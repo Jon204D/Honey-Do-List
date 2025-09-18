@@ -1,4 +1,11 @@
+# entire project
 **.DS_Store
-**artifacts*
 **.vscode
-.env
+**.env
+**.env.local
+
+# client
+**artifacts*
+**build*
+
+# server
