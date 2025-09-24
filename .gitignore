@@ -20,5 +20,3 @@ yarn-error.log*
 **/build/
 **/artifacts*
 
-# Optional: ignore lock file if you don't want to commit it
-# /server/package-lock.json
