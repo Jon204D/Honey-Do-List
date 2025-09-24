@@ -1,4 +1,6 @@
 # entire project
+node_modules/
+
 **.DS_Store
 **.vscode
 **.env
@@ -9,3 +11,6 @@
 **build*
 
 # server
+/server/node_modules/
+/server/package-lock.json
+**/node_modules/
