@@ -2,6 +2,7 @@
 
 const express = require('express');
 const dotenv = require('dotenv');
+const connectDB = require("../config/db"); // accesses new folder for DB connection logic
 const taskRoutes = require('./routes/taskRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -10,6 +11,9 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// initializes DB connection, echoes in /config/db.js
+connectDB();
 
 // Middleware
 app.use(express.json()); // Parse JSON request bodies

@@ -4,13 +4,15 @@
   "description": "The development of a Honey Do List, a shared task management list designed for couples. The system will allow partners to create, assign, and track tasks in real-time, reducing miscommunication and improving household productivity. The features will support comments, tags, and the severity of the tasks, deadlines, reminders, and progress tasks.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^17.2.2",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "mongoose": "^7.0.5"
   }
 }

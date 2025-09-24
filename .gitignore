@@ -3,8 +3,8 @@ node_modules/
 
 **.DS_Store
 **.vscode
-**.env
-**.env.local
+**/.env
+**/.env.local
 
 # client
 **artifacts*
