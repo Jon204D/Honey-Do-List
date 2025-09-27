@@ -7,6 +7,7 @@ import ResetPassword from "./Pages/ResetPassword";
 import ResetUsername from "./Pages/ResetUsername";
 import Settings from "./Pages/Settings";
 import SignUp from "./Pages/SignUp";
+import InvitesPage from './Pages/Invite';
 
 const App: React.FC = () => 
 {
@@ -17,6 +18,7 @@ const App: React.FC = () =>
         <Link to="/signup" style={{marginRight: "1rem"}}>Sign Up</Link>
         <Link to="/login" style={{marginRight: "1rem"}}>Login</Link>
         <Link to="/settings" style={{marginRight: "1rem"}}>Settings</Link>
+        <Link to="/invite" style={{marginRight: "1rem"}}>Invite</Link>
       </nav>
 
       <Routes>
@@ -27,6 +29,7 @@ const App: React.FC = () =>
         <Route path="/resetusername" element={<ResetUsername/>} />
         <Route path="/settings" element={<Settings/>} />
         <Route path="/signup" element={<SignUp/>} />
+        <Route path="/invite" element={<InvitesPage />} />
       </Routes>
     </Router>    
   )
