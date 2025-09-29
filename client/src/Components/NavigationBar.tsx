@@ -4,6 +4,7 @@ import ProfileLogo from "./ProfileLogo";
 import {Outlet, Link} from "react-router-dom";
 import {ReactComponent as HomeIcon} from "../assets/Honey.svg";
 
+/* Navigation bar at the top of every page */
 const NavigationBar: React.FC = () => {
   return (
     <div>

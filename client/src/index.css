@@ -23,10 +23,11 @@ code {
     monospace;
 }
 
+/* Title Font */
 .title {
   font-family: 'Pacifico', cursive;
-  font-size: 1.5rem; /* adjust if you want bigger/smaller */
-  font-weight: normal; /* Pacifico already looks bold */
+  font-size: 1.5rem; 
+  font-weight: normal; 
   text-decoration: none;
   color: black;
 }
