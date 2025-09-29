@@ -1,40 +1,111 @@
-import React, {useState} from "react";
+import React, { useState, useRef } from "react";
 import AuthCard from "../Components/AuthCard";
-import {useNavigate} from "react-router-dom";
-import {AuthInput, AuthButton} from "../Components/AuthStyles";
+import { useNavigate } from "react-router-dom";
+import { AuthInput, AuthButton } from "../Components/AuthStyles";
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const lastSubmitTime = useRef<number>(0);
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const validateFields = (): string | null => {
+    if (!username || !email || !password) {
+      return 'All fields are required.';
+    }
+    if (username.length < 3) {
+      return 'Username must be at least 3 characters long.';
+    }
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long.';
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      return 'Invalid email format.';
+    }
+    return null;
+  };
+
+  const signUpRequest = async () => {
+    // Field Validation
+    const validationError = validateFields();
+    if (validationError) {
+      setFormMessage(validationError);
+      return;
+    } else {
+      setFormMessage(null);
+    }
+
+    // Throttle: Prevent submissions within 3 seconds
+    const now = Date.now();
+    const throttleDelay = 3000; // 3 seconds
+    
+    if (now - lastSubmitTime.current < throttleDelay) {
+      console.log('Request throttled. Please wait before submitting again.');
+      return;
+    }
+
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    lastSubmitTime.current = now;
+
+    try {
+      // Make the API POST request
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL || 'http://localhost:3001'}/api/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      // Handle response
+      if (response.ok) {
+        loginNav("Account created! Please log in.");
+      } else {
+        const errorData = await response.json();
+        console.error('Sign up failed:', errorData.message);
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+      
+      // Fallback: Save fake user in localStorage for development
+      localStorage.setItem(
+        "fakeUser",
+        JSON.stringify({ username, email, password })
+      );
+      loginNav("Account created! Please log in.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const loginNav = (message?: string) => {
+    navigate("/login", { state: { message } });
+  }
+
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Save fake user in localStorage
-    localStorage.setItem(
-      "fakeUser",
-      JSON.stringify({ username, email, password })
-    )
-
-    // Redirect with success message
-    navigate("/login", { state: { message: "Account created! Please log in." } });
   }
 
   return (
     <AuthCard title="Create Account">
+      {formMessage && <p style = {{color: "orange", fontWeight: "bold"}}>{formMessage}</p>}
       <form
         onSubmit={handleSignUp}
-        style = {{ 
-          display: "flex", 
-          flexDirection: "column", 
-          gap: "10px" 
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px"
         }}
       >
         <AuthInput
           type="text"
-          name="username" 
+          name="username"
           placeholder="Username"
           autoComplete="username"
           value={username}
@@ -43,40 +114,41 @@ const SignUp: React.FC = () => {
         />
         <AuthInput
           type="email"
-          name="email" 
+          name="email"
           placeholder="Email"
-          autoComplete="email" 
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <AuthInput
           type="password"
-          name="password" 
+          name="password"
           placeholder="Password"
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <AuthButton 
-          type="submit" 
-          variant="primary">
-            Create Account
+        <AuthButton
+          type="submit"
+          variant="primary"
+          onClick={signUpRequest}
+          disabled={isSubmitting}>
+          {isSubmitting ? 'Creating Account...' : 'Create Account'}
         </AuthButton>
 
       </form>
-      <div 
-        style = {{ 
-          marginTop: "20px" 
+      <div
+        style={{
+          marginTop: "20px"
         }}
       >
-        <AuthButton 
-          onClick={() => navigate("/login")} 
+        <AuthButton
+          onClick={() => loginNav()}
           variant="secondary">
-            Back to Login
+          Back to Login
         </AuthButton>
-        
       </div>
     </AuthCard>
   )
