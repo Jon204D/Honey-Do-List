@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import AuthCard from "../components/AuthCard";
 import { useNavigate } from "react-router-dom";
 import { AuthInput, AuthButton } from "../components/AuthStyles";
