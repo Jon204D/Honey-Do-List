@@ -1,10 +1,10 @@
 import React from 'react';
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
-import Settings from "./pages/Settings";
-import ForgotPassword from "./pages/ForgotPassword";
-import NavigationBar from './components/NavigationBar';
+import Home from "./Pages/Home";
+import Login from "./Pages/Login";
+import SignUp from "./Pages/SignUp";
+import Settings from "./Pages/Settings";
+import ForgotPassword from "./Pages/ForgotPassword";
+import NavigationBar from './Components/NavigationBar';
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 
 const App: React.FC = () => {

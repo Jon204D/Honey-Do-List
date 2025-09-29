@@ -1,7 +1,7 @@
 import React, {useState} from "react";
-import AuthCard from "../components/AuthCard";
+import AuthCard from "../Components/AuthCard";
 import { useNavigate } from "react-router-dom";
-import { AuthInput, AuthButton } from "../components/AuthStyles";
+import { AuthInput, AuthButton } from "../Components/AuthStyles";
 
 /* Request Password Reset Link
    - go back to the "Login" page

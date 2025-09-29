@@ -1,7 +1,7 @@
 import React, {useState} from "react";
-import AuthCard from "../components/AuthCard";
+import AuthCard from "../Components/AuthCard";
 import {useNavigate, useLocation} from "react-router-dom";
-import {AuthInput, AuthButton} from "../components/AuthStyles";
+import {AuthInput, AuthButton} from "../Components/AuthStyles";
 
 /* Displays Login Form
    - Checks credentials saved in localStorage by SignUp

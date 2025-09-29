@@ -1,10 +1,10 @@
-import AuthCard from "../components/AuthCard";
+import AuthCard from "../Components/AuthCard";
 import React, {useState, useEffect} from "react";
-import {AuthButton} from "../components/AuthStyles";
-import EmailDisplay from "../components/EmailDisplay";
+import {AuthButton} from "../Components/AuthStyles";
+import EmailDisplay from "../Components/EmailDisplay";
 import {useNavigate, useLocation} from "react-router-dom";
-import PasswordDisplay from "../components/PasswordDisplay";
-import UsernameDisplay from "../components/UsernameDisplay";
+import PasswordDisplay from "../Components/PasswordDisplay";
+import UsernameDisplay from "../Components/UsernameDisplay";
 
 /* Account Settings
    - Displays username, email, and password

@@ -1,6 +1,6 @@
 import {useNavigate} from "react-router-dom";
 import React, {useState, useEffect} from "react";
-import {AuthButton} from "../components/AuthStyles";
+import {AuthButton} from "./AuthStyles";
 
 interface Props {
   username: string;                                                 // Current saved username   
