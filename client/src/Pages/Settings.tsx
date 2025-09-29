@@ -1,6 +1,6 @@
-import AuthCard from "../components/AuthCard";
+import AuthCard from "../Components/AuthCard";
 import React, {useState, useEffect} from "react";
-import {AuthButton} from "../components/AuthStyles";
+import {AuthButton} from "../Components/AuthStyles";
 import {useNavigate, useLocation} from "react-router-dom";
 
 const Settings: React.FC = () => {
