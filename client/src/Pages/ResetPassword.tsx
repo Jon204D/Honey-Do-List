@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 
 interface ResetPasswordProps {
-  password: string;
-  onCancel: () => void;
-  onSave: (newPassword: string) => void;
+  password: string;                         // Current password
+  onCancel: () => void;                     // If user cancels
+  onSave: (newPassword: string) => void;    // If user saves new password
 }
 
+/* Editing Password */
 const ResetPassword: React.FC<ResetPasswordProps> = ({password, onCancel, onSave}) => {
   const [newPassword, setNewPassword] = useState(password);
 

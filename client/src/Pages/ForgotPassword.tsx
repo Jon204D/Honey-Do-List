@@ -3,6 +3,9 @@ import AuthCard from "../components/AuthCard";
 import { useNavigate } from "react-router-dom";
 import { AuthInput, AuthButton } from "../components/AuthStyles";
 
+/* Request Password Reset Link
+   - go back to the "Login" page
+   - recieve message that the email was sent */
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
@@ -10,7 +13,7 @@ const ForgotPassword: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Back to login page
+    /* Send success message to show code works */
     navigate("/login", {state: {message: "Password link set to your email!"}});
   }
 
@@ -40,6 +43,7 @@ const ForgotPassword: React.FC = () => {
         </AuthButton>
 
       </form>
+
       <div 
         style = {{
           marginTop: "20px"

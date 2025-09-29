@@ -3,18 +3,26 @@ import AuthCard from "../components/AuthCard";
 import {useNavigate, useLocation} from "react-router-dom";
 import {AuthInput, AuthButton} from "../components/AuthStyles";
 
+/* Displays Login Form
+   - Checks credentials saved in localStorage by SignUp
+   - sets "isLoggedIn" flag if they match
+   - displays success/error messages */
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation();               // Reading messages passed in navigation
   const [email, setEmail] = useState("");
   const message = location.state?.message;
   const [password, setPassword] = useState("");
 
+  /* Login Form */
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+
+    /* Get the stored user from localStorage */
     const savedUser = localStorage.getItem("fakeUser");
   
     if (savedUser) {
+      // Parse saved user and check credentials
       const {email: savedEmail, password: savedPassword} = JSON.parse(savedUser);
 
     if (email === savedEmail && password === savedPassword) {
@@ -30,9 +38,13 @@ const Login: React.FC = () => {
 
   return (
     <AuthCard title="Log In">
-      {message && <p style = {{color: "orange", fontWeight: "bold"}}>{message}</p>}
+      {/* Success/Error Messages */}
+      {message && <p style = {{color: "orange", fontWeight: "bold"}}>{message}</p>}   
+      
+      {/* Login Form */}
       <form onSubmit={handleLogin} style = {{display: "flex", flexDirection: "column", gap: "10px"}}>
         
+        {/* Email Input */}
         <AuthInput
           type="email"
           name="email"
@@ -43,6 +55,7 @@ const Login: React.FC = () => {
           required
         />
 
+        {/* Password Input */}
         <AuthInput
           type="password"
           name="password"
@@ -53,13 +66,15 @@ const Login: React.FC = () => {
           required
         />
 
+        {/* Submit Button */}
         <AuthButton 
           type="submit" 
           variant="primary">
             Log In
         </AuthButton>
-
       </form>
+
+      {/* Forgot Password & Create Account */}
       <div 
         style = {{
           marginTop: "20px", 

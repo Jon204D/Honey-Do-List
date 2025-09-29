@@ -1,11 +1,12 @@
 import React, {useState} from "react";
 
 interface ResetUsernameProps {
-  username: string;
-  onCancel: () => void;
-  onSave: (newUsername: string) => void;
+  username: string;                         // Current username 
+  onCancel: () => void;                     // If user cancels
+  onSave: (newUsername: string) => void;    // If user saves new username
 }
 
+/* Editing Username */
 const ResetUsername: React.FC<ResetUsernameProps> = ({username, onCancel, onSave}) => {
   const [newUsername, setNewUsername] = useState(username);
 

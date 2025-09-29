@@ -3,6 +3,9 @@ import AuthCard from "../components/AuthCard";
 import {useNavigate} from "react-router-dom";
 import {AuthInput, AuthButton} from "../components/AuthStyles";
 
+/* Registers username, email, and password
+   - Saves a fake user into localStorage
+   - Goes back to the "Login" page */
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -23,6 +26,8 @@ const SignUp: React.FC = () => {
   }
 
   return (
+
+    /* Title */
     <AuthCard title="Create Account">
       <form
         onSubmit={handleSignUp}
@@ -32,6 +37,8 @@ const SignUp: React.FC = () => {
           gap: "10px" 
         }}
       >
+
+        {/* Username */}
         <AuthInput
           type="text"
           name="username" 
@@ -41,6 +48,8 @@ const SignUp: React.FC = () => {
           onChange={(e) => setUsername(e.target.value)}
           required
         />
+
+        {/* Email */}
         <AuthInput
           type="email"
           name="email" 
@@ -50,6 +59,8 @@ const SignUp: React.FC = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+
+        {/* Password */}
         <AuthInput
           type="password"
           name="password" 
@@ -59,13 +70,16 @@ const SignUp: React.FC = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+
+        {/* Create Button */}
         <AuthButton 
           type="submit" 
           variant="primary">
             Create Account
         </AuthButton>
-
       </form>
+
+      {/* Navigate to Login */}
       <div 
         style = {{ 
           marginTop: "20px" 
@@ -76,7 +90,6 @@ const SignUp: React.FC = () => {
           variant="secondary">
             Back to Login
         </AuthButton>
-        
       </div>
     </AuthCard>
   )

@@ -1,5 +1,6 @@
 import React from "react";
 
+/* <input> with dark and orange theme */
 export const AuthInput = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
   <input
     {...props}
@@ -14,6 +15,9 @@ export const AuthInput = (props: React.InputHTMLAttributes<HTMLInputElement>) =>
   />
 )
 
+/* <button> with two variants 
+   "primary" - orange background, black text 
+   "secondary" - dark background, orange text, orange border */
 export const AuthButton = ({
   variant = "primary",
   ...props
