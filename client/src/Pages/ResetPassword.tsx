@@ -1,15 +1,42 @@
-import React from "react";
+import React, {useState} from "react";
 
-const ResetPassword: React.FC = () => {
-    return (
-        <div>
-            <h1>Reset Password Page</h1>   
-            <p>Please Enter new password:</p>
-            <input type="text" placeholder="password" 
-            style={{display: "block",}}/>
-            <button>Save</button>
-        </div>
-    )
+interface ResetPasswordProps {
+  password: string;                         // Current password
+  onCancel: () => void;                     // If user cancels
+  onSave: (newPassword: string) => void;    // If user saves new password
+}
+
+/* Editing Password */
+const ResetPassword: React.FC<ResetPasswordProps> = ({password, onCancel, onSave}) => {
+  const [newPassword, setNewPassword] = useState(password);
+
+  return (
+    <div>
+
+      <input
+        type="text"
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        style = {{ 
+          width: "100%", 
+          padding: "8px", 
+          marginTop: "5px" 
+        }}
+      />
+
+      <div 
+        style = {{ 
+          marginTop: "10px", 
+          display: "flex", 
+          gap: "10px" 
+        }}
+      >
+        <button onClick={() => onSave(newPassword)}>Save</button>
+        <button onClick={onCancel}>Cancel</button>
+      </div>
+
+    </div>
+  )
 }
 
 export default ResetPassword;
