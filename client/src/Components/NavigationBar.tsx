@@ -1,12 +1,42 @@
+import "../App.css"; 
 import React from "react";
-import {Link} from "react-router-dom";
+import ProfileLogo from "./ProfileLogo";
+import {Outlet, Link} from "react-router-dom";
+import {ReactComponent as HomeIcon} from "../assets/Honey.svg";
 
+/* Navigation bar at the top of every page */
 const NavigationBar: React.FC = () => {
-    return (
-        <nav style={{padding: "1rem", background: "#eee"}}>
-            <Link to="/">Home</Link> | <Link to="/signup">SignUp</Link> | <Link to="/login">Login</Link> | <Link to="/settings">Settings</Link>
-        </nav>
-    )
+  return (
+    <div>
+      <nav
+        style = {{
+          padding: "1rem",
+          display: "flex",
+          alignItems: "center",
+          background: "#212121",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* Left: Home icon */}
+        <Link to="/" className="icon-circle">
+          <HomeIcon />
+        </Link>
+
+        {/* Middle: Title */}
+         <Link to="/" className="title">
+            Honey-Do List
+        </Link>
+
+        {/* Right: Profile icon */}
+          <ProfileLogo />
+
+      </nav>
+
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  )
 }
 
 export default NavigationBar;
