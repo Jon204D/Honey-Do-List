@@ -6,6 +6,7 @@ import Settings from "./Pages/Settings";
 import ForgotPassword from "./Pages/ForgotPassword";
 import NavigationBar from './Components/NavigationBar';
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
+import InvitesPage from './Pages/Invite';
 
 const App: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ const App: React.FC = () => {
           <Route path="/login" element={<Login/>} />
           <Route path="/settings" element={<Settings/>} />
           <Route path="/signup" element={<SignUp/>} />
+          <Route path="/invite" element={<InvitesPage/>} />
         </Route>
       </Routes>
     </Router>    

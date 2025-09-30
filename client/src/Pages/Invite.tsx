@@ -1,13 +1,13 @@
-// src/pages/InvitesPage.tsx
+// src/pages/invite.tsx
 import React, { useState, useEffect } from 'react';
-
+import styles from './design/invite.module.css';
+import clsx from 'clsx'; // You may need to run: npm install clsx
 
 interface Invite {
   id: number;
   recipient_email: string;
   status: 'pending' | 'accepted' | 'declined';
 }
-
 
 interface InviteFormProps {
   onSendInvite: (email: string) => void;
@@ -24,7 +24,8 @@ const InviteForm: React.FC<InviteFormProps> = ({ onSendInvite }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
+        // FIXED: Uses the correct 'form' class
+        <form onSubmit={handleSubmit} className={styles.form}>
             <h3>Send a New Invite</h3>
             <input
                 type="email"
@@ -32,14 +33,13 @@ const InviteForm: React.FC<InviteFormProps> = ({ onSendInvite }) => {
                 value={email}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 required
-                style={{ padding: '8px', marginRight: '8px' }}
+                // FIXED: Inline styles removed
             />
             <button type="submit">Send Invite</button>
         </form>
     );
 };
 
-// Reusable List
 interface InviteListProps {
   invites: Invite[];
   onDeleteInvite: (id: number) => void;
@@ -52,13 +52,21 @@ const InviteList: React.FC<InviteListProps> = ({ invites, onDeleteInvite }) => {
 
     return (
         <div>
-            <h3>Sent Invites</h3>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
+            <h3 className={styles.listTitle}>Sent Invites</h3>
+            <ul className={styles.inviteList}>
                 {invites.map((invite) => (
-                    <li key={invite.id} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '5px' }}>
+                    <li
+                        key={invite.id}
+                        // FIXED: Uses clsx for base and conditional styles
+                        className={clsx(styles.inviteItem, {
+                            [styles.acceptedStatus]: invite.status === 'accepted',
+                            [styles.declinedStatus]: invite.status === 'declined',
+                        })}
+                    >
                         <span>{invite.recipient_email} - <strong>{invite.status}</strong></span>
                         {invite.status === 'pending' && (
-                            <button onClick={() => onDeleteInvite(invite.id)} style={{ float: 'right' }}>
+                            // FIXED: Uses the correct 'revokeButton' class
+                            <button onClick={() => onDeleteInvite(invite.id)} className={styles.revokeButton}>
                                 Revoke
                             </button>
                         )}
@@ -69,44 +77,38 @@ const InviteList: React.FC<InviteListProps> = ({ invites, onDeleteInvite }) => {
     );
 };
 
-
 // Main page
 const InvitesPage: React.FC = () => {
     const [invites, setInvites] = useState<Invite[]>([]);
 
     useEffect(() => {
-        // This is a placeholder for your actual API call to get invites
-        console.log("Fetching invites...");
         const mockInvites: Invite[] = [
             { id: 1, recipient_email: 'friend1@example.com', status: 'accepted' },
             { id: 2, recipient_email: 'friend2@example.com', status: 'pending' },
+            { id: 3, recipient_email: 'friend3@example.com', status: 'declined' },
         ];
         setInvites(mockInvites);
     }, []);
 
     const handleSendInvite = (email: string) => {
-        // Placeholder for your actual API call to create an invite
-        console.log(`Sending invite to ${email}`);
-        const newInvite: Invite = {
-            id: Date.now(),
-            recipient_email: email,
-            status: 'pending'
-        };
+        const newInvite: Invite = { id: Date.now(), recipient_email: email, status: 'pending' };
         setInvites([...invites, newInvite]);
     };
 
     const handleDeleteInvite = (inviteId: number) => {
-        // Placeholder for your actual API call to delete an invite
-        console.log(`Deleting invite ${inviteId}`);
-        setInvites(invites.filter(invite => invite.id !== inviteId));
+        setInvites(invites.filter((invite) => invite.id !== inviteId));
     };
 
     return (
-        <div>
-            <h2>Manage Invites</h2>
-            <InviteForm onSendInvite={handleSendInvite} />
-            <InviteList invites={invites} onDeleteInvite={handleDeleteInvite} />
-        </div>
+        // ADDED: A React Fragment <> and the new background div
+        <>
+            <div className={styles.orangeBackground} />
+            <div className={styles.pageContainer}>
+                <h2>Manage Invites</h2>
+                <InviteForm onSendInvite={handleSendInvite} />
+                <InviteList invites={invites} onDeleteInvite={handleDeleteInvite} />
+            </div>
+        </>
     );
 };
 

@@ -74,7 +74,7 @@ const Login: React.FC = () => {
         </AuthButton>
       </form>
 
-      {/* Forgot Password & Create Account */}
+      {/* Forgot Password, Create Account, and Invite New User */}
       <div 
         style = {{
           marginTop: "20px", 
@@ -95,8 +95,13 @@ const Login: React.FC = () => {
           variant="secondary">
             Create Account
         </AuthButton>
-        
+
+        <AuthButton onClick={() => navigate("/Invite")} 
+          variant="secondary">
+            Invite New User
+        </AuthButton>
       </div>
+
     </AuthCard>
   )
 }
