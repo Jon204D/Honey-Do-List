@@ -26,7 +26,7 @@ const InviteForm: React.FC<InviteFormProps> = ({ onSendInvite }) => {
     return (
         // FIXED: Uses the correct 'form' class
         <form onSubmit={handleSubmit} className={styles.form}>
-            <h3>Send a New Invite</h3>
+            <h3 >Send a New Invite</h3>
             <input
                 type="email"
                 placeholder="Enter person's email"
