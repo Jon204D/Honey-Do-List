@@ -4,6 +4,10 @@ const mongoose = require('mongoose');
 
 const taskSchema = new mongoose.Schema(
   {
+    owner: { 
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", //references User
+    },
     title: {
       type: String,
       required: [true, 'Task title is required'],
@@ -11,8 +15,9 @@ const taskSchema = new mongoose.Schema(
     description: {
       type: String,
     },
-    assignedTo: {
-      type: String, // You can use user IDs or names, up to the team
+    assignedTo: { // personally, i do not want to make this unique bc what if u want a to-do list for urself? :D
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", //will reference User Schema
     },
     priority: {
       type: String,
