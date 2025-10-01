@@ -1,11 +1,22 @@
-# entire project
-**.DS_Store
-**.vscode
-**.env
-**.env.local
+# OS/System files
+.DS_Store
 
-# client
-**artifacts*
-**build*
+# IDE
+.vscode/
 
-# server
+# Environment variables
+.env
+.env.local
+
+# Node modules (ignore in all folders)
+**/node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts (client-specific)
+**/build/
+**/artifacts*
+
