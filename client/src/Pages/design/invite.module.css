@@ -15,16 +15,16 @@
 }
 
 
-/* --- Main Content Card --- */
+/* Main Content Card */
 /* This is the card that holds all the content on the page */
 .pageContainer {
   max-width: 700px;
   margin: 3rem auto;
   padding: 2rem;
   background-color: rgb(33, 33, 33);
-  border: 1px solid #e0e0e0;
+  border: 1px solid black;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
 }
 
 .pageContainer h2 {
