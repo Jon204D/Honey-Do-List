@@ -3,8 +3,7 @@
 /* ============================================= */
 
 
-/* --- Full Page Background Wrapper --- */
-/* This div sits behind everything to provide a full-screen color */
+/* Full Page Background Wrapper  */
 .orangeBackground {
   position: fixed;
   top: 0;
@@ -22,7 +21,7 @@
   max-width: 700px;
   margin: 3rem auto;
   padding: 2rem;
-  background-color: rgb(33, 33, 33); /* Combined the duplicate styles into one */
+  background-color: rgb(33, 33, 33);
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -36,8 +35,8 @@
 }
 
 
-/* --- Invite Form Section --- */
-/* This styles the "Send a New Invite" form */
+/* Invite Form Section */
+/* "Send a New Invite" */
 .form {
   display: flex;
   flex-direction: column;
@@ -85,8 +84,8 @@
 }
 
 
-/* --- Invite List Section --- */
-/* This styles the "Sent Invites" list */
+/* Invite List Section */
+/* Styles the "Sent Invites" list */
 
 .listTitle {
   text-align: center;
@@ -104,7 +103,7 @@
   align-items: center;
   padding: 1rem;
   border: 1px solid #e0e0e0;
-  border-left: 5px solid #6c757d; /* Default gray border for "pending" */
+  border-left: 5px solid #6c757d; 
   border-radius: 4px;
   margin-bottom: 10px;
   transition: all 0.2s ease-in-out;
@@ -116,7 +115,7 @@
 }
 
 
-/* --- List Item Status Modifiers --- */
+/* List Item Status Modifiers */
 /* These classes are added to .inviteItem to change its look based on status */
 .acceptedStatus {
   border-left-color: #28a745; /* Green */
@@ -126,7 +125,7 @@
 }
 
 .declinedStatus {
-  border-left-color: #dc3545; /* Red */
+  border-left-color: #dc3545; 
   opacity: 0.7; /* Make declined invites look faded */
 }
 .declinedStatus strong {
@@ -134,7 +133,7 @@
 }
 
 
-/* --- Specific Buttons --- */
+/* Specific Buttons */
 /* The "Revoke" button inside a list item */
 .revokeButton {
   padding: 8px 12px;
