@@ -1,9 +1,8 @@
 from honeyDoList import HoneyDoList
 # Custom imports
-from checks.webdriverCheck import get_available_driver
+from operations.webdriverCheck import get_available_driver
 
 if __name__ == "__main__":
-    driver = get_available_driver()
-    honey_do_list = HoneyDoList(driver)
-    honey_do_list.run_tests()
-    driver.quit()
+    bot = HoneyDoList()
+    bot.run_initial_tests()
+    bot.exit()
