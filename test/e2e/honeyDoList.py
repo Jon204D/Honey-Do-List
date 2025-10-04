@@ -10,8 +10,7 @@ from operations.webdriverCheck import get_available_driver
 import operations.constants as const
 
 driver = get_available_driver()
-wait = WebDriverWait(self.driver, 10)
-load_dotenv()  # Load environment variables from .env file
+wait = WebDriverWait(driver, 10)
 
 class HoneyDoList:
     def __init__(self):
@@ -28,7 +27,7 @@ class HoneyDoList:
             print(f"❌ An error occurred while closing the browser: \n- {e}")
 
     def log_test_result(self, test_name, passed, message=""):
-        #Log test results for reporting.
+        # Log test results for reporting.
         self.test_results.append({
             "test": test_name,
             "passed": passed,
@@ -38,7 +37,7 @@ class HoneyDoList:
         print(f"{status}: {test_name} - {message}")
 
     def print_test_summary(self):
-        """Print test execution summary."""
+        # Print test execution summary.
         print("\n" + "=" * 50)
         print("🐝 TEST SUMMARY 🐝")
         print("=" * 50)
@@ -60,24 +59,18 @@ class HoneyDoList:
 
     def run_initial_tests(self):
         try:
-            self.driver.get(const.BASE_URL)
-            print(f"✅ Navigated to {const.BASE_URL} successfully.")
-            time.sleep(2)  # Wait for the page to load
-
-            # Example test: Check if the title contains "Honey Do List"
-            assert "Honey Do List" in self.driver.title
-            print("✅ Title check passed.")
-
-            # Example test: Check if the main header is present
-            header = self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
-            assert header.text == "Honey Do List"
-            print("✅ Header check passed.")
-
-            self.exit()
-            print("✅ All initial tests completed successfully.")
-        except AssertionError as ae:
-            print(f"❌ Assertion error: {ae}")
+            from tests.prechecks.test_initial_checks import InitialChecks
+            precheck_test = InitialChecks(self.driver, self.wait)
+            results = precheck_test.run_all()
+            self.test_results.extend(results)
         except Exception as e:
-            print(f"❌ An error occurred during tests: \n- {e}")
+            self.log_test_result("Prechecks", False, str(e))
+
+    def run_regression_test(self):
+        try:
+            self.run_initial_tests()
+        except Exception as e:
+            self.log_test_result("Regression", False, str(e))
         finally:
             self.exit()
+            self.print_test_summary()
