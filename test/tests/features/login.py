@@ -13,7 +13,7 @@ class LoginTests:
             self.driver.get(constants.BASE_URL + "/login")
 
             try:
-                self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "login_form")))
+                self.wait.until(EC.presence_of_element_located((By.TITLE, "Log In")))
                 print("✅ Login form is present.")
             except:
                 raise Exception("❌ Login form is not present.")
@@ -64,12 +64,11 @@ class LoginTests:
             return
 
 
-    def run_all(self):
+    def run_all_login(self):
         try:
             self.land_login_page()
             self.login_invalid()
             self.login_valid()
-            # Add more test methods as needed
         except Exception as e:
             print(f"❌ An error occurred during tests: \n- {e}")
         finally:

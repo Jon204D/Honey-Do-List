@@ -68,7 +68,17 @@ class HoneyDoList:
 
     def run_regression_test(self):
         try:
+            # First, run initial environment checks
             self.run_initial_tests()
+            # Import and run signup feature tests
+            from tests.features.signup import SignupTests
+            signup_test = SignupTests(self.driver, self.wait)
+            results = signup_test.run_all_signup()
+
+            # Import and run login feature tests
+            from tests.features.login import LoginTests
+            login_test = LoginTests(self.driver, self.wait)
+            results += login_test.run_all_login()
         except Exception as e:
             self.log_test_result("Regression", False, str(e))
         finally:
