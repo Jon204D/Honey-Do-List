@@ -40,7 +40,7 @@ class LoginTests(BaseTestSuite):
             print("🔐 Attempting to log in with invalid credentials...")
             self.driver.find_element(By.NAME, "email").send_keys("invalid@example.com")
             self.driver.find_element(By.NAME, "password").send_keys("wrongpassword")
-            self.driver.find_element(By.TYPE, "submit").click()
+            self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
             if self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "error_message"))):
                 self.log_result("Invalid Login", True, "Error message displayed for invalid login.")
@@ -67,7 +67,7 @@ class LoginTests(BaseTestSuite):
             print("🔐 Attempting to log in...")
             self.driver.find_element(By.NAME, "email").send_keys(username)
             self.driver.find_element(By.NAME, "password").send_keys(password)
-            self.driver.find_element(By.TYPE, "submit").click()
+            self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
             if self.wait.until(EC.url_contains("/dashboard")):
                 self.log_result("Valid Login", True, "Successfully logged in and redirected to dashboard.")

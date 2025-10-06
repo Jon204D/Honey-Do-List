@@ -37,7 +37,7 @@ class HoneyDoList(BaseTestSuite):
         try:
             # First, run initial environment checks
             self.run_initial_tests()
-            
+
             # Import and run signup feature tests
             from tests.features.signup import SignupTests
             signup_test = SignupTests(self.driver, self.wait)
@@ -45,10 +45,10 @@ class HoneyDoList(BaseTestSuite):
             self.test_results.extend(results)
 
             # Import and run login feature tests
-            # from tests.features.login import LoginTests
-            # login_test = LoginTests(self.driver, self.wait)
-            # results += login_test.run_all_login()
-            # self.test_results.extend(results)
+            from tests.features.login import LoginTests
+            login_test = LoginTests(self.driver, self.wait)
+            results += login_test.run_all_login()
+            self.test_results.extend(results)
         except Exception as e:
             self.log_result("Regression", False, str(e))
         finally:
