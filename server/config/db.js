@@ -1,8 +1,6 @@
-// config/db.js
-
 // configs the database MongoDB
-
 const mongoose = require("mongoose");
+
 
 const connectDB = async () => {
   try {

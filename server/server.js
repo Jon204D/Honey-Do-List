@@ -4,7 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const connectDB = require('../config/db');
+const connectDB = require('./config/db');
 const taskRoutes = require('./routes/taskRoutes');
 const userRoutes = require("./routes/userRoutes");
 const errorHandler = require('./middleware/errorHandler');
@@ -15,8 +15,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || 'http://localhost';
 const PROD_STATUS = process.env.IN_PROD || false;
-const CLIENT_ORIGIN = process.env.ClientHost;
-const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL;
+const CLIENT_ORIGIN = process.env.FRONTEND_BASE_URL;
+const BACKEND_BASE_URL = `${HOST}${PORT ? `:${PORT}` : ''}`;
 
 // Define allowed origins
 const allowedOrigins = [CLIENT_ORIGIN];
