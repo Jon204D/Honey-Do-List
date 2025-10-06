@@ -10,6 +10,9 @@ const {
   updateTask,
   deleteTask,
   addReactionToTask,
+  getUserTasks,
+  getTasksAssignedToUser,
+  getMyTasks,
 } = require('../controllers/taskController');
 
 // Routes
@@ -19,5 +22,8 @@ router.post('/', createTask);                  // Create a new task
 router.put('/:id', updateTask);                // Update an existing task
 router.delete('/:id', deleteTask);             // Delete a task
 router.post('/:id/react', addReactionToTask);  // Add a reaction (emoji) to a task
+router.get('/users/:userId', getUserTasks);     // Get tasks by user ID
+router.get("/assigned/:userId", getTasksAssignedToUser);  // Get tasks by assigned to ID
+router.get("/my/:userId", getMyTasks);          // overall dashboarding function!! :3
 
 module.exports = router;

@@ -1,78 +1,128 @@
 // server/controllers/taskController.js
 
-// Placeholder task list for now
-let tasks = [];
+// loading queries
+// honestly if we have time i might do what i did over in the user controller by making the queries an array, but its wtv
+const {
+  getAllTasksQuery,
+  getTaskByIdQuery,
+  createTaskQuery,
+  updateTaskQuery,
+  deleteTaskQuery,
+  addReactionToTaskQuery,
+  getUserTasksQuery,
+  getTasksAssignedToUserQuery
+} = require('../queries/taskQueries');
 
 // Get all tasks
-const getAllTasks = (req, res) => {
-  res.status(200).json(tasks);
+const getAllTasks = async (req, res) => {
+  try {
+    const tasks = await getAllTasksQuery();
+    res.status(200).json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Get a single task by ID
-const getTaskById = (req, res) => {
-  const { id } = req.params;
-  const task = tasks.find(t => t.id === id);
-  if (!task) {
-    return res.status(404).json({ message: 'Task not found' });
+const getTaskById = async (req, res) => {
+  try {
+    const task = await getTaskByIdQuery(req.params.id);
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+    res.status(200).json(task);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.status(200).json(task);
 };
 
 // Create a new task
-const createTask = (req, res) => {
-  const { title, description, assignedTo, priority, dueDate } = req.body;
-
-  const newTask = {
-    id: Date.now().toString(), // fake unique ID
-    title,
-    description,
-    assignedTo,
-    priority,
-    dueDate,
-    reactions: [],
-    status: 'pending',
-  };
-
-  tasks.push(newTask);
-  res.status(201).json(newTask);
+const createTask = async (req, res) => {
+  try {
+    const newTask = await createTaskQuery(req.body);
+    res.status(201).json(newTask);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 };
 
 // Update an existing task
-const updateTask = (req, res) => {
-  const { id } = req.params;
-  const index = tasks.findIndex(t => t.id === id);
-  if (index === -1) {
-    return res.status(404).json({ message: 'Task not found' });
+const updateTask = async (req, res) => {
+  try {
+    const updatedTask = await updateTaskQuery(req.params.id, req.body);
+    if (!updatedTask) return res.status(404).json({ message: 'Task not found' });
+    res.status(200).json(updatedTask);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  tasks[index] = { ...tasks[index], ...req.body };
-  res.status(200).json(tasks[index]);
 };
 
 // Delete a task
-const deleteTask = (req, res) => {
-  const { id } = req.params;
-  const index = tasks.findIndex(t => t.id === id);
-  if (index === -1) {
-    return res.status(404).json({ message: 'Task not found' });
+const deleteTask = async (req, res) => {
+  try {
+    const deletedTask = await deleteTaskQuery(req.params.id);
+    if (!deletedTask) return res.status(404).json({ message: 'Task not found' });
+    res.status(200).json({ message: 'Task deleted', task: deletedTask });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  const deletedTask = tasks.splice(index, 1);
-  res.status(200).json({ message: 'Task deleted', task: deletedTask[0] });
 };
 
 // Add emoji reaction to a task
-const addReactionToTask = (req, res) => {
-  const { id } = req.params;
-  const { emoji } = req.body;
-
-  const task = tasks.find(t => t.id === id);
-  if (!task) {
-    return res.status(404).json({ message: 'Task not found' });
+const addReactionToTask = async (req, res) => {
+  try {
+    const updatedTask = await addReactionToTaskQuery(id, emoji);
+    if (!updatedTask) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    res.status(200).json({ message: 'Reaction added', task: updatedTask });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
+};
 
-  task.reactions.push(emoji);
-  res.status(200).json({ message: 'Reaction added', task });
+// focuses on what the user assigns to others
+const getUserTasks = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const tasks = await getUserTasksQuery(userId);
+    if (!tasks || tasks.length === 0) {
+      return res.status(404).json({ message: 'No tasks found for this user!' });
+    }
+    res.status(200).json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// focus on what the user has been assigned
+const getTasksAssignedToUser = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const tasks = await getTasksAssignedToUserQuery(userId);
+    if (!tasks || tasks.length === 0) {
+      return res.status(404).json({ message: "No tasks assigned to this user" });
+    }
+    res.status(200).json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// this is the overall dashboarding function
+const getMyTasks = async (req, res) => {
+  const { userId } = req.params;
+  const { status, priority, dueDate } = req.query; // passes the filters via query string
+
+  try {
+    const tasks = await getMyTasksQuery(userId, { status, priority, dueDate });
+    if (!tasks || tasks.length === 0) {
+      return res.status(404).json({ message: "No tasks found for this user" });
+    }
+    res.status(200).json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 module.exports = {
@@ -82,4 +132,7 @@ module.exports = {
   updateTask,
   deleteTask,
   addReactionToTask,
+  getUserTasks,
+  getTasksAssignedToUser,
+  getMyTasks,
 };

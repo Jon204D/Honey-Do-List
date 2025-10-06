@@ -1,7 +1,9 @@
-import React, { useState, useRef } from "react";
+import {useNavigate} from "react-router-dom";
+import React, {useState, useRef} from "react";
 import AuthCard from "../Components/AuthCard";
-import { useNavigate } from "react-router-dom";
-import { AuthInput, AuthButton } from "../Components/AuthStyles";
+import FormMessage from "../Components/FormMessage";
+import SignUpExtraButton from "../Components/SignUpExtraButon";
+import {AuthInput, AuthButton} from "../Components/AuthStyles";
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
@@ -89,14 +91,13 @@ const SignUp: React.FC = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-
   }
 
   return (
 
     /* Title */
     <AuthCard title="Create Account">
-      {formMessage && <p style = {{color: "orange", fontWeight: "bold"}}>{formMessage}</p>}
+      {formMessage && <FormMessage message={formMessage} />}
       <form
         onSubmit={handleSignUp}
         style={{
@@ -150,17 +151,7 @@ const SignUp: React.FC = () => {
       </form>
 
       {/* Navigate to Login */}
-      <div
-        style={{
-          marginTop: "20px"
-        }}
-      >
-        <AuthButton
-          onClick={() => loginNav()}
-          variant="secondary">
-          Back to Login
-        </AuthButton>
-      </div>
+      <SignUpExtraButton/>
     </AuthCard>
   )
 }
