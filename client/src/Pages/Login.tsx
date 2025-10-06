@@ -1,4 +1,4 @@
-import React, {useState, useRef} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import AuthCard from "../Components/AuthCard";
 import FormMessage from "../Components/FormMessage";
 import {useNavigate, useLocation} from "react-router-dom";
@@ -11,6 +11,10 @@ import LoginExtraButtons from "../Components/LoginExtraButtons";
    - Session only valid for 1 hour
    - Displays success/error messages */
 const Login: React.FC = () => {
+   useEffect(() => {
+        document.title = "Honey-Do List Login";
+    }, []);
+
   const navigate = useNavigate();
   const location = useLocation();               // Reading messages passed in navigation
   const [email, setEmail] = useState("");
@@ -119,56 +123,58 @@ const Login: React.FC = () => {
   }
 
   return (
-    <AuthCard title="Log In">
-      {/* Success/Error Messages */}
-      {formMessage && <FormMessage message={formMessage} />}
+    <>
+      <AuthCard title="Log In">
+        {/* Success/Error Messages */}
+        {formMessage && <FormMessage message={formMessage} />}
 
-      {/* Login Form */}
-      <form 
-        onSubmit = {handleLogin} 
-        style = {{
-          display: "flex", 
-          flexDirection: "column", 
-          gap: "10px"
-        }}
-      >
-        
-        {/* Email Input */}
-        <AuthInput
-          type="email"
-          name="email"
-          placeholder="Email"
-          autoComplete="username"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-
-        {/* Password Input */}
-        <AuthInput
-          type="password"
-          name="password"
-          placeholder="Password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-
-        {/* Submit Button */}
-        <AuthButton 
-          type="submit" 
-          variant="primary"
-          onClick={loginRequest}
-          disabled={isSubmitting}
+        {/* Login Form */}
+        <form 
+          onSubmit = {handleLogin} 
+          style = {{
+            display: "flex", 
+            flexDirection: "column", 
+            gap: "10px"
+          }}
         >
-          {isSubmitting ? "Logging in..." : "Log In"}
-        </AuthButton>
-      </form>
+          
+          {/* Email Input */}
+          <AuthInput
+            type="email"
+            name="email"
+            placeholder="Email"
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-      {/* Forgot Password & Create Account */}
-      <LoginExtraButtons/>
-    </AuthCard>
+          {/* Password Input */}
+          <AuthInput
+            type="password"
+            name="password"
+            placeholder="Password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          {/* Submit Button */}
+          <AuthButton 
+            type="submit" 
+            variant="primary"
+            onClick={loginRequest}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Logging in..." : "Log In"}
+          </AuthButton>
+        </form>
+
+        {/* Forgot Password & Create Account */}
+        <LoginExtraButtons/>
+      </AuthCard>
+    </>
   )
 }
 

@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 
 interface ResetUsernameProps {
   username: string;                         // Current username 
@@ -8,6 +8,10 @@ interface ResetUsernameProps {
 
 /* Editing Username */
 const ResetUsername: React.FC<ResetUsernameProps> = ({username, onCancel, onSave}) => {
+   useEffect(() => {
+        document.title = "Reset Username - Honey-Do List";
+    }, []);
+
   const [newUsername, setNewUsername] = useState(username);
 
   return (

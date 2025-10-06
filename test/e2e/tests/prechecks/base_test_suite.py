@@ -21,22 +21,18 @@ class BaseTestSuite:
         print(f"{status} {test_name}: {message}")
 
     def print_test_summary(self):
-        # Print test execution summary.
         print("\n" + "=" * 50)
         print("🐝 TEST SUMMARY 🐝")
         print("=" * 50)
-        
         total_tests = len(self.test_results)
-        passed_tests = sum(1 for result in self.test_results if result["passed"])
-        failed_tests = total_tests - passed_tests
-        
+        passed_tests = sum(1 for result in self.test_results if result["passed"] is True)
+        failed_tests = sum(1 for result in self.test_results if result["passed"] is False)
         print(f"Total Tests: {total_tests}")
         print(f"✅ Passed: {passed_tests}")
         print(f"❌ Failed: {failed_tests}")
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%" if total_tests > 0 else "No tests run")
-        
         if failed_tests > 0:
             print("\nFailed Tests:")
             for result in self.test_results:
-                if not result["passed"]:
+                if bool(result["passed"]) is False:
                     print(f"  - {result['test']}: {result['message']}")

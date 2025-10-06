@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 
 interface ResetPasswordProps {
   password: string;                         // Current password
@@ -8,6 +8,10 @@ interface ResetPasswordProps {
 
 /* Editing Password */
 const ResetPassword: React.FC<ResetPasswordProps> = ({password, onCancel, onSave}) => {
+   useEffect(() => {
+        document.title = "Reset Password - Honey-Do List";
+    }, []);
+
   const [newPassword, setNewPassword] = useState(password);
 
   return (

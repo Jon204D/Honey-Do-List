@@ -62,10 +62,9 @@ class InitialChecks(BaseTestSuite):
     
     def run_all(self):
         # Run all precheck tests.
-        print("  🔍 Running initial application checks...")
+        print("🔍 Running initial application checks...")
         
         self.test_page_load()
         self.test_title_check() 
         self.test_basic_dom_structure()
-        
         return self.test_results

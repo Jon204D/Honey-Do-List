@@ -1,11 +1,15 @@
 import {useNavigate} from "react-router-dom";
-import React, {useState, useRef} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import AuthCard from "../Components/AuthCard";
 import FormMessage from "../Components/FormMessage";
 import SignUpExtraButton from "../Components/SignUpExtraButon";
 import {AuthInput, AuthButton} from "../Components/AuthStyles";
 
 const SignUp: React.FC = () => {
+   useEffect(() => {
+        document.title = "Sign Up - Honey-Do List";
+    }, []);
+
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -94,7 +98,6 @@ const SignUp: React.FC = () => {
   }
 
   return (
-
     /* Title */
     <AuthCard title="Create Account">
       {formMessage && <FormMessage message={formMessage} />}

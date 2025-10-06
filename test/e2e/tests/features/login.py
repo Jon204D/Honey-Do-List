@@ -1,11 +1,11 @@
 from dotenv import load_dotenv
-from tests import constants
+from operations.constants import BASE_URL
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import os
 from tests.prechecks.base_test_suite import BaseTestSuite
 
-load_dotenv()  # Load environment variables from .env file
+load_dotenv()
 
 class LoginTests(BaseTestSuite):
     def __init__(self, driver, wait):
@@ -15,17 +15,21 @@ class LoginTests(BaseTestSuite):
     def land_login_page(self):
         try:
             print("🚀 Launching Login page...")
-            self.driver.get(constants.BASE_URL + "/login")
+            self.driver.get(BASE_URL + "/login")
 
             try:
                 self.wait.until(EC.presence_of_element_located((By.TITLE, "Log In")))
                 self.log_result("Login Page Load", True, "Login form is present.")
                 print("✅ Login form is present.")
-            except:
+            except Exception as e:
                 self.log_result("Login Page Load", False, "Login form is not present.")
-                raise Exception("❌ Login form is not present.")
+                error_message = getattr(e, 'msg', str(e))
+                print(f"❌ Login form is not present: {error_message}")
+                raise
         except Exception as e:
-            print(f"❌ An error occurred: \n- {e}")
+            error_message = getattr(e, 'msg', str(e))
+            self.log_result("Login Page Load", False, error_message)
+            print(f"❌ An error occurred: \n- {error_message}")
 
     def login_invalid(self):
         try:
@@ -42,10 +46,11 @@ class LoginTests(BaseTestSuite):
                 self.log_result("Invalid Login", True, "Error message displayed for invalid login.")
                 print("✅ Error message displayed for invalid login.")
             else:
-                self.log_result("Invalid Login", False, "No error message displayed for invalid login.")
                 raise Exception("❌ No error message displayed for invalid login.")
         except Exception as e:
-            print(f"❌ An error occurred while attempting invalid login: \n- {e}")
+            error_message = getattr(e, 'msg', str(e))
+            self.log_result("Invalid Login", False, error_message)
+            print(f"❌ An error occurred while attempting invalid login: \n- {error_message}")
 
     def login_valid(self):
         try:
@@ -68,19 +73,23 @@ class LoginTests(BaseTestSuite):
                 self.log_result("Valid Login", True, "Successfully logged in and redirected to dashboard.")
                 print("✅ Successfully logged in and redirected to dashboard.")
             else:
-                self.log_result("Valid Login", False, "Login failed or did not redirect to dashboard.")
                 raise Exception("❌ Login failed or did not redirect to dashboard.")
         except Exception as e:
-            print(f"❌ An error occurred while fetching credentials: \n- {e}")
+            error_message = getattr(e, 'msg', str(e))
+            self.log_result("Valid Login", False, error_message)
+            print(f"❌ An error occurred while fetching credentials: \n- {error_message}")
             return
 
 
     def run_all_login(self):
+        print("🔍 Running login feature tests...")
         try:
             self.land_login_page()
             self.login_invalid()
             self.login_valid()
         except Exception as e:
-            print(f"❌ An error occurred during tests: \n- {e}")
+            error_message = getattr(e, 'msg', str(e))
+            self.log_result("Login Tests", False, error_message)
+            print(f"❌ An error occurred during tests: \n- {error_message}")
         finally:
             return self.test_results
