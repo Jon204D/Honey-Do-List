@@ -1,5 +1,6 @@
 # OS/System files
 .DS_Store
+__pycache__/
 
 # IDE
 .vscode/

@@ -2,10 +2,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import operations.constants as const
 import time
+from tests.prechecks.base_test_suite import BaseTestSuite
 
-class InitialChecks():
+class InitialChecks(BaseTestSuite):
     # Prechecks to ensure the application is ready for testing.
     # These tests validate basic functionality before running feature tests.
+
+    def __init__(self, driver):
+        super().__init__(driver)
 
     def test_page_load(self):
         # Test that the application loads successfully.
@@ -64,4 +68,4 @@ class InitialChecks():
         self.test_title_check() 
         self.test_basic_dom_structure()
         
-        return self.results
+        return self.test_results

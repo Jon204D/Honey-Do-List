@@ -3,10 +3,15 @@ from tests import constants
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import os
+from tests.prechecks.base_test_suite import BaseTestSuite
 
 load_dotenv()  # Load environment variables from .env file
 
-class LoginTests:
+class LoginTests(BaseTestSuite):
+    def __init__(self, driver, wait):
+        super().__init__(driver)
+        self.wait = wait
+
     def land_login_page(self):
         try:
             print("🚀 Launching Login page...")
@@ -14,8 +19,10 @@ class LoginTests:
 
             try:
                 self.wait.until(EC.presence_of_element_located((By.TITLE, "Log In")))
+                self.log_result("Login Page Load", True, "Login form is present.")
                 print("✅ Login form is present.")
             except:
+                self.log_result("Login Page Load", False, "Login form is not present.")
                 raise Exception("❌ Login form is not present.")
         except Exception as e:
             print(f"❌ An error occurred: \n- {e}")
@@ -32,8 +39,10 @@ class LoginTests:
             self.driver.find_element(By.TYPE, "submit").click()
 
             if self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "error_message"))):
+                self.log_result("Invalid Login", True, "Error message displayed for invalid login.")
                 print("✅ Error message displayed for invalid login.")
             else:
+                self.log_result("Invalid Login", False, "No error message displayed for invalid login.")
                 raise Exception("❌ No error message displayed for invalid login.")
         except Exception as e:
             print(f"❌ An error occurred while attempting invalid login: \n- {e}")
@@ -56,8 +65,10 @@ class LoginTests:
             self.driver.find_element(By.TYPE, "submit").click()
 
             if self.wait.until(EC.url_contains("/dashboard")):
+                self.log_result("Valid Login", True, "Successfully logged in and redirected to dashboard.")
                 print("✅ Successfully logged in and redirected to dashboard.")
             else:
+                self.log_result("Valid Login", False, "Login failed or did not redirect to dashboard.")
                 raise Exception("❌ Login failed or did not redirect to dashboard.")
         except Exception as e:
             print(f"❌ An error occurred while fetching credentials: \n- {e}")
@@ -72,4 +83,4 @@ class LoginTests:
         except Exception as e:
             print(f"❌ An error occurred during tests: \n- {e}")
         finally:
-            return self.results
+            return self.test_results
