@@ -61,7 +61,7 @@ const ForgotPassword: React.FC = () => {
 
     try {
       // Backend Request
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/forgot-password`, { 
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/forgotPassword`, { 
         method: "POST",
         headers: {"Content-Type": "application/json"},
           body: JSON.stringify({email}),
