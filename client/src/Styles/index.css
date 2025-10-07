@@ -11,23 +11,13 @@ nav .title {
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  background-color: #fbbf24; /* 🍯 Honey color */
+  font-family: "Poppins", sans-serif;
+  color: #1b1b1b;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
-}
-
-/* Title Font */
-.title {
-  font-family: 'Pacifico', cursive;
-  font-size: 1.5rem; 
-  font-weight: normal; 
-  text-decoration: none;
-  color: black;
 }
