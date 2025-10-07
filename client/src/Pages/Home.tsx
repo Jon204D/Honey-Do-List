@@ -1,7 +1,7 @@
 import React from "react";
 import {useState} from "react";
-import TaskList from "../Components/TaskList";
-import TaskModal from "../Components/TaskModal";
+import TaskList from "../Components/Task/TaskList";
+import TaskModal from "../Components/Task/TaskModal";
 
 const Home: React.FC = () => {
     const [isModalOpen, setModalOpen] = useState(false);

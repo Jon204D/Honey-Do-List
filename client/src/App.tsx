@@ -4,7 +4,7 @@ import Login from "./Pages/Login";
 import SignUp from "./Pages/SignUp";
 import Settings from "./Pages/Settings";
 import ForgotPassword from "./Pages/ForgotPassword";
-import NavigationBar from './Components/NavigationBar';
+import NavigationBar from './Components/Navigation/NavigationBar';
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 
 const App: React.FC = () => {

@@ -1,9 +1,9 @@
 import React, {useState, useRef} from "react";
-import AuthCard from "../Components/AuthCard";
-import FormMessage from "../Components/FormMessage";
+import AuthCard from "../Components/Auth/AuthCard";
+import FormMessage from "../Components/Auth/FormMessage";
 import {useNavigate, useLocation} from "react-router-dom";
-import {AuthInput, AuthButton} from "../Components/AuthStyles";
-import LoginExtraButtons from "../Components/LoginExtraButtons";
+import {AuthInput, AuthButton} from "../Components/Auth/AuthStyles";
+import LoginExtraButtons from "../Components/Auth/LoginExtraButtons";
 
 /* Displays Login Form
    - Calls backend or uses local fallback
@@ -71,7 +71,7 @@ const Login: React.FC = () => {
 
     try {
       // Make the API POST request
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/login`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/login`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
