@@ -1,20 +1,23 @@
 import React from "react";
-import Task from "./Task";
+import TaskCard from "./TaskCard";
+import {Task} from "./TaskBoard";
 
-const TaskList: React.FC = () => {
-    const tasks = [
-        {title: "Walmart", description: "Buldak, Cheese, Hotdogs"},
-        {title: "House Duties", description: "Mop the floor, Wipe furniture"},
-    ]
+interface Props {
+  tasks: Task[];
+  onDelete: (id: string) => void;
+}
 
-    return (
-        <div>
-            <h2>Your Tasks</h2>
-            {tasks.map((task, index) => (
-                <Task key={index} title={task.title} description={task.description} />
-            ))}
-        </div>
-    )
+const TaskList: React.FC<Props> = ({tasks, onDelete}) => {
+  if (!tasks.length)
+    return <p style={{color: "#212121"}}>No tasks found. Add one!</p>;
+
+  return (
+    <div style={{display: "grid", gap: "1rem"}}>
+      {tasks.map((task) => (
+        <TaskCard key={task._id} task={task} onDelete={onDelete} />
+      ))}
+    </div>
+  )
 }
 
 export default TaskList;
