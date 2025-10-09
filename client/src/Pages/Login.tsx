@@ -1,8 +1,8 @@
-import React, {useState, useEffect, useRef} from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AuthCard from "../Components/Auth/AuthCard";
 import FormMessage from "../Components/Auth/FormMessage";
-import {useNavigate, useLocation} from "react-router-dom";
-import {AuthInput, AuthButton} from "../Components/Auth/AuthStyles";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AuthInput, AuthButton } from "../Components/Auth/AuthStyles";
 import LoginExtraButtons from "../Components/Auth/LoginExtraButtons";
 
 /* Displays Login Form
@@ -11,9 +11,9 @@ import LoginExtraButtons from "../Components/Auth/LoginExtraButtons";
    - Session only valid for 1 hour
    - Displays success/error messages */
 const Login: React.FC = () => {
-   useEffect(() => {
-        document.title = "Honey-Do List Login";
-    }, []);
+  useEffect(() => {
+    document.title = "Honey-Do List Login";
+  }, []);
 
   const navigate = useNavigate();
   const location = useLocation();               // Reading messages passed in navigation
@@ -76,20 +76,20 @@ const Login: React.FC = () => {
     try {
       // Make the API POST request
       const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/login`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({email, password}),
-        });
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-        /* Handle Response */
-        if (response.ok) {
-          // Success
-          localStorage.setItem("isLoggedIn", "true");
-          const data = await response.json();
-          localStorage.setItem("fakeUser", JSON.stringify(data.user)); 
-          navigate("/settings", {state: {message: "Welcome back!"}});
+      /* Handle Response */
+      if (response.ok) {
+        // Success
+        localStorage.setItem("isLoggedIn", "true");
+        const data = await response.json();
+        localStorage.setItem("fakeUser", JSON.stringify(data.user));
+        navigate("/settings", { state: { message: "Welcome back!" } });
       } else {
         // Failed 
         const errorData = await response.json();
@@ -104,10 +104,10 @@ const Login: React.FC = () => {
 
       if (savedUser) {
         // Parse saved user and check credentials 
-        const {email: savedEmail, password: savedPassword} = JSON.parse(savedUser);
+        const { email: savedEmail, password: savedPassword } = JSON.parse(savedUser);
         if (email === savedEmail && password === savedPassword) {
           saveLoginSession(JSON.parse(savedUser));
-          navigate("/settings", {state: {message: "Welcome back!"}});
+          navigate("/settings", { state: { message: "Welcome back!" } });
           return;
         }
       }
@@ -129,15 +129,15 @@ const Login: React.FC = () => {
         {formMessage && <FormMessage message={formMessage} />}
 
         {/* Login Form */}
-        <form 
-          onSubmit = {handleLogin} 
-          style = {{
-            display: "flex", 
-            flexDirection: "column", 
+        <form
+          onSubmit={handleLogin}
+          style={{
+            display: "flex",
+            flexDirection: "column",
             gap: "10px"
           }}
         >
-          
+
           {/* Email Input */}
           <AuthInput
             type="email"
@@ -161,8 +161,8 @@ const Login: React.FC = () => {
           />
 
           {/* Submit Button */}
-          <AuthButton 
-            type="submit" 
+          <AuthButton
+            type="submit"
             variant="primary"
             onClick={loginRequest}
             disabled={isSubmitting}
@@ -171,8 +171,34 @@ const Login: React.FC = () => {
           </AuthButton>
         </form>
 
-        {/* Forgot Password & Create Account */}
-        <LoginExtraButtons/>
+        {/* Forgot Password, Create Account, and Invite New User */}
+        <div
+          style={{
+            marginTop: "20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px"
+          }}
+        >
+
+          <AuthButton
+            onClick={() => navigate("/forgot-password")}
+            variant="secondary">
+            Forgot Password?
+          </AuthButton>
+
+          <AuthButton
+            onClick={() => navigate("/signup")}
+            variant="secondary">
+            Create Account
+          </AuthButton>
+
+          <AuthButton onClick={() => navigate("/Invite")}
+            variant="secondary">
+            Invite New User
+          </AuthButton>
+        </div>
+
       </AuthCard>
     </>
   )
