@@ -1,10 +1,11 @@
 import {useNavigate} from "react-router-dom";
 import React, {useState, useEffect} from "react";
-import {AuthButton} from "./AuthStyles";
+import {AuthButton} from "../Auth/AuthStyles";
 
 interface Props {
   username: string;                                                 // Current saved username   
-  password: string;                                                 // Current saved password   
+  password: string;   
+  isSubmitting: boolean;                                               // Current saved password   
   saveUser: (newUsername: string, newPassword: string) => void;     // Saves updated user info
 }
 
@@ -12,7 +13,7 @@ interface Props {
    - View Mode - shows hidden password & "reset password" button
    - Edit Mode - shows input field & save/cancel buttons 
    - Toggle to show/hide password */
-const PasswordDisplay: React.FC<Props> = ({username, password, saveUser}) => {
+const PasswordDisplay: React.FC<Props> = ({username, password, saveUser, isSubmitting}) => {
   const [editingPassword, setEditingPassword] = useState(false);        // Toggles between edit & view mode
   const [showPassword, setShowPassword] = useState(false);              // Toggle to show/hide password
   const [tempPassword, setTempPassword] = useState(password);           // Temporary input (in case user does not save)
@@ -42,7 +43,7 @@ const PasswordDisplay: React.FC<Props> = ({username, password, saveUser}) => {
             value={tempPassword}
             onChange={(e) => setTempPassword(e.target.value)}       // Update draft password
             style={{
-              width: "100%",
+              width: "80%",
               padding: "8px",
               marginTop: "5px",
               border: "1px solid orange",
@@ -62,21 +63,18 @@ const PasswordDisplay: React.FC<Props> = ({username, password, saveUser}) => {
 
             {/* Save Button */}
             <AuthButton
-              onClick={() => {
-                saveUser(username, tempPassword);
-                setEditingPassword(false);
-                navigate("/settings", {
-                  state: { message: "Password updated!" },
-                });
-              }}
+              onClick={() => 
+                saveUser(username, tempPassword)}
+                disabled={isSubmitting}
             >
-              Save
+              {isSubmitting ? "Saving..." : "Save"}
             </AuthButton>
 
             {/* Cancel Button */}
             <AuthButton
               onClick={() => setEditingPassword(false)}
               variant="secondary"
+              disabled={isSubmitting}
             >
               Cancel
             </AuthButton>
@@ -91,7 +89,6 @@ const PasswordDisplay: React.FC<Props> = ({username, password, saveUser}) => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginTop: "5px",
             }}
           >
 

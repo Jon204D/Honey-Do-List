@@ -4,8 +4,9 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const connectDB = require('../config/db');
+const connectDB = require('./config/db');
 const taskRoutes = require('./routes/taskRoutes');
+const userRoutes = require("./routes/userRoutes");
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -46,6 +47,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/tasks', taskRoutes);
+app.use("/api/users", userRoutes);
 
 app.get('/', (req, res) => {
   if (PROD_STATUS === 'true') {
@@ -76,6 +78,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at ${HOST}:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server running at ${HOST}:${PORT}`);
 });
