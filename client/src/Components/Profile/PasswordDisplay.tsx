@@ -1,6 +1,6 @@
 import {useNavigate} from "react-router-dom";
 import React, {useState, useEffect} from "react";
-import {AuthButton} from "./AuthStyles";
+import {AuthButton} from "../Auth/AuthStyles";
 
 interface Props {
   username: string;                                                 // Current saved username   
@@ -43,7 +43,7 @@ const PasswordDisplay: React.FC<Props> = ({username, password, saveUser, isSubmi
             value={tempPassword}
             onChange={(e) => setTempPassword(e.target.value)}       // Update draft password
             style={{
-              width: "100%",
+              width: "80%",
               padding: "8px",
               marginTop: "5px",
               border: "1px solid orange",
@@ -89,7 +89,6 @@ const PasswordDisplay: React.FC<Props> = ({username, password, saveUser, isSubmi
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginTop: "5px",
             }}
           >
 

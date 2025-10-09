@@ -1,9 +1,9 @@
 import {useNavigate} from "react-router-dom";
 import React, {useState, useEffect, useRef} from "react";
-import AuthCard from "../Components/AuthCard";
-import FormMessage from "../Components/FormMessage";
-import SignUpExtraButton from "../Components/SignUpExtraButon";
-import {AuthInput, AuthButton} from "../Components/AuthStyles";
+import AuthCard from "../Components/Auth/AuthCard";
+import FormMessage from "../Components/Auth/FormMessage";
+import SignUpExtraButton from "../Components/Auth/SignUpExtraButon";
+import {AuthInput, AuthButton} from "../Components/Auth/AuthStyles";
 
 const SignUp: React.FC = () => {
    useEffect(() => {
@@ -60,7 +60,7 @@ const SignUp: React.FC = () => {
 
     try {
       // Make the API POST request
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/signup`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

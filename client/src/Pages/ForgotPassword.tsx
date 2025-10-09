@@ -1,8 +1,8 @@
 import React, {useState, useEffect, useRef} from "react";
-import AuthCard from "../Components/AuthCard";
+import AuthCard from "../Components/Auth/AuthCard";
 import {useNavigate} from "react-router-dom";
-import FormMessage from "../Components/FormMessage";
-import {AuthInput, AuthButton} from "../Components/AuthStyles";
+import FormMessage from "../Components/Auth/FormMessage";
+import {AuthInput, AuthButton} from "../Components/Auth/AuthStyles";
 
 /* Request Password Reset Link
    - Validates email
@@ -64,7 +64,7 @@ const ForgotPassword: React.FC = () => {
 
     try {
       // Backend Request
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL || 'http://localhost:3001'}/api/forgot-password`, { 
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/forgotPassword`, { 
         method: "POST",
         headers: {"Content-Type": "application/json"},
           body: JSON.stringify({email}),

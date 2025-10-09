@@ -78,6 +78,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at ${HOST}:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server running at ${HOST}:${PORT}`);
 });

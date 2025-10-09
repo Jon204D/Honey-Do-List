@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+nav .title {
+  font-family: 'Pacifico', cursive;
+  font-size: 1.5rem;
+  font-weight: normal;
+  transform: scaleX(1.5) scaleY(1.5);  display: inline-block;  /* needed so transform applies cleanly */
+  text-decoration: none;
+  color: orange;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: orange; 
+  font-family: "Poppins", sans-serif;
+  color: #212121;
+}
+
+::placeholder {
+  color: orange;
+  opacity: 1; 
+}
+
+.task-filter select {
+  background-color: #212121;
+  color: orange;
+  border: 1px solid orange;
+  border-radius: 5px;
+  padding: 10px;
+  appearance: none;
+}
+
+.task-filter select:focus {
+  outline: none;
+  border-color: #ffcc66;
+  box-shadow: 0 0 5px #ffcc66;
+}
+
+/* Calendar */
+input[type="date"] {
+  background-color: #212121;        
+  color: orange;                    
+  border: 1px solid orange;         
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Calendar Icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(68%) sepia(88%) saturate(600%) hue-rotate(5deg);
+  cursor: pointer;
+}
+
+/* Calendar Orange Glow */
+input[type="date"]:focus {
+  outline: none;
+  border-color: #ffcc66;            
+  box-shadow: 0 0 6px #ffcc66;      
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
