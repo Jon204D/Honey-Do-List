@@ -1,4 +1,4 @@
-import React, {useState, useRef} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import AuthCard from "../Components/Auth/AuthCard";
 import {useNavigate} from "react-router-dom";
 import FormMessage from "../Components/Auth/FormMessage";
@@ -10,6 +10,9 @@ import {AuthInput, AuthButton} from "../Components/Auth/AuthStyles";
    - Shows success / error messages
    - Go back to the "Login" page */
 const ForgotPassword: React.FC = () => {
+   useEffect(() => {
+        document.title = "Forgot Password - Honey-Do List";
+    }, []);
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
 

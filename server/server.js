@@ -15,8 +15,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || 'http://localhost';
 const PROD_STATUS = process.env.IN_PROD || false;
-const CLIENT_ORIGIN = process.env.ClientHost;
-const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL;
+const CLIENT_ORIGIN = process.env.FRONTEND_BASE_URL;
+const BACKEND_BASE_URL = `${HOST}${PORT ? `:${PORT}` : ''}`;
 
 // Define allowed origins
 const allowedOrigins = [CLIENT_ORIGIN];

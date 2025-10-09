@@ -3,9 +3,10 @@ import Login from "./Pages/Login";
 import SignUp from "./Pages/SignUp";
 import Settings from "./Pages/Settings";
 import ForgotPassword from "./Pages/ForgotPassword";
+import NavigationBar from './Components/Navigation/NavigationBar';
+import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
+import InvitesPage from './Pages/Invite';
 import Tasks from "./Pages/Tasks";
-import NavigationBar from "./Components/Navigation/NavigationBar";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 const App: React.FC = () => {
   return (
@@ -13,7 +14,7 @@ const App: React.FC = () => {
       <NavigationBar/>
       <Routes>
         <Route element={<NavigationBar/>}>
-          <Route path="/" element={<Home/>}/>
+          <Route path="/" element={<Tasks/>}/>
           <Route path="/forgot-password" element={<ForgotPassword/>} />
           <Route path="/login" element={<Login/>} />
           <Route path="/settings" element={<Settings/>} />

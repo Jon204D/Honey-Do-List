@@ -14,6 +14,10 @@ import UsernameDisplay from "../Components/Profile/UsernameDisplay";
    - Save changes to backend or falls back to localStorage
    - Lets user log out */
 const Settings: React.FC = () => {
+   useEffect(() => {
+        document.title = "Settings - Honey-Do List";
+    }, []);
+
   const navigate = useNavigate();
   const location = useLocation();
 
