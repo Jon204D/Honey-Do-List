@@ -12,11 +12,14 @@ const App: React.FC = () => {
     <Router>
       <NavigationBar/>
       <Routes>
-        <Route path="/" element={<Tasks/>} />
-        <Route path="/forgot-password" element={<ForgotPassword/>} />
-        <Route path="/login" element={<Login/>} />
-        <Route path="/settings" element={<Settings/>} />
-        <Route path="/signup" element={<SignUp/>} />
+        <Route element={<NavigationBar/>}>
+          <Route path="/" element={<Home/>}/>
+          <Route path="/forgot-password" element={<ForgotPassword/>} />
+          <Route path="/login" element={<Login/>} />
+          <Route path="/settings" element={<Settings/>} />
+          <Route path="/signup" element={<SignUp/>} />
+          <Route path="/invite" element={<InvitesPage/>} />
+        </Route>
       </Routes>
     </Router>
   );

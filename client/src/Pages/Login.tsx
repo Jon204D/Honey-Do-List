@@ -166,8 +166,34 @@ const Login: React.FC = () => {
         </AuthButton>
       </form>
 
-      {/* Forgot Password & Create Account */}
-      <LoginExtraButtons/>
+      {/* Forgot Password, Create Account, and Invite New User */}
+      <div 
+        style = {{
+          marginTop: "20px", 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: "10px"
+        }}
+      >
+
+        <AuthButton 
+          onClick={() => navigate("/forgot-password")} 
+          variant="secondary">
+            Forgot Password?
+        </AuthButton>
+
+        <AuthButton 
+          onClick={() => navigate("/signup")} 
+          variant="secondary">
+            Create Account
+        </AuthButton>
+
+        <AuthButton onClick={() => navigate("/Invite")} 
+          variant="secondary">
+            Invite New User
+        </AuthButton>
+      </div>
+
     </AuthCard>
   )
 }
