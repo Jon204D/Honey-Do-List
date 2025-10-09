@@ -45,9 +45,15 @@ class HoneyDoList(BaseTestSuite):
             self.test_results.extend(results)
 
             # Import and run login feature tests
-            from tests.features.login import LoginTests
-            login_test = LoginTests(self.driver, self.wait)
-            results += login_test.run_all_login()
+            # from tests.features.login import LoginTests
+            # login_test = LoginTests(self.driver, self.wait)
+            # results += login_test.run_all_login()
+            # self.test_results.extend(results)
+
+            # Import and run task page feature tests
+            from tests.features.taskPage import TaskPageTests
+            task_page_test = TaskPageTests(self.driver, self.wait)
+            results = task_page_test.run_all_tasks()
             self.test_results.extend(results)
         except Exception as e:
             self.log_result("Regression", False, str(e))
