@@ -1,8 +1,8 @@
-import "../App.css"; 
+import "../../Styles/App.css"; 
 import React from "react";
-import ProfileLogo from "./ProfileLogo";
+import ProfileLogo from "../Profile/ProfileLogo";
 import {Outlet, Link} from "react-router-dom";
-import {ReactComponent as HomeIcon} from "../assets/Honey.svg";
+import {ReactComponent as HomeIcon} from "../../assets/Honey.svg";
 
 /* Navigation bar at the top of every page */
 const NavigationBar: React.FC = () => {

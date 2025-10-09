@@ -8,13 +8,6 @@ interface AuthCardProps {
 /* Orange background with black card in the middle */
 const AuthCard: React.FC<AuthCardProps> = ({title, children}) => {
   return (
-    <div
-      style = {{
-        width: "100%",
-        height: "100vh",
-        backgroundColor: "orange", 
-      }}
-    >
       <div
         style = {{
           top: "50%",                  
@@ -33,7 +26,6 @@ const AuthCard: React.FC<AuthCardProps> = ({title, children}) => {
         <h2 style={{margin: "0 0 15px 0"}}>{title}</h2>
         {children}
       </div>
-    </div>
   )
 }
 

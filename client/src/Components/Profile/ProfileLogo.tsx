@@ -1,6 +1,6 @@
 import React from "react";
 import {useNavigate} from "react-router-dom";
-import ProfileIcon from "../assets/Bee.svg";
+import ProfileIcon from "../../assets/Bee.svg";
 
 /* Profile icon on the right of naviagtion bar 
    - If not logged in, go to "Login" page

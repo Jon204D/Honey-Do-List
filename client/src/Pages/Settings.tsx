@@ -1,11 +1,11 @@
-import AuthCard from "../Components/AuthCard";
+import AuthCard from "../Components/Auth/AuthCard";
 import React, {useState, useEffect} from "react";
-import FormMessage from "../Components/FormMessage";
-import {AuthButton} from "../Components/AuthStyles";
-import EmailDisplay from "../Components/EmailDisplay";
+import FormMessage from "../Components/Auth/FormMessage";
+import {AuthButton} from "../Components/Auth/AuthStyles";
+import EmailDisplay from "../Components/Profile/EmailDisplay";
 import {useNavigate, useLocation} from "react-router-dom";
-import PasswordDisplay from "../Components/PasswordDisplay";
-import UsernameDisplay from "../Components/UsernameDisplay";
+import PasswordDisplay from "../Components/Profile/PasswordDisplay";
+import UsernameDisplay from "../Components/Profile/UsernameDisplay";
 
 /* Account Settings
    - Displays username, email, and password
@@ -14,8 +14,14 @@ import UsernameDisplay from "../Components/UsernameDisplay";
    - Save changes to backend or falls back to localStorage
    - Lets user log out */
 const Settings: React.FC = () => {
+   useEffect(() => {
+        document.title = "Settings - Honey-Do List";
+    }, []);
+
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [userId, setUserId] = useState<string>("");
 
   // State variables for user info
   const [username, setUsername] = useState("");
@@ -40,6 +46,7 @@ const Settings: React.FC = () => {
       setUsername(parsedUser.username || "");
       setEmail(parsedUser.email || "");
       setPassword(parsedUser.password || "");
+      setUserId(parsedUser._id || parsedUser.id || "");
     }
   }, []);
 
@@ -47,7 +54,7 @@ const Settings: React.FC = () => {
      - If backend succeeds: updates state & localStorage
      - If backend fails: shows backend error message
      - If network error: fallback to localStorage */ 
-  const saveUser = async (newUsername = username, newPassword = password,  message = "Settings updated successfully!") => {
+  const saveUser = async (newUsername = username, newPassword = password,  message = "Settings updated successfully!",  onSuccess?: () => void) => {
     if (!newUsername || !newPassword) {
       setFormMessage("Username and password are required");
       return;
@@ -57,8 +64,8 @@ const Settings: React.FC = () => {
 
     try {
       // Backend Request
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL || 'http://localhost:3001'}/api/settings`, {
-        method: "POST",
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/${userId}`, {
+        method: "PUT",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           username: newUsername,
@@ -84,6 +91,8 @@ const Settings: React.FC = () => {
         )
         
         setFormMessage(message);        
+
+        if (onSuccess) onSuccess();
       } else {
         // Backend responds with error
         const errorData = await response.json();
@@ -104,6 +113,8 @@ const Settings: React.FC = () => {
       setUsername(newUsername);
       setPassword(newPassword);
       setFormMessage(`${message} (saved locally)`);
+      
+      if (onSuccess) onSuccess();
     } finally {
       setIsSubmitting(false);
     }
