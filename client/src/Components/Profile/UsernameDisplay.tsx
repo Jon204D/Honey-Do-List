@@ -1,12 +1,12 @@
 import {useNavigate} from "react-router-dom";
 import React, {useState, useEffect} from "react";
-import {AuthButton} from "./AuthStyles";
+import {AuthButton} from "../Auth/AuthStyles";
 
 interface Props {
   username: string;                                                 // Current saved username
   password: string;
   isSubmitting: boolean;                                                // Current saved password   
-  saveUser: (newUsername: string, newPassword: string) => void;     // Saves updated user info
+  saveUser: (newUsername: string, newPassword: string, onSuccess?: () => void) => void;     // Saves updated user info
 }
 
 /* Displaying & Editing Username 
@@ -40,7 +40,7 @@ const UsernameDisplay: React.FC<Props> = ({username, password, saveUser, isSubmi
             value={tempUsername}
             onChange={(e) => setTempUsername(e.target.value)}
             style = {{
-              width: "100%",
+              width: "80%",
               padding: "8px",
               color: "orange",
               marginTop: "5px",
@@ -60,7 +60,11 @@ const UsernameDisplay: React.FC<Props> = ({username, password, saveUser, isSubmi
             {/* Save Button */}
             <AuthButton
               onClick={() => 
-                saveUser(tempUsername, password)}       // Call parent save function
+                saveUser(tempUsername, password, () => {   // Call parent save function
+                  setEditingUsername(false);
+                  navigate("/settings", {state: {message: "Username updated!"}});
+                })
+              }       
                 disabled={isSubmitting}                // Prevent clicks while saving
             >
               {isSubmitting ? "Saving..." : "Save"}
@@ -85,7 +89,6 @@ const UsernameDisplay: React.FC<Props> = ({username, password, saveUser, isSubmi
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginTop: "5px",
             }}
           >
 
