@@ -21,7 +21,7 @@ class InitialChecks(BaseTestSuite):
             if "Honey" in self.driver.title:
                 self.log_result("Page Load", True, f"Successfully loaded {const.BASE_URL}")
             elif "React App" in self.driver.title:
-                self.log_result("Page Load", False, f"Page loaded, but codebase loaded React App for {const.BASE_URL}")
+                self.log_result("Page Load", False, f"Page loaded, but codebase loaded React App")
             else:
                 self.log_result("Page Load", False, f"Unexpected title: {self.driver.title}")
                 
