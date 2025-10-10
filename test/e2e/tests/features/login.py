@@ -18,7 +18,7 @@ class LoginTests(BaseTestSuite):
             self.driver.get(BASE_URL + "/login")
 
             try:
-                self.wait.until(EC.presence_of_element_located((By.TITLE, "Log In")))
+                self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//h2[text()='Log In']")))
                 self.log_result("Login Page Load", True, "Login form is present.")
                 print("✅ Login form is present.")
             except Exception as e:
@@ -42,15 +42,19 @@ class LoginTests(BaseTestSuite):
             self.driver.find_element(By.NAME, "password").send_keys("wrongpassword")
             self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
-            if self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "error_message"))):
+            if self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//p[contains(text(), 'Invalid email or password!')]"))):
                 self.log_result("Invalid Login", True, "Error message displayed for invalid login.")
                 print("✅ Error message displayed for invalid login.")
             else:
+                self.log_result("Invalid Login", False, "No error message displayed for invalid login.")
                 raise Exception("❌ No error message displayed for invalid login.")
         except Exception as e:
             error_message = getattr(e, 'msg', str(e))
             self.log_result("Invalid Login", False, error_message)
             print(f"❌ An error occurred while attempting invalid login: \n- {error_message}")
+        finally:
+            self.driver.find_element(By.NAME, "email").clear()
+            self.driver.find_element(By.NAME, "password").clear()
 
     def login_valid(self):
         try:
@@ -58,14 +62,14 @@ class LoginTests(BaseTestSuite):
                 print("🔄 Redirecting to Login page...")
                 self.land_login_page()
 
-            username = os.getenv("TEST_USERNAME")
+            email = os.getenv("TEST_EMAIL")
             password = os.getenv("TEST_PASSWORD")
 
-            if not username or not password:
-                raise Exception("❌ TEST_USERNAME or TEST_PASSWORD environment variables are not set.")
+            if not email or not password:
+                raise Exception("❌ TEST_EMAIL or TEST_PASSWORD environment variables are not set.")
             
             print("🔐 Attempting to log in...")
-            self.driver.find_element(By.NAME, "email").send_keys(username)
+            self.driver.find_element(By.NAME, "email").send_keys(email)
             self.driver.find_element(By.NAME, "password").send_keys(password)
             self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
@@ -79,7 +83,6 @@ class LoginTests(BaseTestSuite):
             self.log_result("Valid Login", False, error_message)
             print(f"❌ An error occurred while fetching credentials: \n- {error_message}")
             return
-
 
     def run_all_login(self):
         print("🔍 Running login feature tests...")
