@@ -55,6 +55,12 @@ class HoneyDoList(BaseTestSuite):
             task_page_test = TaskPageTests(self.driver, self.wait)
             results = task_page_test.run_all_tasks()
             self.test_results.extend(results)
+
+            # Import and run invite feature tests
+            from tests.features.invite import InviteTests
+            invite_test = InviteTests(self.driver, self.wait)
+            results = invite_test.run_all_invite()
+            self.test_results.extend(results)
         except Exception as e:
             self.log_result("Regression", False, str(e))
         finally:
