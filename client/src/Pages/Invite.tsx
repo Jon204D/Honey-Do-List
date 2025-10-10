@@ -15,7 +15,7 @@ interface InviteFormProps {
 
 const InviteForm: React.FC<InviteFormProps> = ({ onSendInvite }) => {
       useEffect(() => {
-        document.title = "Honey-Do List Login";
+        document.title = "Honey-Do List Invite";
       }, []);
     
     const [email, setEmail] = useState<string>('');
