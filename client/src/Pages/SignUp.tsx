@@ -74,6 +74,21 @@ const SignUp: React.FC = () => {
       } else {
         const errorData = await response.json();
         console.error('Sign up failed:', errorData.message);
+
+        /* Email & Username Already In Use */
+        if (
+          response.status === 400 &&
+          errorData.message?.toLowerCase().includes("email")
+        ) {
+          setFormMessage("Email already in use / taken");
+        } else if (
+          response.status === 400 &&
+          errorData.message?.toLowerCase().includes("username")
+        ) {
+          setFormMessage("Username already in use / taken");
+        } else {
+          setFormMessage(errorData.message || "Please try again");
+        }
       }
     } catch (error) {
       console.error('Network error:', error);
