@@ -52,8 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 // ─── Routes ──────
 app.use('/api/tasks', taskRoutes);
 app.use("/api/users", userRoutes);
-app.use('/api/invites', inviteRoutes); 
-=======
+app.use('/api/invites', inviteRoutes);
 app.use('/api/users', userRoutes);
 
 // ─── Base Route ───────
@@ -67,9 +66,9 @@ app.get('/', (req, res) => {
 
 // ─── 404 Catch ────────
 app.use((req, res, next) => {
-    const err = new Error('Not Found');
-    err.status = 404;
-    next(err);
+  const err = new Error('Not Found');
+  err.status = 404;
+  next(err);
 });
 
 // ─── Error Handler ──────
