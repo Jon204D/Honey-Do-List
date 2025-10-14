@@ -1,11 +1,15 @@
 import {useNavigate} from "react-router-dom";
-import React, {useState, useRef} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import AuthCard from "../Components/Auth/AuthCard";
 import FormMessage from "../Components/Auth/FormMessage";
 import SignUpExtraButton from "../Components/Auth/SignUpExtraButon";
 import {AuthInput, AuthButton} from "../Components/Auth/AuthStyles";
 
 const SignUp: React.FC = () => {
+   useEffect(() => {
+        document.title = "Sign Up - Honey-Do List";
+    }, []);
+
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -70,6 +74,21 @@ const SignUp: React.FC = () => {
       } else {
         const errorData = await response.json();
         console.error('Sign up failed:', errorData.message);
+
+        /* Email & Username Already In Use */
+        if (
+          response.status === 400 &&
+          errorData.message?.toLowerCase().includes("email")
+        ) {
+          setFormMessage("Email already in use / taken");
+        } else if (
+          response.status === 400 &&
+          errorData.message?.toLowerCase().includes("username")
+        ) {
+          setFormMessage("Username already in use / taken");
+        } else {
+          setFormMessage(errorData.message || "Please try again");
+        }
       }
     } catch (error) {
       console.error('Network error:', error);
@@ -94,7 +113,6 @@ const SignUp: React.FC = () => {
   }
 
   return (
-
     /* Title */
     <AuthCard title="Create Account">
       {formMessage && <FormMessage message={formMessage} />}
