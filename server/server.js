@@ -13,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const HOST = process.env.HOST || 'localhost';
 const CLIENT_ORIGIN = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
-const BACKEND_BASE_URL = `http://${HOST}:${PORT}`;
+const BACKEND_BASE_URL = `http://${HOST}${PORT ? `:${PORT}` : ''}`;
 
 // ─── Connect to DB ──────
 connectDB();

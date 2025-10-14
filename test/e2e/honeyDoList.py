@@ -44,6 +44,12 @@ class HoneyDoList(BaseTestSuite):
             results = signup_test.run_all_signup()
             self.test_results.extend(results)
 
+            # Import and run forgot password feature tests
+            from tests.features.ForgotPassword import ForgotPasswordTests
+            forgot_password_test = ForgotPasswordTests(self.driver, self.wait)
+            results += forgot_password_test.run_all_ForgotPassword()
+            self.test_results.extend(results)
+
             # Import and run login feature tests
             from tests.features.login import LoginTests
             login_test = LoginTests(self.driver, self.wait)
@@ -60,6 +66,12 @@ class HoneyDoList(BaseTestSuite):
             from tests.features.invite import InviteTests
             invite_test = InviteTests(self.driver, self.wait)
             results += invite_test.run_all_invite()
+            self.test_results.extend(results)
+
+            # Import and run settings feature tests
+            from tests.features.settings import SettingsTests
+            settings_test = SettingsTests(self.driver, self.wait)
+            results += settings_test.run_all_settings()
             self.test_results.extend(results)
         except Exception as e:
             self.log_result("Regression", False, str(e))
