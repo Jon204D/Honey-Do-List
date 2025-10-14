@@ -33,4 +33,4 @@ jobs:
           NEW_TEST_USERNAME: ${{ vars.NEW_TEST_USERNAME }}
           NEW_TEST_PASSWORD: ${{ vars.NEW_TEST_PASSWORD }}
         run: |
-          pytest tests/ui
+          python test/e2e/run.py
