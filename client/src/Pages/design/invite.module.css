@@ -1,0 +1,156 @@
+/* ============================================= */
+/* === Styles for the Invite Page Component  === */
+/* ============================================= */
+
+
+/* Full Page Background Wrapper  */
+.orangeBackground {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: orange;
+  z-index: -1;
+}
+
+
+/* Main Content Card */
+/* This is the card that holds all the content on the page */
+.pageContainer {
+  max-width: 700px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: rgb(33, 33, 33);
+  border: 1px solid black;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+
+.pageContainer h2 {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 2rem;
+  color: orange;
+}
+
+
+/* Invite Form Section */
+/* "Send a New Invite" */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  border: 1px solid #e0e0e0;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.form h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 500;
+  color: orange;
+}
+
+.form input {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form input::placeholder {
+  color: gray;
+  opacity: 1;
+}
+
+.form input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.form button {
+  padding: 12px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.form button:hover {
+  background-color: #0056b3;
+}
+
+
+/* Invite List Section */
+/* Styles the "Sent Invites" list */
+
+.listTitle {
+  text-align: center;
+  color: orange;
+}
+
+.inviteList {
+  list-style: none;
+  padding: 0;
+}
+
+.inviteItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-left: 5px solid #6c757d; 
+  border-radius: 4px;
+  margin-bottom: 10px;
+  transition: all 0.2s ease-in-out;
+}
+
+.inviteItem span {
+  color: orange;
+  font-family: monospace;
+}
+
+
+/* List Item Status Modifiers */
+/* These classes are added to .inviteItem to change its look based on status */
+.acceptedStatus {
+  border-left-color: #28a745; /* Green */
+}
+.acceptedStatus strong {
+  color: #28a745;
+}
+
+.declinedStatus {
+  border-left-color: #dc3545; 
+  opacity: 0.7; /* Make declined invites look faded */
+}
+.declinedStatus strong {
+  color: #dc3545;
+}
+
+
+/* Specific Buttons */
+/* The "Revoke" button inside a list item */
+.revokeButton {
+  padding: 8px 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.revokeButton:hover {
+  background-color: #c82333;
+}
