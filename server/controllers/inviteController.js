@@ -1,5 +1,5 @@
 
-const inviteQueries = require('../queries/invitequeries.js');
+const inviteQueries = require('../queries/inviteQueries.js');
 
 
 exports.createInvite = async (req, res) => {
@@ -31,3 +31,42 @@ exports.getAllInvites = async (req, res) => {
         res.status(500).json({ message: "Error fetching invites.", error: error.message });
     }
 }
+
+const Invite = require('../models/Invite'); // Adjust path to your Invite model
+
+// ... your other controller functions (getAllInvites, createInvite)
+
+// --- NEW CONTROLLER FUNCTION ---
+exports.revokeInvite = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the invite by its ID
+        const invite = await Invite.findById(id);
+
+        // If no invite is found, return a 404 error
+        if (!invite) {
+            return res.status(404).json({ message: 'Invite not found.' });
+        }
+
+        // Optional: Check if the invite is already in a non-pending state
+        if (invite.status !== 'pending') {
+            return res.status(400).json({ 
+                message: `Cannot revoke an invite with status '${invite.status}'.` 
+            });
+        }
+
+        // Update the status to 'cancelled'
+        invite.status = 'cancelled';
+        
+        // Save the updated invite to the database
+        await invite.save();
+
+        // Send back the updated invite as confirmation
+        res.status(200).json(invite);
+
+    } catch (error) {
+        console.error('Error revoking invite:', error);
+        res.status(500).json({ message: 'Server error while revoking invite.' });
+    }
+};

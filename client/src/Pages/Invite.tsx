@@ -4,14 +4,13 @@ import axios from 'axios'; // Make sure axios is installed: npm install axios
 import styles from './design/invite.module.css';
 import clsx from 'clsx';
 
-
 const API_URL = 'http://localhost:5001/api/invites';
 
-
+// 1. Updated the Invite interface to include 'cancelled' status
 interface Invite {
     _id: string;
     recipient_email: string;
-    status: 'pending' | 'accepted' | 'declined';
+    status: 'pending' | 'accepted' | 'declined' | 'cancelled';
     createdAt: string;
 }
 
@@ -20,9 +19,9 @@ interface InviteFormProps {
 }
 
 const InviteForm: React.FC<InviteFormProps> = ({ onSendInvite }) => {
-      useEffect(() => {
+    useEffect(() => {
         document.title = "Honey-Do List Invite";
-      }, []);
+    }, []);
     
     const [email, setEmail] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,13 +63,13 @@ const InviteForm: React.FC<InviteFormProps> = ({ onSendInvite }) => {
     );
 };
 
+// 2. Updated InviteListProps to accept the onRevokeInvite function
 interface InviteListProps {
     invites: Invite[];
-    // We don't have a delete route yet, so this is commented out for now
-    // onDeleteInvite: (id: string) => void;
+    onRevokeInvite: (id: string) => void;
 }
 
-const InviteList: React.FC<InviteListProps> = ({ invites }) => {
+const InviteList: React.FC<InviteListProps> = ({ invites, onRevokeInvite }) => {
     if (invites.length === 0) {
         return <p>You haven't sent any invites yet.</p>;
     }
@@ -85,10 +84,23 @@ const InviteList: React.FC<InviteListProps> = ({ invites }) => {
                         className={clsx(styles.inviteItem, {
                             [styles.acceptedStatus]: invite.status === 'accepted',
                             [styles.declinedStatus]: invite.status === 'declined',
+                            // 3. Added a style condition for the new 'cancelled' status
+                            [styles.cancelledStatus]: invite.status === 'cancelled',
                         })}
                     >
-                        <span>{invite.recipient_email} - <strong>{invite.status}</strong></span>
-                        {/* Add revoke functionality back when the DELETE API endpoint is created */}
+                        <div className={styles.inviteInfo}>
+                            <span>{invite.recipient_email} - <strong>{invite.status.toUpperCase()}</strong></span>
+                        </div>
+                        
+                        {/* 4. Conditionally render the Revoke button if status is 'pending' */}
+                        {invite.status === 'pending' && (
+                            <button
+                                onClick={() => onRevokeInvite(invite._id)}
+                                className={styles.revokeButton}
+                            >
+                                Revoke
+                            </button>
+                        )}
                     </li>
                 ))}
             </ul>
@@ -117,14 +129,33 @@ const InvitesPage: React.FC = () => {
         const response = await axios.post(API_URL, { email });
 
         if (response.data && response.data.data) {
-          setInvites([...invites, response.data.data]);
+          setInvites(prevInvites => [...prevInvites, response.data.data]);
         } else {
-          setInvites([...invites, response.data]);
+          setInvites(prevInvites => [...prevInvites, response.data]);
         }
     };
 
-    // We don't have a DELETE API route yet
-    // const handleDeleteInvite = (inviteId: string) => {};
+    // 5. Added the handler function for revoking an invite (front-end only)
+    const handleRevokeInvite = async (inviteIdToRevoke: string) => {
+        try {
+            // Call the new backend endpoint
+              await axios.post(`${API_URL}/${inviteIdToRevoke}/revoke`);
+
+            // If the API call is successful, then update the local state
+            setInvites(currentInvites =>
+                currentInvites.map(invite => {
+                    if (invite._id === inviteIdToRevoke) {
+                        return { ...invite, status: 'cancelled' };
+                    }
+                    return invite;
+                })
+            );
+        } catch (error) {
+            console.error(`Failed to revoke invite ${inviteIdToRevoke}:`, error);
+            // Here you could add logic to show an error message to the user
+            alert('Failed to revoke the invite. Please try again.');
+        }
+    };
 
     return (
         <>
@@ -132,7 +163,7 @@ const InvitesPage: React.FC = () => {
             <div className={styles.pageContainer}>
                 <h2>Manage Invites</h2>
                 <InviteForm onSendInvite={handleSendInvite} />
-                <InviteList invites={invites} />
+                <InviteList invites={invites} onRevokeInvite={handleRevokeInvite} />
             </div>
         </>
     );

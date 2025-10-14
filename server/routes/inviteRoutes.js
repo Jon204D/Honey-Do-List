@@ -5,5 +5,6 @@ const inviteController = require('../controllers/inviteController.js');
 router.post('/', inviteController.createInvite);
 router.get('/', inviteController.getAllInvites);
 
+router.post('/:id/revoke', inviteController.revokeInvite);
 
 module.exports = router;
