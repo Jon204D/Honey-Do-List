@@ -45,16 +45,16 @@ class HoneyDoList(BaseTestSuite):
             self.test_results.extend(results)
 
             # Import and run forgot password feature tests
-            # from tests.features.ForgotPassword import ForgotPasswordTests
-            # forgot_password_test = ForgotPasswordTests(self.driver, self.wait)
-            # results += forgot_password_test.run_all_ForgotPassword()
-            # self.test_results.extend(results)
+            from tests.features.forgotPassword import ForgotPasswordTests
+            forgot_password_test = ForgotPasswordTests(self.driver, self.wait)
+            results += forgot_password_test.run_all_ForgotPassword()
+            self.test_results.extend(results)
 
             # Import and run login feature tests
-            # from tests.features.login import LoginTests
-            # login_test = LoginTests(self.driver, self.wait)
-            # results += login_test.run_all_login()
-            # self.test_results.extend(results)
+            from tests.features.login import LoginTests
+            login_test = LoginTests(self.driver, self.wait)
+            results += login_test.run_all_login()
+            self.test_results.extend(results)
 
             # Import and run task page feature tests
             from tests.features.taskPage import TaskPageTests
@@ -69,10 +69,10 @@ class HoneyDoList(BaseTestSuite):
             self.test_results.extend(results)
 
             # Import and run settings feature tests
-            # from tests.features.settings import SettingsTests
-            # settings_test = SettingsTests(self.driver, self.wait)
-            # results += settings_test.run_all_settings()
-            # self.test_results.extend(results)
+            from tests.features.settings import SettingsTests
+            settings_test = SettingsTests(self.driver, self.wait)
+            results += settings_test.run_all_settings()
+            self.test_results.extend(results)
         except Exception as e:
             self.log_result("Regression", False, str(e))
         finally:

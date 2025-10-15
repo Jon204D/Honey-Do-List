@@ -133,9 +133,16 @@ class SettingsTests(BaseTestSuite):
         new_password = os.getenv("NEW_TEST_PASSWORD")
         
         try:
+            # Initial checks
             self.test_user_info_displayed(expected_username, expected_email, expected_password)
+            # Edit username and password
             self.test_edit_username(new_username, current_password)
             self.test_edit_password(current_username, new_password)
+            # Verify changes
+            self.test_user_info_displayed(new_username, expected_email, new_password)
+            # Revert changes
+            self.test_edit_username(expected_username, new_password)
+            self.test_edit_password(new_username, expected_password)
             self.test_logout()
             self.test_empty_fields_error()
             print("🎉 All Settings tests passed!")
