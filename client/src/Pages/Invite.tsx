@@ -83,7 +83,6 @@ const InviteList: React.FC<InviteListProps> = ({ invites, onRevokeInvite }) => {
                         className={clsx(styles.inviteItem, {
                             [styles.acceptedStatus]: invite.status === 'accepted',
                             [styles.declinedStatus]: invite.status === 'declined',
-                            // 3. Added a style condition for the new 'cancelled' status
                             [styles.cancelledStatus]: invite.status === 'cancelled',
                         })}
                     >
@@ -91,7 +90,6 @@ const InviteList: React.FC<InviteListProps> = ({ invites, onRevokeInvite }) => {
                             <span>{invite.recipient_email} - <strong>{invite.status.toUpperCase()}</strong></span>
                         </div>
                         
-                        {/* 4. Conditionally render the Revoke button if status is 'pending' */}
                         {invite.status === 'pending' && (
                             <button
                                 onClick={() => onRevokeInvite(invite._id)}
@@ -137,7 +135,6 @@ const InvitesPage: React.FC = () => {
 
     const handleRevokeInvite = async (inviteIdToRevoke: string) => {
         try {
-            // Call the new backend endpoint
               await axios.post(`${API_URL}/${inviteIdToRevoke}/revoke`);
 
             setInvites(currentInvites =>
