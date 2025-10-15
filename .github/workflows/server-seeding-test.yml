@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    environment: Honey-Do-List FE (Develop) (pacific-recreation / production)
+    environment: Honey-Do-List BE (Develop) (pacific-recreation / production)
 
     env:
       MONGO_URI: ${{ vars.MONGO_URI }}
