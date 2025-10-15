@@ -6,6 +6,8 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const taskRoutes = require('./routes/taskRoutes');
 const userRoutes = require("./routes/userRoutes");
+const inviteRoutes = require('./routes/inviteRoutes.js');
+const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
@@ -49,6 +51,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // ─── Routes ──────
 app.use('/api/tasks', taskRoutes);
+app.use("/api/users", userRoutes);
+app.use('/api/invites', inviteRoutes);
 app.use('/api/users', userRoutes);
 
 // ─── Base Route ───────
