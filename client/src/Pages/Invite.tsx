@@ -6,7 +6,7 @@ import clsx from 'clsx';
 
 const API_URL = 'http://localhost:5001/api/invites';
 
-// 1. Updated the Invite interface to include 'cancelled' status
+
 interface Invite {
     _id: string;
     recipient_email: string;
@@ -63,7 +63,6 @@ const InviteForm: React.FC<InviteFormProps> = ({ onSendInvite }) => {
     );
 };
 
-// 2. Updated InviteListProps to accept the onRevokeInvite function
 interface InviteListProps {
     invites: Invite[];
     onRevokeInvite: (id: string) => void;
@@ -135,13 +134,12 @@ const InvitesPage: React.FC = () => {
         }
     };
 
-    // 5. Added the handler function for revoking an invite (front-end only)
+
     const handleRevokeInvite = async (inviteIdToRevoke: string) => {
         try {
             // Call the new backend endpoint
               await axios.post(`${API_URL}/${inviteIdToRevoke}/revoke`);
 
-            // If the API call is successful, then update the local state
             setInvites(currentInvites =>
                 currentInvites.map(invite => {
                     if (invite._id === inviteIdToRevoke) {
@@ -152,7 +150,6 @@ const InvitesPage: React.FC = () => {
             );
         } catch (error) {
             console.error(`Failed to revoke invite ${inviteIdToRevoke}:`, error);
-            // Here you could add logic to show an error message to the user
             alert('Failed to revoke the invite. Please try again.');
         }
     };

@@ -32,11 +32,8 @@ exports.getAllInvites = async (req, res) => {
     }
 }
 
-const Invite = require('../models/Invite'); // Adjust path to your Invite model
+const Invite = require('../models/Invite'); 
 
-// ... your other controller functions (getAllInvites, createInvite)
-
-// --- NEW CONTROLLER FUNCTION ---
 exports.revokeInvite = async (req, res) => {
     try {
         const { id } = req.params;
@@ -49,14 +46,12 @@ exports.revokeInvite = async (req, res) => {
             return res.status(404).json({ message: 'Invite not found.' });
         }
 
-        // Optional: Check if the invite is already in a non-pending state
         if (invite.status !== 'pending') {
             return res.status(400).json({ 
                 message: `Cannot revoke an invite with status '${invite.status}'.` 
             });
         }
 
-        // Update the status to 'cancelled'
         invite.status = 'cancelled';
         
         // Save the updated invite to the database
