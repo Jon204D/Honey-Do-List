@@ -6,29 +6,29 @@ const User = require('../models/User');
 
 const testUsers = [
   {
-    email: 'roottest01@test.com',
-    username: 'roottest01',
-    password: 'TestPass123!',
+    email: process.env.TESTUSER1EMAIL,
+    username: process.env.TESTUSER1USERNAME,
+    password: process.env.TESTUSER1PASSWORD,
   },
   {
-    email: 'roottest02@test.com',
-    username: 'roottest02',
-    password: 'TestPass123!',
+    email: process.env.TESTUSER2EMAIL,
+    username: process.env.TESTUSER2USERNAME,
+    password: process.env.TESTUSER2PASSWORD,
   },
   {
-    email: 'roottest03@test.com',
-    username: 'roottest03',
-    password: 'TestPass123!',
+    email: process.env.TESTUSER3EMAIL,
+    username: process.env.TESTUSER3USERNAME,
+    password: process.env.TESTUSER3PASSWORD,
   },
   {
-    email: 'admintest@test.com',
-    username: 'admintest',
-    password: 'AdminPass123!',
+    email: process.env.TESTADMINEMAIL,
+    username: process.env.TESTADMINUSERNAME,
+    password: process.env.TESTADMINPASSWORD,
   },
   {
-    email: 'demouser@test.com',
-    username: 'demouser',
-    password: 'DemoPass123!',
+    email: process.env.DEMOUSEREMAIL,
+    username: process.env.DEMOUSERNAME,
+    password: process.env.DEMOPASSWORD,
   },
 ];
 

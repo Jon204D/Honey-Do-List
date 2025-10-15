@@ -72,9 +72,9 @@ class SignupTests(BaseTestSuite):
             if not self.driver.current_url.endswith("/signup"):
                 print("🔄 Redirecting to Signup page...")
                 self.land_signup_page()
-            email = os.getenv("TEST_EMAIL")
-            username = os.getenv("TEST_USERNAME")
-            password = os.getenv("TEST_PASSWORD")
+            email = os.getenv("TESTUSER1EMAIL")
+            username = os.getenv("TESTUSER1USERNAME")
+            password = os.getenv("TESTUSER1PASSWORD")
             if not email or not username or not password:
                 raise Exception("❌ TEST_EMAIL, TEST_USERNAME, or TEST_PASSWORD environment variables are not set.")
             print("🔐 Attempting to sign up...")

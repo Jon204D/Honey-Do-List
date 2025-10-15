@@ -23,7 +23,7 @@ const TaskBoard: React.FC = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks`, {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}api/tasks`, {
           method: "GET",
           headers: {"Content-Type": "application/json"},
         })

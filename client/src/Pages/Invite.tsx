@@ -5,7 +5,7 @@ import styles from './design/invite.module.css';
 import clsx from 'clsx';
 
 
-const API_URL = 'http://localhost:5000/api/invites';
+const API_URL = 'http://localhost:5001/api/invites';
 
 
 interface Invite {
