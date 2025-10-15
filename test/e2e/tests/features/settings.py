@@ -122,15 +122,15 @@ class SettingsTests(BaseTestSuite):
 
     def run_all_settings(self):
         print("=== Running Settings Tests ===")
-        expected_username = os.getenv("TEST_USERNAME")
-        expected_email = os.getenv("TEST_EMAIL")
-        expected_password = os.getenv("TEST_PASSWORD")
+        expected_username = os.getenv("TESTUSER1USERNAME")
+        expected_email = os.getenv("TESTUSER1EMAIL")
+        expected_password = os.getenv("TESTUSER1PASSWORD")
 
-        current_username = os.getenv("TEST_USERNAME")
-        current_password = os.getenv("TEST_PASSWORD")
+        current_username = os.getenv("TESTUSER1USERNAME")
+        current_password = os.getenv("TESTUSER1PASSWORD")
 
-        new_username = os.getenv("NEW_TEST_USERNAME")
-        new_password = os.getenv("NEW_TEST_PASSWORD")
+        new_username = os.getenv("TESTUSER3USERNAME")
+        new_password = os.getenv("TESTUSER3PASSWORD")
         
         try:
             self.test_user_info_displayed(expected_username, expected_email, expected_password)

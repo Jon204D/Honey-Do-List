@@ -59,7 +59,7 @@ class ForgotPasswordTests(BaseTestSuite):
     def test_valid_email(self):
         try:
             self.land_forgot_password_page()
-            email = os.getenv("TEST_EMAIL")
+            email = os.getenv("TESTUSER1EMAIL")
             email_input = self.driver.find_element(By.XPATH, "//form//input[@type='email']")
             email_input.clear()
             email_input.send_keys(email)
