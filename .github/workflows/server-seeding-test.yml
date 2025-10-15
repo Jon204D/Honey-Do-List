@@ -38,6 +38,25 @@ jobs:
         with:
           node-version: '20' # or your preferred version
 
+      - name: Log environment variables
+        run: |
+          echo "MONGO_URI=$MONGO_URI"
+          echo "TESTUSER1EMAIL=$TESTUSER1EMAIL"
+          echo "TESTUSER1USERNAME=$TESTUSER1USERNAME"
+          echo "TESTUSER1PASSWORD=$TESTUSER1PASSWORD"
+          echo "TESTUSER2EMAIL=$TESTUSER2EMAIL"
+          echo "TESTUSER2USERNAME=$TESTUSER2USERNAME"
+          echo "TESTUSER2PASSWORD=$TESTUSER2PASSWORD"
+          echo "TESTUSER3EMAIL=$TESTUSER3EMAIL"
+          echo "TESTUSER3USERNAME=$TESTUSER3USERNAME"
+          echo "TESTUSER3PASSWORD=$TESTUSER3PASSWORD"
+          echo "TESTADMINEMAIL=$TESTADMINEMAIL"
+          echo "TESTADMINUSERNAME=$TESTADMINUSERNAME"
+          echo "TESTADMINPASSWORD=$TESTADMINPASSWORD"
+          echo "TESTDEMOEMAIL=$TESTDEMOEMAIL"
+          echo "TESTDEMOUSERNAME=$TESTDEMOUSERNAME"
+          echo "TESTDEMOPASSWORD=$TESTDEMOPASSWORD"
+
       - name: Install dependencies
         run: npm install
 
