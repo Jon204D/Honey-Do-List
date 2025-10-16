@@ -1,5 +1,5 @@
 // controllers/inviteController.js
-const inviteQueries = require("../queries/invitequeries");
+const inviteQueries = require("../queries/inviteQueries");
 
 const createInvite = async (req, res) => {
     try {
