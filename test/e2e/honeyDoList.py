@@ -45,9 +45,9 @@ class HoneyDoList(BaseTestSuite):
             self.test_results.extend(results)
 
             # Import and run forgot password feature tests
-            # from tests.features.ForgotPassword import ForgotPasswordTests
+            # from tests.features.forgotPassword import ForgotPasswordTests
             # forgot_password_test = ForgotPasswordTests(self.driver, self.wait)
-            # results += forgot_password_test.run_all_ForgotPassword()
+            # results += forgot_password_test.run_all_forgot_password()
             # self.test_results.extend(results)
 
             # Import and run login feature tests
