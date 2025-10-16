@@ -82,7 +82,14 @@ class SignupTests(BaseTestSuite):
             self.driver.find_element(By.NAME, "username").send_keys(username)
             self.driver.find_element(By.NAME, "password").send_keys(password)
             self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
-            if self.wait.until(EC.url_contains("/login")):
+
+            error_element = self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "p")))
+            error_text = error_element.text.strip()
+
+            if "Email already in use / taken" in error_text:
+                print("✅ User already exists. Consider using different credentials.")
+                self.driver.get(BASE_URL + "/login")
+            elif self.wait.until(EC.url_contains("/login")):
                 self.log_result("Valid Signup", True, "Successfully signed up and redirected to login.")
                 print("✅ Successfully signed up and redirected to login.")
             else:

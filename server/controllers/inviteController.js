@@ -2,7 +2,7 @@
 const inviteQueries = require('../queries/invitequeries.js');
 
 
-exports.createInvite = async (req, res) => {
+const createInvite = async (req, res) => {
     try {
         const { email } = req.body;
 
@@ -22,7 +22,7 @@ exports.createInvite = async (req, res) => {
 };
 
 
-exports.getAllInvites = async (req, res) => {
+const getAllInvites = async (req, res) => {
     try {
         const invites = await inviteQueries.getAllInvitesQuery();
         
@@ -31,3 +31,8 @@ exports.getAllInvites = async (req, res) => {
         res.status(500).json({ message: "Error fetching invites.", error: error.message });
     }
 }
+
+module.exports = {
+    createInvite,
+    getAllInvites
+};
