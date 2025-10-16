@@ -26,9 +26,9 @@ const testUsers = [
     password: process.env.TESTADMINPASSWORD,
   },
   {
-    email: process.env.DEMOUSEREMAIL,
-    username: process.env.DEMOUSERNAME,
-    password: process.env.DEMOPASSWORD,
+    email: process.env.TESTDEMOEMAIL,
+    username: process.env.TESTDEMOUSERNAME,
+    password: process.env.TESTDEMOPASSWORD,
   },
 ];
 
