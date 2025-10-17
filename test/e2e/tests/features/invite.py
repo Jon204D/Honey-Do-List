@@ -82,7 +82,7 @@ class InviteTests(BaseTestSuite):
         try:
             self.land_invite_page()
             self.invite_invalid()
-            valid_email = os.getenv("TEST_EMAIL")
+            valid_email = os.getenv("TESTUSER1EMAIL")
             if not valid_email:
                 raise Exception("❌ TEST_EMAIL environment variable is not set.")
             self.invite_valid(valid_email)

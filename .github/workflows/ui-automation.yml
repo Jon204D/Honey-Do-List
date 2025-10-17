@@ -34,10 +34,11 @@ jobs:
       - name: Run UI automation tests
         env:
           BASE_URL: ${{ vars.BASE_URL }}
-          TEST_EMAIL: ${{ vars.TEST_EMAIL }}
-          TEST_PASSWORD: ${{ vars.TEST_PASSWORD }}
-          TEST_USERNAME: ${{ vars.TEST_USERNAME }}
-          NEW_TEST_USERNAME: ${{ vars.NEW_TEST_USERNAME }}
-          NEW_TEST_PASSWORD: ${{ vars.NEW_TEST_PASSWORD }}
+          TESTUSER1EMAIL: ${{ vars.TESTUSER1EMAIL }}
+          TESTUSER1PASSWORD: ${{ vars.TESTUSER1PASSWORD }}
+          TESTUSER1USERNAME: ${{ vars.TESTUSER1USERNAME }}
+          TESTUSER3EMAIL: ${{ vars.TESTUSER3EMAIL }}
+          TESTUSER3USERNAME: ${{ vars.TESTUSER3USERNAME }}
+          TESTUSER3PASSWORD: ${{ vars.TESTUSER3PASSWORD }}
         run: |
           python test/e2e/run.py

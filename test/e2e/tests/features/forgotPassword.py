@@ -30,7 +30,7 @@ class ForgotPasswordTests(BaseTestSuite):
             self.land_forgot_password_page()
             submit_btn = self.driver.find_element(By.XPATH, "//form//button[@type='submit']")
             submit_btn.click()
-            msg = self.wait.until(EC.presence_of_element_located((By.XPATH, "//form//p")))
+            msg = self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//p")))
             assert "Email is required." in msg.text
             self.log_result("Empty Email Validation", True, "Correct error message displayed for empty email.")
             print("✅ Empty email validation works.")
@@ -47,7 +47,7 @@ class ForgotPasswordTests(BaseTestSuite):
             email_input.send_keys("bad-email")
             submit_btn = self.driver.find_element(By.XPATH, "//form//button[@type='submit']")
             submit_btn.click()
-            msg = self.wait.until(EC.presence_of_element_located((By.XPATH, "//form//p")))
+            msg = self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//p")))
             assert "Invalid email format." in msg.text
             self.log_result("Invalid Email Validation", True, "Correct error message displayed for invalid email.")
             print("✅ Invalid email validation works.")
@@ -59,13 +59,13 @@ class ForgotPasswordTests(BaseTestSuite):
     def test_valid_email(self):
         try:
             self.land_forgot_password_page()
-            email = os.getenv("TEST_EMAIL")
+            email = os.getenv("TESTUSER1EMAIL")
             email_input = self.driver.find_element(By.XPATH, "//form//input[@type='email']")
             email_input.clear()
             email_input.send_keys(email)
             submit_btn = self.driver.find_element(By.XPATH, "//form//button[@type='submit']")
             submit_btn.click()
-            msg = self.wait.until(EC.presence_of_element_located((By.XPATH, "//form//p")))
+            msg = self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//p")))
             assert "Password reset link sent to your email!" in msg.text
             self.log_result("Valid Email Submission", True, "Password reset link sent message displayed.")
             print("✅ Valid email submission and redirect works.")

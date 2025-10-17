@@ -1,4 +1,4 @@
-const Invite = require('../models/Invite.js');
+const Invite = require('../models/Invite');
 
 const createInviteQuery = async (email) => {
     const newInvite = new Invite({

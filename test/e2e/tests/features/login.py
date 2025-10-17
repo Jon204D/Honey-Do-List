@@ -62,8 +62,8 @@ class LoginTests(BaseTestSuite):
                 print("🔄 Redirecting to Login page...")
                 self.land_login_page()
 
-            email = os.getenv("TEST_EMAIL")
-            password = os.getenv("TEST_PASSWORD")
+            email = os.getenv("TESTUSER1EMAIL")
+            password = os.getenv("TESTUSER1PASSWORD")
 
             if not email or not password:
                 raise Exception("❌ TEST_EMAIL or TEST_PASSWORD environment variables are not set.")

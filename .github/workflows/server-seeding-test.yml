@@ -1,0 +1,45 @@
+name: Server User Seeding Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop, feature/*]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: Honey-Do-List BE (Develop) (pacific-recreation / production)
+
+    env:
+      MONGO_URI: ${{ vars.MONGO_URI }}
+      TESTUSER1EMAIL: ${{ vars.TESTUSER1EMAIL }}
+      TESTUSER1USERNAME: ${{ vars.TESTUSER1USERNAME }}
+      TESTUSER1PASSWORD: ${{ vars.TESTUSER1PASSWORD }}
+      TESTUSER2EMAIL: ${{ vars.TESTUSER2EMAIL }}
+      TESTUSER2USERNAME: ${{ vars.TESTUSER2USERNAME }}
+      TESTUSER2PASSWORD: ${{ vars.TESTUSER2PASSWORD }}
+      TESTUSER3EMAIL: ${{ vars.TESTUSER3EMAIL }}
+      TESTUSER3USERNAME: ${{ vars.TESTUSER3USERNAME }}
+      TESTUSER3PASSWORD: ${{ vars.TESTUSER3PASSWORD }}
+      TESTADMINEMAIL: ${{ vars.TESTADMINEMAIL }}
+      TESTADMINUSERNAME: ${{ vars.TESTADMINUSERNAME }}
+      TESTADMINPASSWORD: ${{ vars.TESTADMINPASSWORD }}
+      TESTDEMOEMAIL: ${{ vars.TESTDEMOEMAIL }}
+      TESTDEMOUSERNAME: ${{ vars.TESTDEMOUSERNAME }}
+      TESTDEMOPASSWORD: ${{ vars.TESTDEMOPASSWORD }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # or your preferred version
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run user seed tests
+        run: npx jest tests/seedUsers.test.js
