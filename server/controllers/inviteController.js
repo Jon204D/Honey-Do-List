@@ -1,5 +1,5 @@
 
-const inviteQueries = require('../queries/inviteQueries.js');
+const inviteQueries = require('../queries/inviteQueries');
 
 
 exports.createInvite = async (req, res) => {
