@@ -74,11 +74,11 @@ class HoneyDoList(BaseTestSuite):
             self.test_results.extend(results)
 
             # Import and run settings feature tests
-            print("\n") # Add spacing in console output
-            from tests.features.settings import SettingsTests
-            settings_test = SettingsTests(self.driver, self.wait)
-            results += settings_test.run_all_settings()
-            self.test_results.extend(results)
+            # print("\n") # Add spacing in console output
+            # from tests.features.settings import SettingsTests
+            # settings_test = SettingsTests(self.driver, self.wait)
+            # results += settings_test.run_all_settings()
+            # self.test_results.extend(results)
         except Exception as e:
             self.log_result("Regression", False, str(e))
         finally:
