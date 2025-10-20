@@ -29,6 +29,7 @@ const TaskFilter: React.FC<Props> = ({onFilter, onApply}) => {
 
   return (
     <div
+    data-tour="task-filter"
     className="task-filter"
       style = {{
         backgroundColor: "#212121",

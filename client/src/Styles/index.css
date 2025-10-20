@@ -64,3 +64,81 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+/* Driver.js */
+.driver-popover {
+  background: #212121 !important;
+  color: #ff9f1a !important;             
+  border: 1px solid #ff9f1a !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,.55) !important;
+}
+
+/* Title */
+.driver-popover-title {
+  color: #ffb142 !important;
+  font-weight: 800 !important;
+}
+
+/* Description */
+.driver-popover-description {
+  color: #ffd79c !important;
+  line-height: 1.35 !important;
+}
+
+/* Progress Text */
+.driver-popover-progress-text {
+  color: #ffd79c !important;
+  opacity: .9 !important;
+}
+
+/* Footer */
+.driver-popover-footer {
+  gap: 8px !important;
+}
+
+/* Buttons */
+.driver-popover-prev-btn,
+.driver-popover-done-btn {
+  background: transparent !important;
+  color: #ff9f1a !important;
+  border: 1px solid #ff9f1a !important;
+  border-radius: 10px !important;
+  padding: 6px 10px !important;
+}
+
+.driver-popover-next-btn {
+  background: #ff9f1a !important;
+  color: #212121 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 6px 12px !important;
+  font-weight: 700 !important;
+}
+
+/* Remove Default Close */
+.driver-popover-close-btn {
+  display: none !important;
+}
+
+/* Highlight Ring  */
+.driver-stage {
+  box-shadow:
+    0 0 0 3px #ff9f1a,
+    0 0 0 9999px rgba(0,0,0,.65) !important;  
+  border-radius: 14px !important;             
+}
+
+/* Tighten Arrow  */
+.driver-popover-arrow {
+  --driverjs-popover-arrow-color: #212121;  
+}
+
+/* Remove White Outline */
+.driver-popover button {
+  text-shadow: none !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  color: inherit !important; 
+}
