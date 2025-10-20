@@ -1,7 +1,4 @@
 // server/controllers/taskController.js
-
-// loading queries
-// honestly if we have time i might do what i did over in the user controller by making the queries an array, but its wtv
 const {
   getAllTasksQuery,
   getTaskByIdQuery,
@@ -66,9 +63,13 @@ const deleteTask = async (req, res) => {
   }
 };
 
+
 // Add emoji reaction to a task
 const addReactionToTask = async (req, res) => {
   try {
+    const { id } = req.params;  // FIXED: was missing
+    const { emoji } = req.body;  // FIXED: was missing
+    
     const updatedTask = await addReactionToTaskQuery(id, emoji);
     if (!updatedTask) {
       return res.status(404).json({ message: 'Task not found' });

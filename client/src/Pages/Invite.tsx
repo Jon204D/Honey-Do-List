@@ -1,51 +1,74 @@
-// src/pages/invite.tsx
+// src/Pages/Invite.tsx
 import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // Make sure axios is installed: npm install axios
 import styles from './design/invite.module.css';
-import clsx from 'clsx'; // You may need to run: npm install clsx
+import clsx from 'clsx';
+
+const API_URL = 'http://localhost:5001/api/invites';
+
 
 interface Invite {
-  id: number;
-  recipient_email: string;
-  status: 'pending' | 'accepted' | 'declined';
+    _id: string;
+    recipient_email: string;
+    status: 'pending' | 'accepted' | 'declined' | 'cancelled';
+    createdAt: string;
 }
 
 interface InviteFormProps {
-  onSendInvite: (email: string) => void;
+    onSendInvite: (email: string) => Promise<void>;
 }
 
 const InviteForm: React.FC<InviteFormProps> = ({ onSendInvite }) => {
+    useEffect(() => {
+        document.title = "Honey-Do List Invite";
+    }, []);
+    
     const [email, setEmail] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string>('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email) return;
-        onSendInvite(email);
-        setEmail('');
+        if (!email || isSubmitting) return;
+
+        setIsSubmitting(true);
+        setError('');
+        try {
+            await onSendInvite(email);
+            setEmail(''); // Clear email on successful submission
+        } catch (err: any) {
+            // Display error message from the server if available
+            setError(err.response?.data?.message || "An error occurred.");
+            console.error("Submission failed:", err);
+        } finally {
+            setIsSubmitting(false); // Re-enable the button
+        }
     };
 
     return (
-        // FIXED: Uses the correct 'form' class
         <form onSubmit={handleSubmit} className={styles.form}>
-            <h3 >Send a New Invite</h3>
+            <h3>Send a New Invite</h3>
             <input
                 type="email"
                 placeholder="Enter person's email"
                 value={email}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                // FIXED: Inline styles removed
             />
-            <button type="submit">Send Invite</button>
+            <button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Sending...' : 'Send Invite'}
+            </button>
+            {error && <p className={styles.errorMessage}>{error}</p>}
         </form>
     );
 };
 
 interface InviteListProps {
-  invites: Invite[];
-  onDeleteInvite: (id: number) => void;
+    invites: Invite[];
+    onRevokeInvite: (id: string) => void;
 }
 
-const InviteList: React.FC<InviteListProps> = ({ invites, onDeleteInvite }) => {
+const InviteList: React.FC<InviteListProps> = ({ invites, onRevokeInvite }) => {
     if (invites.length === 0) {
         return <p>You haven't sent any invites yet.</p>;
     }
@@ -56,17 +79,22 @@ const InviteList: React.FC<InviteListProps> = ({ invites, onDeleteInvite }) => {
             <ul className={styles.inviteList}>
                 {invites.map((invite) => (
                     <li
-                        key={invite.id}
-                        // FIXED: Uses clsx for base and conditional styles
+                        key={invite._id}
                         className={clsx(styles.inviteItem, {
                             [styles.acceptedStatus]: invite.status === 'accepted',
                             [styles.declinedStatus]: invite.status === 'declined',
+                            [styles.cancelledStatus]: invite.status === 'cancelled',
                         })}
                     >
-                        <span>{invite.recipient_email} - <strong>{invite.status}</strong></span>
+                        <div className={styles.inviteInfo}>
+                            <span>{invite.recipient_email} - <strong>{invite.status.toUpperCase()}</strong></span>
+                        </div>
+                        
                         {invite.status === 'pending' && (
-                            // FIXED: Uses the correct 'revokeButton' class
-                            <button onClick={() => onDeleteInvite(invite.id)} className={styles.revokeButton}>
+                            <button
+                                onClick={() => onRevokeInvite(invite._id)}
+                                className={styles.revokeButton}
+                            >
                                 Revoke
                             </button>
                         )}
@@ -77,36 +105,59 @@ const InviteList: React.FC<InviteListProps> = ({ invites, onDeleteInvite }) => {
     );
 };
 
-// Main page
+// Main page component
 const InvitesPage: React.FC = () => {
     const [invites, setInvites] = useState<Invite[]>([]);
 
     useEffect(() => {
-        const mockInvites: Invite[] = [
-            { id: 1, recipient_email: 'friend1@example.com', status: 'accepted' },
-            { id: 2, recipient_email: 'friend2@example.com', status: 'pending' },
-            { id: 3, recipient_email: 'friend3@example.com', status: 'declined' },
-        ];
-        setInvites(mockInvites);
+        const fetchInvites = async () => {
+            try {
+                const response = await axios.get(API_URL);
+                setInvites(response.data); 
+            } catch (error) {
+                console.error("Failed to fetch invites:", error);
+            }
+        };
+
+        fetchInvites();
     }, []);
 
-    const handleSendInvite = (email: string) => {
-        const newInvite: Invite = { id: Date.now(), recipient_email: email, status: 'pending' };
-        setInvites([...invites, newInvite]);
+    const handleSendInvite = async (email: string) => {
+        const response = await axios.post(API_URL, { email });
+
+        if (response.data && response.data.data) {
+          setInvites(prevInvites => [...prevInvites, response.data.data]);
+        } else {
+          setInvites(prevInvites => [...prevInvites, response.data]);
+        }
     };
 
-    const handleDeleteInvite = (inviteId: number) => {
-        setInvites(invites.filter((invite) => invite.id !== inviteId));
+
+    const handleRevokeInvite = async (inviteIdToRevoke: string) => {
+        try {
+              await axios.post(`${API_URL}/${inviteIdToRevoke}/revoke`);
+
+            setInvites(currentInvites =>
+                currentInvites.map(invite => {
+                    if (invite._id === inviteIdToRevoke) {
+                        return { ...invite, status: 'cancelled' };
+                    }
+                    return invite;
+                })
+            );
+        } catch (error) {
+            console.error(`Failed to revoke invite ${inviteIdToRevoke}:`, error);
+            alert('Failed to revoke the invite. Please try again.');
+        }
     };
 
     return (
-        // ADDED: A React Fragment <> and the new background div
         <>
             <div className={styles.orangeBackground} />
             <div className={styles.pageContainer}>
                 <h2>Manage Invites</h2>
                 <InviteForm onSendInvite={handleSendInvite} />
-                <InviteList invites={invites} onDeleteInvite={handleDeleteInvite} />
+                <InviteList invites={invites} onRevokeInvite={handleRevokeInvite} />
             </div>
         </>
     );

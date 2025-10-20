@@ -37,7 +37,7 @@ const TaskBoard: React.FC = () => {
         setFilteredTasks(taskArray);
         localStorage.setItem("tasks", JSON.stringify(taskArray));
       } catch (err) {
-        console.warn("Backend failed, using localStorage only.");
+        console.warn("Backend failed, using localStorage only.", err);
         const savedTasks = localStorage.getItem("tasks");
         if (savedTasks) {
           const parsed = JSON.parse(savedTasks);

@@ -11,7 +11,6 @@ import Tasks from "./Pages/Tasks";
 const App: React.FC = () => {
   return (
     <Router>
-      <NavigationBar/>
       <Routes>
         <Route element={<NavigationBar/>}>
           <Route path="/" element={<Tasks/>}/>

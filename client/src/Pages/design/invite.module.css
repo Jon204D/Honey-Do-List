@@ -62,6 +62,11 @@
   font-size: 1rem;
 }
 
+.form input::placeholder {
+  color: gray;
+  opacity: 1;
+}
+
 .form input:focus {
   outline: none;
   border-color: #007bff;
@@ -118,7 +123,7 @@
 /* List Item Status Modifiers */
 /* These classes are added to .inviteItem to change its look based on status */
 .acceptedStatus {
-  border-left-color: #28a745; /* Green */
+  border-left-color: #28a745; 
 }
 .acceptedStatus strong {
   color: #28a745;
@@ -132,6 +137,14 @@
   color: #dc3545;
 }
 
+
+.cancelledStatus {
+  border-left-color: #dc3545; 
+  opacity: 0.7; /* Make declined invites look faded */
+}
+.declinedStatus strong {
+  color: #dc3545;
+}
 
 /* Specific Buttons */
 /* The "Revoke" button inside a list item */

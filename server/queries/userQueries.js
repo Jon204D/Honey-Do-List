@@ -2,36 +2,44 @@
 
 const User = require("../models/User");
 
-const findUserByEmail = async (email) => {
+const findUserByEmailQuery = async (email) => {
     return await User.findOne({ email });
 };
+
+// Alias for backwards compatibility
+const findUserByEmail = findUserByEmailQuery;
 
 const createUser = async (userData) => {
     const user = new User(userData);
     return await user.save();
 };
 
-const updateUser = async (userID, updateData) => {
-    return await User.findByIDAndUpdate(userID, updateData, { new: true });
+const updateUserQuery = async (userID, updateData) => {
+    return await User.findByIdAndUpdate(userID, updateData, { new: true });
 };
 
-const deleteUser = async (userID) => {
-    return await User.findByIDAndDelete(userID);
+const deleteUserQuery = async (userID) => {
+    return await User.findByIdAndDelete(userID);
 };
 
-const getAllUsers = async () => {
+const getAllUsersQuery = async () => {
   return await User.find();
 };
 
-const updatePassword = async (userID, newPass) => {
-    return await User.findByIDAndUpdate(userID, {password: newPass}, {new: true});
+const getUserById = async (userID) => {
+  return await User.findById(userID);
+};
+
+const updatePasswordQuery = async (userID, newPass) => {
+    return await User.findByIdAndUpdate(userID, {password: newPass}, {new: true});
 };
 
 module.exports = {
-    findUserByEmail,
+    findUserByEmailQuery,
     createUser,
-    updateUser,
-    deleteUser,
-    getAllUsers,
-    updatePassword,
+    updateUserQuery,
+    deleteUserQuery,
+    getAllUsersQuery,
+    getUserById,
+    updatePasswordQuery,
 };

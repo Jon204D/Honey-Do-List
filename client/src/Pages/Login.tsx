@@ -94,7 +94,11 @@ const Login: React.FC = () => {
         // Failed 
         const errorData = await response.json();
         console.error("Login failed:", errorData.message);
-        setFormMessage(errorData.message || "Invalid credentials");
+        if (errorData.message === "Endpoint Not Found") {
+            setFormMessage("Server error.");
+        } else {
+            setFormMessage(errorData.message || "Invalid credentials");
+            }
       }
     } catch (error) {
       console.error("Network error:", error);
