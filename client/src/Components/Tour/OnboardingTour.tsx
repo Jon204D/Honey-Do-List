@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { driver, DriveStep } from "driver.js";
 
+// npm install driver.js //
+
 const STORAGE_KEY = "hd_tour_done_v1";
 
 export default function OnboardingTour({ isAuthed }: { isAuthed: boolean }) {
