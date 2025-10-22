@@ -28,8 +28,9 @@ const TaskModal: React.FC<Props> = ({onClose, onSave}) => {
     }
   }
 
-  return (
+  return (  
     <div
+      data-tour="task-modal"
       style = {{
         position: "fixed",
         top: 0,
@@ -66,6 +67,7 @@ const TaskModal: React.FC<Props> = ({onClose, onSave}) => {
 
         {/* Title */}
         <input
+          data-tour="task-title"
           type="text"
           placeholder="Title"
           value={title}
@@ -84,6 +86,7 @@ const TaskModal: React.FC<Props> = ({onClose, onSave}) => {
 
         {/* Description */}
         <textarea
+          data-tour="task-desc"
           placeholder="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -103,6 +106,7 @@ const TaskModal: React.FC<Props> = ({onClose, onSave}) => {
 
         {/* Status */}
         <select
+          data-tour="task-status"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
           required
@@ -125,6 +129,7 @@ const TaskModal: React.FC<Props> = ({onClose, onSave}) => {
 
          {/* Priority */}
          <select
+          data-tour="task-priority"
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
           required
@@ -146,6 +151,7 @@ const TaskModal: React.FC<Props> = ({onClose, onSave}) => {
         </select>
 
         <AuthInput
+          data-tour="task-date" 
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
@@ -153,7 +159,7 @@ const TaskModal: React.FC<Props> = ({onClose, onSave}) => {
         />
 
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <AuthButton type="submit" disabled={isSubmitting || !title || !description || !priority}
+          <AuthButton data-tour="create-task" type="submit" disabled={isSubmitting || !title || !description || !priority}
           >
             {isSubmitting ? "Saving..." : "Save"}
           </AuthButton>

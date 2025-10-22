@@ -12,6 +12,7 @@ const TaskCard: React.FC<Props> = ({task, onDelete}) => {
 
   return (
     <div
+      data-tour="task-card" 
       style = {{
         backgroundColor: "#212121",
         color: "orange",
