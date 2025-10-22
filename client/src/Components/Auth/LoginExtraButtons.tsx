@@ -24,6 +24,7 @@ const LoginExtraButtons: React.FC = () => {
       </AuthButton>
 
       <AuthButton 
+      data-tour="signup-button"  
         onClick={() => navigate("/signup")} 
         variant="secondary">
           Create Account

@@ -12,7 +12,7 @@ const TaskList: React.FC<Props> = ({tasks, onDelete}) => {
     return <p style={{color: "#212121"}}>No tasks found. Add one!</p>;
 
   return (
-    <div style={{display: "grid", gap: "1rem"}}>
+    <div data-tour="task-list" style={{display: "grid", gap: "1rem"}}>
       {tasks.map((task) => (
         <TaskCard key={task._id} task={task} onDelete={onDelete} />
       ))}
