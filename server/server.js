@@ -19,6 +19,11 @@ const BACKEND_BASE_URL = `http://${HOST}${PORT ? `:${PORT}` : ''}`;
 
 // ─── Connect to DB ──────
 connectDB();
+console.log("🔧 ENV CHECK:");
+console.log("HOST:", process.env.HOST);
+console.log("PORT:", process.env.PORT);
+console.log("FRONTEND_BASE_URL:", process.env.FRONTEND_BASE_URL);
+console.log("BACKEND_BASE_URL:", process.env.BACKEND_BASE_URL);
 
 // ─── CORS Configuration ───────
 const allowedOrigins = [
@@ -87,6 +92,7 @@ app.use((err, req, res, next) => {
 
 // ─── Start Server ───
 app.listen(PORT, () => {
+  console.log(`✅ Server listening on port ${PORT}`);
   console.log(`\n${'='.repeat(50)}`);
   console.log(`🚀 Server running at ${BACKEND_BASE_URL}`);
   console.log(`📡 CORS enabled for: ${allowedOrigins.join(', ')}`);

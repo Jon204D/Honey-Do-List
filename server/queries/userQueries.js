@@ -1,5 +1,6 @@
 // commonQueries/userQueries.js
 
+const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 
 const findUserByEmailQuery = async (email) => {
@@ -31,7 +32,11 @@ const getUserById = async (userID) => {
 };
 
 const updatePasswordQuery = async (userID, newPass) => {
-    return await User.findByIdAndUpdate(userID, {password: newPass}, {new: true});
+    return await User.findByIdAndUpdate(userID, { password: newPass }, { new: true });
+};
+
+const comparePassword = async (inputPassword, hashedPassword) => {
+    return await bcrypt.compare(inputPassword, hashedPassword);
 };
 
 module.exports = {
@@ -42,4 +47,5 @@ module.exports = {
     getAllUsersQuery,
     getUserById,
     updatePasswordQuery,
+    comparePassword,
 };
