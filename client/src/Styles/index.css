@@ -99,22 +99,28 @@ code {
 }
 
 /* Buttons */
-.driver-popover-prev-btn,
-.driver-popover-done-btn {
-  background: transparent !important;
-  color: #ff9f1a !important;
-  border: 1px solid #ff9f1a !important;
-  border-radius: 10px !important;
-  padding: 6px 10px !important;
+
+/* needs this to override the driver.js assignment for buttons */
+.driver-popover .driver-btn {
+  color: #212121 !important;        /* dark text for contrast */
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  padding: 8px 14px !important;
 }
 
-.driver-popover-next-btn {
-  background: #ff9f1a !important;
-  color: #212121 !important;
+/* Next button */
+.driver-popover .driver-popover-next-btn {
+  background-color: #fbbf24 !important; /* honey yellow */
+  color: black !important;              /* dark text */
   border: none !important;
-  border-radius: 10px !important;
-  padding: 6px 12px !important;
-  font-weight: 700 !important;
+}
+
+/* Prev/Done buttons */
+.driver-popover .driver-popover-prev-btn,
+.driver-popover .driver-popover-done-btn {
+  background: transparent !important;
+  color: #fbbf24 !important;  /* honey color to match theme */
+  border: 1px solid #fbbf24 !important;
 }
 
 /* Remove Default Close */

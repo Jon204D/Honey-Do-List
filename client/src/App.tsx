@@ -1,4 +1,5 @@
 import React from "react";
+import LandingPage from "./Pages/LandingPage";
 import Login from "./Pages/Login";
 import SignUp from "./Pages/SignUp";
 import Settings from "./Pages/Settings";
@@ -13,7 +14,8 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         <Route element={<NavigationBar/>}>
-          <Route path="/" element={<Tasks/>}/>
+          <Route path="/" element={<LandingPage/>}/>
+          <Route path="/tasks" element={<Tasks/>}/>
           <Route path="/forgot-password" element={<ForgotPassword/>} />
           <Route path="/login" element={<Login/>} />
           <Route path="/settings" element={<Settings/>} />
