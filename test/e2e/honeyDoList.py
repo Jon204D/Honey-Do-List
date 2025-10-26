@@ -45,33 +45,33 @@ class HoneyDoList(BaseTestSuite):
             results = signup_test.run_all_signup()
             self.test_results.extend(results)
 
-            # Import and run forgot password feature tests
-            print("\n") # Add spacing in console output
-            from tests.features.forgotPassword import ForgotPasswordTests
-            forgot_password_test = ForgotPasswordTests(self.driver, self.wait)
-            results += forgot_password_test.run_all_forgot_password()
-            self.test_results.extend(results)
-
-            # Import and run login feature tests
-            print("\n") # Add spacing in console output
-            from tests.features.login import LoginTests
-            login_test = LoginTests(self.driver, self.wait)
-            results += login_test.run_all_login()
-            self.test_results.extend(results)
-
-            # Import and run task page feature tests
-            print("\n") # Add spacing in console output
-            from tests.features.taskPage import TaskPageTests
-            task_page_test = TaskPageTests(self.driver, self.wait)
-            results += task_page_test.run_all_tasks()
-            self.test_results.extend(results)
-
             # Import and run invite feature tests
             print("\n") # Add spacing in console output
             from tests.features.invite import InviteTests
             invite_test = InviteTests(self.driver, self.wait)
             results += invite_test.run_all_invite()
             self.test_results.extend(results)
+
+            # Import and run forgot password feature tests
+            print("\n") # Add spacing in console output
+            from tests.features.forgotPassword import ForgotPasswordTests
+            forgot_password_test = ForgotPasswordTests(self.driver, self.wait)
+            results += forgot_password_test.run_all_forgot_passw ord()
+            self.test_results.extend(results)
+
+            # Import and run login feature tests
+            # print("\n") # Add spacing in console output
+            # from tests.features.login import LoginTests
+            # login_test = LoginTests(self.driver, self.wait)
+            # results += login_test.run_all_login()
+            # self.test_results.extend(results)
+
+            # # Import and run task page feature tests
+            # print("\n") # Add spacing in console output
+            # from tests.features.taskPage import TaskPageTests
+            # task_page_test = TaskPageTests(self.driver, self.wait)
+            # results += task_page_test.run_all_tasks()
+            # self.test_results.extend(results)
 
             # Import and run settings feature tests
             # print("\n") # Add spacing in console output

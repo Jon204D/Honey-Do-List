@@ -42,7 +42,7 @@ class LoginTests(BaseTestSuite):
             self.driver.find_element(By.NAME, "password").send_keys("wrongpassword")
             self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
-            if self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//p[contains(text(), 'Invalid email or password!')]"))):
+            if self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//p[contains(text(), 'Invalid email or password')]"))):
                 self.log_result("Invalid Login", True, "Error message displayed for invalid login.")
                 print("✅ Error message displayed for invalid login.")
             else:

@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/landing.css";
 
 const LandingPage: React.FC = () => {
+  useEffect(() => {
+    document.title = "Welcome to Honey-Do List";
+  }, []);
   const navigate = useNavigate();
 
   return (
