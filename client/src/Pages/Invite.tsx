@@ -5,7 +5,7 @@ import styles from './design/invite.module.css';
 import clsx from 'clsx';
 
 const API_URL = 'http://localhost:5001/api/invites';
-
+// will probably need to be edited to have a similar fetch requests as the others
 
 interface Invite {
     _id: string;
