@@ -3,6 +3,7 @@
 // this is for dummy data to test
 // run the following line    -->   node scripts/seedUsers.js
 
+/*
 require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
@@ -48,3 +49,5 @@ const seedUsers = async () => {
 };
 
 seedUsers();
+
+*/
