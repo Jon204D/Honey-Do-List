@@ -8,27 +8,27 @@ import {ReactComponent as HomeIcon} from "../../assets/Honey.svg";
 const NavigationBar: React.FC = () => {
   return (
     <div>
-      <nav
-        style = {{
-          padding: "1rem",
-          display: "flex",
-          alignItems: "center",
-          background: "#212121",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* Left: Home icon */}
-        <Link to="/" className="icon-circle">
+      <nav className="navbar">
+        <div className="icon-wrapper">
+          {/* Left: Home icon */}
+        <Link to="/" className="icon-circle"> 
           <HomeIcon />
         </Link>
+        <span className="icon-hover-text">Task Board</span>
+        </div>
+        
 
         {/* Middle: Title */}
          <Link to="/" className="title">
             Honey-Do List
         </Link>
 
-        {/* Right: Profile icon */}
+        <div className="icon-wrapper">
+             {/* Right: Profile icon */}
           <ProfileLogo />
+          <span className="icon-hover-text">Profile</span>
+        </div>
+     
 
       </nav>
 
