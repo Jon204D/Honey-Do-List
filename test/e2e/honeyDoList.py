@@ -37,12 +37,13 @@ class HoneyDoList(BaseTestSuite):
         try:
             # First, run initial environment checks
             self.run_initial_tests()
+            results = []
 
             # Import and run signup feature tests
             # print("\n") # Add spacing in console output
             # from tests.features.signup import SignupTests
             # signup_test = SignupTests(self.driver, self.wait)
-            # results = signup_test.run_all_signup()
+            # results += signup_test.run_all_signup()
             # self.test_results.extend(results)
 
             # Import and run invite feature tests
@@ -60,18 +61,18 @@ class HoneyDoList(BaseTestSuite):
             # self.test_results.extend(results)
 
             # Import and run login feature tests
-            print("\n") # Add spacing in console output
-            from tests.features.login import LoginTests
-            login_test = LoginTests(self.driver, self.wait)
-            results = login_test.run_all_login()
-            self.test_results.extend(results)
+            # print("\n") # Add spacing in console output
+            # from tests.features.login import LoginTests
+            # login_test = LoginTests(self.driver, self.wait)
+            # results += login_test.run_all_login()
+            # self.test_results.extend(results)
 
             # # Import and run task page feature tests
-            # print("\n") # Add spacing in console output
-            # from tests.features.taskPage import TaskPageTests
-            # task_page_test = TaskPageTests(self.driver, self.wait)
-            # results += task_page_test.run_all_tasks()
-            # self.test_results.extend(results)
+            print("\n") # Add spacing in console output
+            from tests.features.taskPage import TaskPageTests
+            task_page_test = TaskPageTests(self.driver, self.wait)
+            results += task_page_test.run_all_tasks()
+            self.test_results.extend(results)
 
             # Import and run settings feature tests
             # print("\n") # Add spacing in console output

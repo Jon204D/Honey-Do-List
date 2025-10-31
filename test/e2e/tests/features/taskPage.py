@@ -2,10 +2,12 @@ from dotenv import load_dotenv
 from operations.constants import BASE_URL
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+import os
 import time
 from tests.prechecks.base_test_suite import BaseTestSuite
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from tests.features.login import LoginTests
 
 load_dotenv()
 
@@ -14,10 +16,37 @@ class TaskPageTests(BaseTestSuite):
         super().__init__(driver)
         self.wait = wait
 
+    def login_valid(self):
+        try:
+            print("🔐 Logging in to access Task page...")
+            self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//div//button[contains(text(), 'Log In')]")))
+            email = os.getenv("TESTUSER1EMAIL")
+            password = os.getenv("TESTUSER1PASSWORD")
+
+            if not email or not password:
+                raise Exception("TESTUSER1EMAIL or TESTUSER1PASSWORD not set")
+
+            # wait for inputs
+            self.wait.until(EC.visibility_of_element_located((By.NAME, "email")))
+            self.wait.until(EC.visibility_of_element_located((By.NAME, "password")))
+            self.driver.find_element(By.NAME, "email").send_keys(email)
+            self.driver.find_element(By.NAME, "password").send_keys(password)
+            self.driver.find_element(By.XPATH, "//div//div//button[contains(text(), 'Log In')]").click()
+        except Exception as e:
+            error_message = getattr(e, 'msg', str(e))
+            print(f"❌ An error occurred during login for Task Page: \n- {error_message}")
+            return
+
     def land_task_page(self):
         try:
             print("🚀 Launching Task page...")
-            self.driver.get(BASE_URL + "/")
+            self.driver.get(BASE_URL + "/tasks")
+
+            if self.driver.current_url.endswith("/login"):
+                self.login_valid()
+                
+                if not self.driver.current_url.endswith("/tasks"):
+                    self.driver.get(BASE_URL + "/tasks")
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//div[text()='Your Tasks']")))
                 self.log_result("Task Page Load", True, "Task page is present.")
@@ -39,7 +68,7 @@ class TaskPageTests(BaseTestSuite):
                 self.land_task_page()
 
             print(f"➕ Attempting to add task: {task_name}...")
-            self.driver.find_element(By.XPATH, "//button[contains(text(), '+ Add Task')]").click()
+            self.driver.find_element(By.XPATH, "//button[contains(text(), '+ Create Task')]").click()
             self.driver.find_element(By.XPATH, "//form//input[@placeholder='Title']").send_keys(task_name)
             self.driver.find_element(By.XPATH, "//form//textarea[@placeholder='Description']").send_keys("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam a odio imperdiet, dictum diam id, fringilla sapien. Proin nec velit at magna dapibus convallis. Maecenas nec orci vel tellus pellentesque maximus id a tellus. Donec eget convallis lorem, nec dapibus magna. Duis vel malesuada lectus. Ut quis eleifend dolor. Proin imperdiet posuere sodales. In blandit malesuada massa, non accumsan velit sodales ut. Etiam non rutrum neque. Donec ut augue nec est sodales semper at sit amet odio. Cras quis velit a lorem aliquam rhoncus vel eget turpis. Morbi fringilla neque condimentum tortor gravida scelerisque. Vestibulum placerat leo vitae ipsum suscipit. Nullam a felis euismod, convallis erat in, facilisis libero. Nulla facilisi. In hac habitasse platea dictumst.")
             select_Status = self.driver.find_element(By.XPATH, "//form//select[option[contains(text(), 'Select Status')]]")
@@ -75,6 +104,7 @@ class TaskPageTests(BaseTestSuite):
     def run_all_tasks(self):
         print("=== Running Task Page Tests ===")
         try:
+            self.login_valid()
             self.land_task_page()
             self.add_task("Test Task 1")
             self.add_task("Test Task 2")
