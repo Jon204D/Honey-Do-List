@@ -65,6 +65,8 @@ class LoginTests(BaseTestSuite):
             email = os.getenv("TESTUSER1EMAIL")
             password = os.getenv("TESTUSER1PASSWORD")
 
+            print(f"Using credentials - Email: {email}, Password: {'*' * len(password) if password else None}")
+
             if not email or not password:
                 raise Exception("❌ TEST_EMAIL or TEST_PASSWORD environment variables are not set.")
             
