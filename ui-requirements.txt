@@ -3,4 +3,3 @@ python-dotenv
 pytest
 webdriver_manager
 python-dateutil
-python-traceback
