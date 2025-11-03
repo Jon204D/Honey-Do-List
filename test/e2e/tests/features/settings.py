@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import os
 import time
 from tests.prechecks.base_test_suite import BaseTestSuite
+from tests.features.login import LoginTests
 
 load_dotenv()
 
@@ -174,10 +175,11 @@ class SettingsTests(BaseTestSuite):
         current_username = os.getenv("TESTUSER1USERNAME")
         current_password = os.getenv("TESTUSER1PASSWORD")
 
-        new_username = os.getenv("TESTUSER3USERNAME")
-        new_password = os.getenv("TESTUSER3PASSWORD")
+        new_username = os.getenv("TESTUSERNEWUSERNAME")
+        new_password = os.getenv("TESTUSERNEWPASSWORD")
         
         try:
+            LoginTests(self.driver, self.wait).login_valid()
             # Initial checks
             # self.test_user_info_displayed(expected_username, expected_email, expected_password) --- Temporarily disabled ---
             # Edit username and password

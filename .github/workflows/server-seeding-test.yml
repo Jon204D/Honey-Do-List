@@ -39,7 +39,7 @@ jobs:
           node-version: '20' # or your preferred version
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci --prefix server
 
       - name: Run user seed tests
         run: npx jest tests/seedUsers.test.js

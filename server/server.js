@@ -23,7 +23,7 @@ console.log("🔧 ENV CHECK:");
 console.log("HOST:", process.env.HOST);
 console.log("PORT:", process.env.PORT);
 console.log("FRONTEND_BASE_URL:", process.env.FRONTEND_BASE_URL);
-console.log("BACKEND_BASE_URL:", process.env.BACKEND_BASE_URL);
+console.log("BACKEND_BASE_URL:", BACKEND_BASE_URL);
 
 // ─── CORS Configuration ───────
 const allowedOrigins = [

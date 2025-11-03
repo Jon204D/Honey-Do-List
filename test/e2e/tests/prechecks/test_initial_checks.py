@@ -53,6 +53,10 @@ class InitialChecks(BaseTestSuite):
             # Look for common React app elements
             body = self.driver.find_element(By.TAG_NAME, "body")
             if body:
+                guest_button = self.driver.find_elements(By.XPATH, "//button[contains(text(), 'Continue as Guest')]")
+                if guest_button:
+                    guest_button[0].click()
+                    time.sleep(1)  # Wait for any navigation
                 self.log_result("DOM Structure", True, "Basic DOM structure is present")
             else:
                 self.log_result("DOM Structure", False, "Body element not found")
