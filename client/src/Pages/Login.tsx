@@ -3,7 +3,6 @@ import AuthCard from "../Components/Auth/AuthCard";
 import FormMessage from "../Components/Auth/FormMessage";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthInput, AuthButton } from "../Components/Auth/AuthStyles";
-import LoginExtraButtons from "../Components/Auth/LoginExtraButtons";
 
 /* Displays Login Form
    - Calls backend or uses local fallback
@@ -16,16 +15,27 @@ const Login: React.FC = () => {
   }, []);
 
   const navigate = useNavigate();
-  const location = useLocation();               // Reading messages passed in navigation
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [formMessage, setFormMessage] = useState<string | null>(
-    location.state?.message || null
+    (location.state as any)?.message || null
   )
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const lastSubmitTime = useRef<number>(0);
+
+  const saveLoginSession = (userData: any) => {
+    const now = Date.now();
+    const sessionExpiry = now + 3600000; // 1 hour
+
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("loginTimestamp", String(now));
+    localStorage.setItem("sessionExpiry", String(sessionExpiry));
+    localStorage.setItem("fakeUser", JSON.stringify(userData));
+    window.dispatchEvent(new Event("sessionchange")); // notify navbar
+  }
 
   /* Validation */
   const validateFields = (): string | null => {
@@ -38,19 +48,8 @@ const Login: React.FC = () => {
     return null;
   }
 
-  const saveLoginSession = (userData: any) => {
-    const now = Date.now();
-    const sessionExpiry = now + 3600000;  // 1 hour in ms
-
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("loginTimestamp", now.toString());
-    localStorage.setItem("sessionExpiry", sessionExpiry.toString());
-    localStorage.setItem("fakeUser", JSON.stringify(userData));
-  }
-
   /* Request to Backend */
   const loginRequest = async () => {
-    // Field Validation
     const validationError = validateFields();
     if (validationError) {
       setFormMessage(validationError);
@@ -75,47 +74,59 @@ const Login: React.FC = () => {
 
     try {
       // Make the API POST request
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}api/users/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/login`,
+        {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({email, password}),
+        }
+      )
+
+      {/* Irtiza - I keep getting an extra "/" so I kept this here for me to connect to the backend */}
+      
+      /* 
+      const base = (process.env.REACT_APP_BACKEND_BASE_URL || "").replace(/\/+$/, "");
+      const url = `${base}/api/users/login`;
+      console.log("LOGIN URL =>", url);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({email, password}),
       });
+      */
 
       /* Handle Response */
       if (response.ok) {
-        // Success
-        localStorage.setItem("isLoggedIn", "true");
         const data = await response.json();
-        localStorage.setItem("fakeUser", JSON.stringify(data.user));
+        // Optional: store token if backend returns it
+        if (data?.token) localStorage.setItem("authToken", String(data.token));
+        if (!data?.user) {
+          setFormMessage("Invalid server response.");
+          return;
+        }
+        saveLoginSession(data.user);
         navigate("/settings", { state: { message: "Welcome back!" } });
       } else {
-        // Failed 
-        const errorData = await response.json();
-        console.error("Login failed:", errorData.message);
-        if (errorData.message === "Endpoint Not Found") {
-            setFormMessage("Server error.");
-        } else {
-            setFormMessage(errorData.message || "Invalid credentials");
-            }
+        const errorData = await response.json().catch(() => ({}));
+        setFormMessage(errorData.message || "Invalid credentials");
       }
     } catch (error) {
       console.error("Network error:", error);
 
       // Fallback: Save fake user in localStorage for development
       const savedUser = localStorage.getItem("fakeUser");
-
       if (savedUser) {
-        // Parse saved user and check credentials 
-        const { email: savedEmail, password: savedPassword } = JSON.parse(savedUser);
-        if (email === savedEmail && password === savedPassword) {
-          saveLoginSession(JSON.parse(savedUser));
-          navigate("/settings", { state: { message: "Welcome back!" } });
-          return;
-        }
+        try {
+          const u = JSON.parse(savedUser);
+          if (u?.email === email && u?.password === password) {
+            saveLoginSession(u);
+            navigate("/settings", { state: { message: "Welcome back! (offline)" } });
+            return;
+          }
+        } catch {}
       }
-      setFormMessage("Invalid email or password!");
+      setFormMessage("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -127,84 +138,70 @@ const Login: React.FC = () => {
   }
 
   return (
-    <>
-      <AuthCard title="Log In">
-        {/* Success/Error Messages */}
-        {formMessage && <FormMessage message={formMessage} />}
+    <AuthCard title="Log In">
+      {formMessage && <FormMessage message={formMessage} />}
 
-        {/* Login Form */}
-        <form
-          onSubmit={handleLogin}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px"
-          }}
+      {/* Login Form */}
+      <form
+        onSubmit={handleLogin}
+        style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+      >
+        {/* Email Input */}
+        <AuthInput
+          type="email"
+          name="email"
+          placeholder="Email"
+          autoComplete="username"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        {/* Password Input */} 
+        <AuthInput
+          type="password"
+          name="password"
+          placeholder="Password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        {/* Submit Button */}
+        <AuthButton
+          type="submit"
+          variant="primary"
+          onClick={loginRequest}
+          disabled={isSubmitting}
         >
+          {isSubmitting ? "Logging in..." : "Log In"}
+        </AuthButton>
+      </form>
 
-          {/* Email Input */}
-          <AuthInput
-            type="email"
-            name="email"
-            placeholder="Email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+      {/* Forgot Password, Create Account, and Invite New User */}
+      <div
+        style={{
+          marginTop: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+        }}
+      >
+        <AuthButton onClick={() => navigate("/forgot-password")} variant="secondary">
+          Forgot Password?
+        </AuthButton>
 
-          {/* Password Input */}
-          <AuthInput
-            type="password"
-            name="password"
-            placeholder="Password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        <AuthButton onClick={() => navigate("/signup")} variant="secondary">
+          Create Account
+        </AuthButton>
 
-          {/* Submit Button */}
-          <AuthButton
-            type="submit"
-            variant="primary"
-            onClick={loginRequest}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Logging in..." : "Log In"}
-          </AuthButton>
-        </form>
-
-        {/* Forgot Password, Create Account, and Invite New User */}
-        <div
-          style={{
-            marginTop: "20px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px"
-          }}
-        >
-
-          <AuthButton
-            onClick={() => navigate("/forgot-password")}
-            variant="secondary">
-            Forgot Password?
-          </AuthButton>
-
-          <AuthButton
-            onClick={() => navigate("/signup")}
-            variant="secondary">
-            Create Account
-          </AuthButton>
-
-          <AuthButton onClick={() => navigate("/Invite")}
-            variant="secondary">
-            Invite New User
-          </AuthButton>
-        </div>
+        <AuthButton onClick={() => navigate("/invite")} variant="secondary">
+          Invite New User
+        </AuthButton>
+      </div>
 
       </AuthCard>
-    </>
   )
 }
 

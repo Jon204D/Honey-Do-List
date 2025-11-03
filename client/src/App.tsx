@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from "react";
 import LandingPage from "./Pages/LandingPage";
 import Login from "./Pages/Login";
