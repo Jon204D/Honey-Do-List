@@ -16,34 +16,13 @@ class TaskPageTests(BaseTestSuite):
         super().__init__(driver)
         self.wait = wait
 
-    def login_valid(self):
-        try:
-            print("🔐 Logging in to access Task page...")
-            self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//div//button[contains(text(), 'Log In')]")))
-            email = os.getenv("TESTUSER1EMAIL")
-            password = os.getenv("TESTUSER1PASSWORD")
-
-            if not email or not password:
-                raise Exception("TESTUSER1EMAIL or TESTUSER1PASSWORD not set")
-
-            # wait for inputs
-            self.wait.until(EC.visibility_of_element_located((By.NAME, "email")))
-            self.wait.until(EC.visibility_of_element_located((By.NAME, "password")))
-            self.driver.find_element(By.NAME, "email").send_keys(email)
-            self.driver.find_element(By.NAME, "password").send_keys(password)
-            self.driver.find_element(By.XPATH, "//div//div//button[contains(text(), 'Log In')]").click()
-        except Exception as e:
-            error_message = getattr(e, 'msg', str(e))
-            print(f"❌ An error occurred during login for Task Page: \n- {error_message}")
-            return
-
     def land_task_page(self):
         try:
             print("🚀 Launching Task page...")
             self.driver.get(BASE_URL + "/tasks")
 
             if self.driver.current_url.endswith("/login"):
-                self.login_valid()
+                LoginTests(self.driver, self.wait).login_valid()
                 
                 if not self.driver.current_url.endswith("/tasks"):
                     self.driver.get(BASE_URL + "/tasks")
@@ -104,7 +83,7 @@ class TaskPageTests(BaseTestSuite):
     def run_all_tasks(self):
         print("=== Running Task Page Tests ===")
         try:
-            self.login_valid()
+            LoginTests(self.driver, self.wait).login_valid()
             self.land_task_page()
             self.add_task("Test Task 1")
             self.add_task("Test Task 2")

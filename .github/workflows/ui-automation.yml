@@ -40,5 +40,7 @@ jobs:
           TESTUSER3EMAIL: ${{ vars.TESTUSER3EMAIL }}
           TESTUSER3USERNAME: ${{ vars.TESTUSER3USERNAME }}
           TESTUSER3PASSWORD: ${{ vars.TESTUSER3PASSWORD }}
+          TESTUSERNEWUSERNAME: ${{ vars.TESTUSERNEWUSERNAME }}
+          TESTUSERNEWPASSWORD: ${{ vars.TESTUSERNEWPASSWORD }}
         run: |
           python test/e2e/run.py

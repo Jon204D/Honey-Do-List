@@ -27,7 +27,7 @@ const TaskBoard: React.FC = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks`, {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}api/tasks`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         })
@@ -74,7 +74,7 @@ const TaskBoard: React.FC = () => {
   // Add Task
   const handleAddTask = async (newTask: Task) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}api/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newTask),
@@ -106,7 +106,7 @@ const TaskBoard: React.FC = () => {
   // Delete Task
   const handleDeleteTask = async (id: string) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks/${id}`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}api/tasks/${id}`, {
         method: "DELETE",
       })
 
