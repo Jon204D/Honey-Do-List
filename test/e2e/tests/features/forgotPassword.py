@@ -15,7 +15,7 @@ class ForgotPasswordTests(BaseTestSuite):
 
     def land_forgot_password_page(self):
         try:
-            print("🚀 Launching Forgot Password page...")
+            print("\n🚀 Launching Forgot Password page...")
             self.driver.get(BASE_URL + "forgot-password")
             self.wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='Forgot Password']")))
             self.log_result("Forgot Password Page Load", True, "Forgot Password page is present.")

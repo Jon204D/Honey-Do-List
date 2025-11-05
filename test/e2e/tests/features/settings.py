@@ -167,7 +167,7 @@ class SettingsTests(BaseTestSuite):
             print(f"❌ Required field error message failed: {error_message}")
 
     def run_all_settings(self):
-        print("=== Running Settings Tests ===")
+        print("\n⚙️ Running Settings Tests...")
         expected_username = os.getenv("TESTUSER1USERNAME")
         expected_email = os.getenv("TESTUSER1EMAIL")
         expected_password = os.getenv("TESTUSER1PASSWORD")

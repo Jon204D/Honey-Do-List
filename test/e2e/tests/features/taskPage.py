@@ -81,7 +81,7 @@ class TaskPageTests(BaseTestSuite):
             print(f"❌ An error occurred while adding task: \n- {error_message}")
 
     def run_all_tasks(self):
-        print("=== Running Task Page Tests ===")
+        print("\n📋 Running Task Page Tests...")
         try:
             LoginTests(self.driver, self.wait).login_valid()
             self.land_task_page()

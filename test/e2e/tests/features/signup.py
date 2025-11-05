@@ -101,7 +101,7 @@ class SignupTests(BaseTestSuite):
             print(f"❌ An error occurred while fetching credentials: \n- {error_message}")
 
     def run_all_signup(self):
-        print("🔍 Running signup feature tests...")
+        print("\n🔍 Running signup feature tests...")
         try:
             self.land_signup_page()
             self.signup_invalid()

@@ -13,7 +13,7 @@ class InviteTests(BaseTestSuite):
 
     def land_invite_page(self):
         try:
-            print("🚀 Launching Invite page...")
+            print("\n🚀 Launching Invite page...")
             self.driver.get(BASE_URL + "invite")
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//h3[text()='Send a New Invite']")))
