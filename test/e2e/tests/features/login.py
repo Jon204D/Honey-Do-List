@@ -3,13 +3,14 @@ from operations.constants import BASE_URL
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException
 import os
 import time
 import traceback
 from tests.prechecks.base_test_suite import BaseTestSuite
 
 load_dotenv()
+
 
 class LoginTests(BaseTestSuite):
     def __init__(self, driver, wait):
@@ -19,26 +20,20 @@ class LoginTests(BaseTestSuite):
     def land_login_page(self):
         try:
             print("🚀 Launching Login page...")
-            # normalize URL building to avoid accidental double/missing slashes
             self.driver.get(f"{BASE_URL.rstrip('/')}/login")
-
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//h2[text()='Log In']")))
                 self.log_result("Login Page Load", True, "Login form is present.")
                 print("✅ Login form is present.")
             except Exception as e:
                 self.log_result("Login Page Load", False, "Login form is not present.")
-                error_message = getattr(e, 'msg', str(e))
-                print(f"❌ Login form is not present: {error_message}")
+                print("❌ Login form is not present:", getattr(e, "msg", str(e)))
                 raise
         except Exception as e:
-            error_message = getattr(e, 'msg', str(e))
-            self.log_result("Login Page Load", False, error_message)
-            print(f"❌ An error occurred: \n- {error_message}")
+            self.log_result("Login Page Load", False, getattr(e, "msg", str(e)))
+            print(f"❌ An error occurred: \n- {getattr(e, 'msg', str(e))}")
 
     def is_guidance_present(self, timeout=2):
-        """Quick presence check for the guidance/popover used on deployed site.
-        Returns True if popover is present within timeout, False otherwise."""
         try:
             WebDriverWait(self.driver, timeout).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover"))
@@ -50,17 +45,8 @@ class LoginTests(BaseTestSuite):
             return False
 
     def guidanceWalkthrough(self, max_steps=20, wait_timeout=5):
-        """Walk through the in-app guidance popover if present.
-
-        Notes:
-        - First do a short-presence check and return immediately if no popover.
-        - Use safe waits for clickable state when candidate is a WebElement (WebDriver's element_to_be_clickable expects a locator tuple).
-        - Re-query the popover after each click because the DOM can be re-rendered.
-        """
         try:
             print("📝 Starting guidance walkthrough...")
-
-            # short-circuit if no popover
             try:
                 popover = WebDriverWait(self.driver, 2).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover"))
@@ -88,8 +74,6 @@ class LoginTests(BaseTestSuite):
 
             while steps < max_steps:
                 steps += 1
-
-                # re-query nav buttons from the current popover instance
                 nav_btns = []
                 try:
                     nav_btns = popover.find_elements(By.CSS_SELECTOR, ".driver-popover-navigation-btns button, .driver-popover-navigation-btns > button, .driver-popover-next-btn, .driver-popover-prev-btn, button")
@@ -102,14 +86,12 @@ class LoginTests(BaseTestSuite):
                         text = (btn.text or "").strip().lower()
                         if not text:
                             text = (btn.get_attribute("aria-label") or "").strip().lower()
-                        # prefer Next/Done/Finish labels
-                        if any(k in text for k in ("next", "done", "finish", "→", "→")) and btn.is_displayed() and btn.is_enabled():
+                        if any(k in text for k in ("next", "done", "finish", "→")) and btn.is_displayed() and btn.is_enabled():
                             candidate = btn
                             break
                     except Exception:
                         continue
 
-                # fallback xpath search inside popover
                 if candidate is None:
                     try:
                         candidate = popover.find_element(By.XPATH, ".//button[contains(translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'next') or contains(translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'done') or contains(translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'finish')]")
@@ -122,29 +104,24 @@ class LoginTests(BaseTestSuite):
                     print("ℹ️ No popover navigation button found, assuming walkthrough finished.")
                     break
 
-                # wait for the WebElement candidate to be clickable using a lambda (since expected_conditions.element_to_be_clickable expects a locator tuple)
                 try:
                     WebDriverWait(self.driver, wait_timeout).until(lambda d: candidate.is_displayed() and candidate.is_enabled())
                 except Exception:
-                    # if the wait fails, we'll still try to click (with JS fallback)
                     pass
 
                 try:
                     candidate.click()
                 except Exception:
                     try:
-                        # JS fallback click
                         self.driver.execute_script("arguments[0].click();", candidate)
                     except Exception:
                         raise
 
-                # wait for change in progress/title or popover disappearance
                 start = time.time()
                 changed = False
                 while time.time() - start < wait_timeout:
                     time.sleep(0.2)
                     try:
-                        # re-query popover (it might be re-rendered)
                         popover = self.driver.find_element(By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover")
                         curr_progress = read_progress(popover)
                         if curr_progress and curr_progress != prev_progress:
@@ -152,11 +129,9 @@ class LoginTests(BaseTestSuite):
                             prev_progress = curr_progress
                             break
                     except Exception:
-                        # if element not found => disappeared => finished
                         changed = True
                         break
 
-                # If popover disappeared -> finished
                 try:
                     if not popover.is_displayed():
                         print("ℹ️ Popover disappeared after clicking, walkthrough complete.")
@@ -164,13 +139,11 @@ class LoginTests(BaseTestSuite):
                 except Exception:
                     break
 
-                # If progress didn't change, but button looked like final, assume done
                 if not changed:
                     candidate_text = (candidate.text or "").strip().lower()
                     if any(k in candidate_text for k in ("done", "finish")):
                         print("ℹ️ Final button clicked but no progress change observed; assuming complete.")
                         break
-                    # otherwise continue to next iteration and attempt again
             else:
                 print(f"⚠️ Reached max_steps={max_steps} without finishing the walkthrough.")
 
@@ -191,10 +164,7 @@ class LoginTests(BaseTestSuite):
 
     def login_invalid(self):
         try:
-            # always start from a fresh login page
             self.land_login_page()
-
-            # wait for inputs
             self.wait.until(EC.visibility_of_element_located((By.NAME, "email")))
             self.wait.until(EC.visibility_of_element_located((By.NAME, "password")))
 
@@ -205,33 +175,33 @@ class LoginTests(BaseTestSuite):
             pwd_input.clear()
             email_input.send_keys("invalid@example.com")
             pwd_input.send_keys("wrongpassword")
-            self.driver.find_element(By.XPATH, "//form//button[@type='submit']").click()
+            # click submit (robust but simple)
+            try:
+                submit = self.driver.find_element(By.XPATH, "//form//button[@type='submit']")
+                submit.click()
+            except Exception:
+                try:
+                    submit = self.driver.find_element(By.XPATH, "//form//button[@type='submit']")
+                    self.driver.execute_script("arguments[0].click();", submit)
+                except Exception:
+                    pass
 
-            # short wait for error message to appear
             local_wait = WebDriverWait(self.driver, 6)
             try:
-                if (local_wait.until(EC.visibility_of_element_located(
-                    (By.XPATH, ".//div//p[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'network') or contains(., 'error') or contains(., 'Network error')]")
-                ))):
-                    self.log_result("Invalid Login", False, "Network error message displayed for invalid login.")
-                    print("❌ Network error message displayed for invalid login.")
-                elif local_wait.until(EC.visibility_of_element_located(
+                local_wait.until(EC.visibility_of_element_located(
                     (By.XPATH, ".//div//p[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'invalid') or contains(., 'Invalid email') or contains(., 'Invalid email or password')]")
-                )):
-                    self.log_result("Invalid Login", True, "Error message displayed for invalid login.")
-                    print("✅ Error message displayed for invalid login.")
+                ))
+                self.log_result("Invalid Login", True, "Error message displayed for invalid login.")
+                print("✅ Error message displayed for invalid login.")
             except TimeoutException:
-                # capture artifacts for debugging CI
                 png, html = self._screenshot_and_snippet("invalid_login_no_error")
                 console = self.capture_browser_console()
                 self.log_result("Invalid Login", False, f"No error message displayed for invalid login (screenshot:{png}, console:{console})")
                 print("❌ No error message displayed for invalid login (timeout). Artifacts:", png, html, console)
         except Exception as e:
-            error_message = getattr(e, "msg", str(e))
-            self.log_result("Invalid Login", False, error_message)
-            print(f"❌ An error occurred while attempting invalid login: \n- {error_message}")
+            self.log_result("Invalid Login", False, getattr(e, "msg", str(e)))
+            print(f"❌ An error occurred while attempting invalid login: \n- {getattr(e, 'msg', str(e))}")
         finally:
-            # clear fields and reload login page to ensure clean state for next test
             try:
                 if self.driver.find_elements(By.NAME, "email"):
                     self.driver.find_element(By.NAME, "email").clear()
@@ -239,40 +209,44 @@ class LoginTests(BaseTestSuite):
                     self.driver.find_element(By.NAME, "password").clear()
             except Exception:
                 pass
-            # reload login page to remove banners/modals
             try:
                 self.driver.get(f"{BASE_URL.rstrip('/')}/login")
-                # give the page a moment to settle
                 time.sleep(0.5)
                 self.wait.until(EC.visibility_of_element_located((By.NAME, "email")))
             except Exception:
                 pass
 
     def login_valid(self):
+        """
+        Attempt a valid login without relying on safe_click helper.
+        - Seeds fakeUser in localStorage (CI fallback)
+        - Navigates, fills credentials, clicks submit using direct click + JS fallback
+        - Waits for redirect or inspects page for network error and captures artifacts
+        """
         try:
+            # Seed fakeUser for CI fallback
             try:
-                email = os.getenv("TESTUSER1EMAIL")
-                password = os.getenv("TESTUSER1PASSWORD")
-                if email and password:
+                email_env = os.getenv("TESTUSER1EMAIL")
+                pwd_env = os.getenv("TESTUSER1PASSWORD")
+                if email_env and pwd_env:
                     self.driver.execute_script("""
                         try {
                             localStorage.setItem('fakeUser', JSON.stringify({ email: arguments[0], password: arguments[1], username: 'CI Test User' }));
                         } catch(e) {}
-                    """, email, password)
+                    """, email_env, pwd_env)
                     time.sleep(0.12)
             except Exception:
                 pass
 
-            # always start clean
+            # Start fresh
             self.land_login_page()
 
             email = os.getenv("TESTUSER1EMAIL")
             password = os.getenv("TESTUSER1PASSWORD")
-            
+
             if not email or not password:
                 raise Exception("TESTUSER1EMAIL or TESTUSER1PASSWORD not set")
 
-            # wait for inputs
             self.wait.until(EC.visibility_of_element_located((By.NAME, "email")))
             self.wait.until(EC.visibility_of_element_located((By.NAME, "password")))
 
@@ -287,13 +261,62 @@ class LoginTests(BaseTestSuite):
             if not self.dismiss_guidance_popover():
                 print("⚠️ Could not dismiss popover before login; continuing with caution.")
 
-            submit = self.driver.find_element(By.XPATH, "//form//button[@type='submit']")
-            prev_url = self.driver.current_url
-            submit.click()
+            # Find submit button (locator) and attempt click without safe_click
+            submit_locator = (By.XPATH, "//form//button[@type='submit']")
+            try:
+                submit_el = WebDriverWait(self.driver, 8).until(EC.presence_of_element_located(submit_locator))
+            except Exception:
+                png, html = self._screenshot_and_snippet("submit_not_found")
+                console = self.capture_browser_console()
+                self.log_result("Valid Login", False, f"Submit button not found (screenshot:{png}, console:{console})")
+                print("❌ Submit button not found. Artifacts:", png, html, console)
+                return
 
+            prev_url = self.driver.current_url
+
+            # Try clicking with retries, JS fallback if intercepted
+            clicked = False
+            for attempt in range(3):
+                try:
+                    submit_el.click()
+                    clicked = True
+                    break
+                except ElementClickInterceptedException as e:
+                    print(f"⚠️ submit click intercepted on attempt {attempt+1}; attempting JS click fallback.")
+                    try:
+                        self.driver.execute_script("arguments[0].click();", submit_el)
+                        clicked = True
+                        break
+                    except Exception:
+                        # try re-finding the element (in case of re-render)
+                        try:
+                            submit_el = self.driver.find_element(*submit_locator)
+                        except Exception:
+                            pass
+                        time.sleep(0.25)
+                except Exception:
+                    # generic fallback: JS click then re-find
+                    try:
+                        self.driver.execute_script("arguments[0].click();", submit_el)
+                        clicked = True
+                        break
+                    except Exception:
+                        try:
+                            submit_el = self.driver.find_element(*submit_locator)
+                        except Exception:
+                            pass
+                        time.sleep(0.25)
+
+            if not clicked:
+                png, html = self._screenshot_and_snippet("login_submit_failed")
+                console = self.capture_browser_console()
+                self.log_result("Valid Login", False, f"Could not click login submit (screenshot:{png}, console:{console})")
+                print("❌ Could not click login submit. Artifacts:", png, html, console)
+                return
+
+            # Wait for redirect or known post-login url fragment
             local_wait = WebDriverWait(self.driver, 15)
             try:
-                # wait for either url change OR a known post-login path
                 local_wait.until(
                     EC.any_of(
                         EC.url_changes(prev_url),
@@ -303,32 +326,54 @@ class LoginTests(BaseTestSuite):
                 )
             except TimeoutException:
                 current = self.driver.current_url
-                # capture artifacts for debugging CI runs
                 png, html = self._screenshot_and_snippet("login_no_redirect")
                 console = self.capture_browser_console()
-                self.log_result("Valid Login", False, f"Did not redirect; current URL: {current} (screenshot:{png}, console:{console})")
-                print(f"❌ Login did not redirect within timeout. Current URL: {current}. Artifacts: {png}, {html}, {console}")
+
+                # Check for network / error message
+                network_shown = False
+                try:
+                    WebDriverWait(self.driver, 2).until(EC.visibility_of_element_located(
+                        (By.XPATH, ".//div//p[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'network') or contains(., 'error') or contains(., 'Network error')]")
+                    ))
+                    network_shown = True
+                except Exception:
+                    network_shown = False
+
+                if network_shown:
+                    self.log_result("Valid Login", False, "Network error message displayed during login.")
+                    print("❌ Network error message displayed during login. Artifacts:", png, html, console)
+                else:
+                    self.log_result("Valid Login", False, f"Did not redirect; current URL: {current} (screenshot:{png}, console:{console})")
+                    print(f"❌ Login did not redirect within timeout. Current URL: {current}. Artifacts: {png}, {html}, {console}")
                 return
 
-            # final verification
+            # Final verification
             final_url = self.driver.current_url
             if "tasks" in final_url or "settings" in final_url:
                 self.log_result("Valid Login", True, "Successfully logged in and redirected.")
                 print("✅ Successfully logged in and redirected.")
 
-                # only run guidance walkthrough if the popover is present
                 if self.is_guidance_present(timeout=2):
                     print("ℹ️ Guidance popover detected after login — running walkthrough.")
-                    self.guidanceWalkthrough()
+                    try:
+                        self.guidanceWalkthrough()
+                    except Exception:
+                        print("⚠️ guidanceWalkthrough raised an error; continuing.")
                 else:
                     print("ℹ️ No guidance popover detected after login — skipping walkthrough.")
             else:
                 self.log_result("Valid Login", False, f"Unexpected redirect URL: {final_url}")
                 print(f"❌ Login redirected to unexpected URL: {final_url}")
         except Exception as e:
+            tb = traceback.format_exc()
             error_message = getattr(e, "msg", str(e))
-            self.log_result("Valid Login", False, error_message)
-            print(f"❌ An error occurred while validating login: \n- {error_message}")
+            try:
+                png, html = self._screenshot_and_snippet("login_unexpected_error")
+                console = self.capture_browser_console()
+            except Exception:
+                png = html = console = None
+            self.log_result("Valid Login", False, f"{error_message} | {tb} (artifacts: {png}, {html}, {console})")
+            print(f"❌ An error occurred while validating login: \n- {error_message}\n{tb}")
             return
 
     def run_all_login(self):
