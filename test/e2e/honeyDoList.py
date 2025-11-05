@@ -39,6 +39,14 @@ class HoneyDoList(BaseTestSuite):
             self.run_initial_tests()
             results = []
 
+            try:
+                if self.dismiss_guidance_popover():
+                    print("ℹ️ Guidance popover dismissed or not present.")
+                else:
+                    print("⚠️ Guidance popover still present after dismiss attempts.")
+            except Exception as e:
+                print("⚠️ Error trying to dismiss guidance popover:", e)
+
             # Import and run signup feature tests
             print("\n") # Add spacing in console output
             from tests.features.signup import SignupTests

@@ -46,6 +46,9 @@ class TaskPageTests(BaseTestSuite):
                 print("🔄 Redirecting to Task page...")
                 self.land_task_page()
 
+            if not self.dismiss_guidance_popover():
+                print("⚠️ Could not remove guidance popover; continuing but click may be intercepted.")
+
             print(f"➕ Attempting to add task: {task_name}...")
             self.driver.find_element(By.XPATH, "//button[contains(text(), '+ Create Task')]").click()
             self.driver.find_element(By.XPATH, "//form//input[@placeholder='Title']").send_keys(task_name)
