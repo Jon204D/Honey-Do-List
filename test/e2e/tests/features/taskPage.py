@@ -1,7 +1,10 @@
 from dotenv import load_dotenv
 from operations.constants import BASE_URL
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 import time
 from tests.prechecks.base_test_suite import BaseTestSuite
 from datetime import datetime
@@ -10,81 +13,175 @@ from tests.features.login import LoginTests
 
 load_dotenv()
 
+
 class TaskPageTests(BaseTestSuite):
-    def __init__(self, driver, wait):
+    """
+    Task page tests with robust interactions:
+      - dismisses overlays before fiddly clicks
+      - uses BaseTestSuite.ensure_field_set for inputs (dispatch events)
+      - adds explicit small keystroke simulation after JS-set so frameworks register 'user' interaction
+      - uses safe_click which tries normal click and JS fallback
+      - sets date inputs via ISO value (yyyy-mm-dd) using JS
+    """
+
+    def __init__(self, driver=None, wait=None):
         super().__init__(driver)
-        self.wait = wait
+        # accept injected wait or use base wait
+        self.wait = wait if wait is not None else self.wait
 
     def land_task_page(self):
         try:
-            print("🚀 Logging in to access Task page...")
-            # ensure login happens elsewhere and sets session/cookies
-            from tests.features.login import LoginTests
-            LoginTests(self.driver, self.wait).login_valid()
             print("🚀 Launching Task page...")
-            self.driver.get(BASE_URL + "tasks")
+            self.driver.get(f"{BASE_URL.rstrip('/')}/tasks")
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//div[text()='Your Tasks']")))
                 self.log_result("Task Page Load", True, "Task page is present.")
                 print("✅ Task page is present.")
             except Exception as e:
                 self.log_result("Task Page Load", False, "Task page is not present.")
-                error_message = getattr(e, 'msg', str(e))
+                error_message = getattr(e, "msg", str(e))
                 print(f"❌ Task page is not present: {error_message}")
                 raise
         except Exception as e:
-            error_message = getattr(e, 'msg', str(e))
+            error_message = getattr(e, "msg", str(e))
             self.log_result("Task Page Load", False, error_message)
             print(f"❌ An error occurred: \n- {error_message}")
 
+    def _wait_for_no_overlays(self, timeout=6, poll=0.25):
+        overlay_selectors = [
+            "#driver-popover-content.driver-popover",
+            ".driver-popover",
+            ".driver-overlay",
+            "[data-tour='task-modal']",
+            ".reactour__overlay-container",
+        ]
+        end = time.time() + timeout
+        while time.time() < end:
+            any_visible = False
+            for sel in overlay_selectors:
+                try:
+                    elems = self.driver.find_elements(By.CSS_SELECTOR, sel)
+                    for e in elems:
+                        try:
+                            if e.is_displayed():
+                                any_visible = True
+                                break
+                        except Exception:
+                            any_visible = True
+                            break
+                    if any_visible:
+                        break
+                except Exception:
+                    continue
+            if not any_visible:
+                time.sleep(0.25)
+                return True
+            time.sleep(poll)
+        return False
+
+    def _ensure_user_like_interaction(self, element):
+        """
+        After using JS to set values, perform a tiny real-user keystroke sequence
+        so the app's event handlers (which might be keyed to real key events) run.
+        """
+        try:
+            # prefer send_keys on the element
+            element.click()
+            element.send_keys(Keys.SPACE)
+            element.send_keys(Keys.BACKSPACE)
+            element.send_keys(Keys.TAB)
+            time.sleep(0.12)
+            return True
+        except Exception:
+            try:
+                # fallback to ActionChains
+                ActionChains(self.driver).move_to_element(element).click().send_keys(' ').send_keys(Keys.BACKSPACE).send_keys(Keys.TAB).perform()
+                time.sleep(0.12)
+                return True
+            except Exception:
+                return False
+
     def add_task(self, task_name):
         try:
-            if not self.driver.current_url.endswith("/tasks") and not self.driver.current_url.endswith("/"):
+            # ensure on tasks page
+            current = self.driver.current_url
+            base_root = BASE_URL.rstrip("/")
+            if not (current.rstrip("/").endswith("/tasks") or current.rstrip("/") == base_root):
                 print("🔄 Redirecting to Task page...")
                 self.land_task_page()
 
             print(f"➕ Attempting to add task: {task_name}...")
 
-            # Ensure overlays are gone right before clicking
-            if not self.dismiss_guidance_popover():
-                print("⚠️ Could not dismiss guidance popover before clicking Create Task; will attempt safe click/JS fallbacks.")
+            # ensure overlays dismissed
+            try:
+                self.dismiss_guidance_popover()
+            except Exception as e:
+                print("⚠️ dismiss_guidance_popover error:", e)
 
-            # Wait for create button presence
-            create_btn = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[data-tour='create-task'], button[data-tour='create-task-button']")))
+            self._wait_for_no_overlays(timeout=6)
 
-            # Wait until create button is visible, enabled and not disabled attribute
-            self.wait.until(lambda d: create_btn.is_displayed() and create_btn.is_enabled())
-            # Wait for disabled attribute to clear if present
-            self.wait.until(lambda d: create_btn.get_attribute("disabled") in (None, "", False))
+            create_locator = (By.CSS_SELECTOR, "button[data-tour='create-task'], button[data-tour='create-task-button'], button[aria-label*='Create Task']")
+            create_btn = WebDriverWait(self.driver, 12).until(EC.presence_of_element_located(create_locator))
+            create_btn = WebDriverWait(self.driver, 12).until(EC.element_to_be_clickable(create_locator))
 
-            time.sleep(0.5)
+            WebDriverWait(self.driver, 10).until(lambda d: create_btn.get_attribute("disabled") in (None, "", False))
 
-            # Use safe_click helper
             if not self.safe_click(create_btn):
                 png, html = self._screenshot_and_snippet("create_click_failed")
                 self.log_result("Add Task", False, f"Could not click Create Task (screenshot:{png})")
-                print(f"❌ Could not click Create Task. screenshot: {png}")
+                print("❌ Could not click Create Task. screenshot:", png)
                 return
 
-            # Wait for modal/form to appear
+            # wait for form
             try:
-                self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form, form[data-tour='task-form']")))
+                form_locator = (By.CSS_SELECTOR, "form[data-tour='task-form'], form")
+                form = WebDriverWait(self.driver, 12).until(EC.visibility_of_element_located(form_locator))
             except Exception:
-                # keep going but capture diagnostics
                 png, html = self._screenshot_and_snippet("task_form_not_visible")
                 print("⚠️ Task form not visible after clicking create. screenshot:", png)
+                try:
+                    form = self.driver.find_element(By.CSS_SELECTOR, "form[data-tour='task-form'], form")
+                except Exception:
+                    self.log_result("Add Task", False, "Task form did not appear after clicking Create.")
+                    return
 
-            # Fill the form fields
-            title_input = self.wait.until(EC.visibility_of_element_located((By.XPATH, "//form//input[@placeholder='Title' or @name='title']")))
-            desc_input = self.driver.find_element(By.XPATH, "//form//textarea[@placeholder='Description' or @name='description']")
-            title_input.clear()
-            title_input.send_keys(task_name)
-            desc_input.clear()
-            desc_input.send_keys("Automated task created by E2E test.")
-
-            # select status and priority if present
+            # Title: set via JS then simulate keystrokes to make UI treat it like user input
             try:
-                status_select = self.driver.find_element(By.XPATH, "//form//select[option[contains(., 'Select Status')]]")
+                title_input = form.find_element(By.XPATH, ".//input[@placeholder='Title' or @name='title']")
+                # set via JS so underlying value is correct
+                self.driver.execute_script("""
+                    arguments[0].value = arguments[1];
+                    arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+                    arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+                """, title_input, task_name)
+                # then ensure user-like keystroke and blur
+                if not self._ensure_user_like_interaction(title_input):
+                    # fallback: send keys
+                    try:
+                        title_input.clear()
+                        title_input.send_keys(task_name)
+                        title_input.send_keys(Keys.TAB)
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+            # Description
+            try:
+                desc_input = form.find_element(By.XPATH, ".//textarea[@placeholder='Description' or @name='description']")
+                self.driver.execute_script("""
+                    arguments[0].value = arguments[1];
+                    arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+                    arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+                """, desc_input, "Automated task created by E2E test.")
+                # user-like keystroke for frameworks that need it
+                self._ensure_user_like_interaction(desc_input)
+            except Exception:
+                pass
+
+            # selects
+            try:
+                status_select = form.find_element(By.XPATH, ".//select[option[contains(., 'Select Status')]]")
                 for option in status_select.find_elements(By.TAG_NAME, "option"):
                     if option.text.strip().lower() == "pending":
                         option.click()
@@ -93,7 +190,7 @@ class TaskPageTests(BaseTestSuite):
                 pass
 
             try:
-                priority_select = self.driver.find_element(By.XPATH, "//form//select[option[contains(., 'Select Priority')]]")
+                priority_select = form.find_element(By.XPATH, ".//select[option[contains(., 'Select Priority')]]")
                 for option in priority_select.find_elements(By.TAG_NAME, "option"):
                     if option.text.strip().lower() == "high":
                         option.click()
@@ -101,48 +198,74 @@ class TaskPageTests(BaseTestSuite):
             except Exception:
                 pass
 
-            # due date if present
+            # Date: set ISO and emulate small user interaction (TAB) after JS set
             try:
-                date_input = self.driver.find_element(By.XPATH, "//form//input[@type='date']")
-                date_input.send_keys((datetime.now() + relativedelta(months=6)).strftime("%Y-%m-%d"))
+                date_input = form.find_element(By.XPATH, ".//input[@type='date']")
+                target_date = (datetime.now() + relativedelta(months=6)).strftime("%Y-%m-%d")
+                self.driver.execute_script("""
+                    arguments[0].value = arguments[1];
+                    arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+                    arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+                """, date_input, target_date)
+                # emulate a TAB so UI registers the change
+                try:
+                    date_input.send_keys(Keys.TAB)
+                except Exception:
+                    ActionChains(self.driver).move_to_element(date_input).click().send_keys(Keys.TAB).perform()
+                time.sleep(0.12)
             except Exception:
                 pass
 
-            # Submit the form (use safe_click on submit)
-            submit_btn = self.wait.until(EC.presence_of_element_located((By.XPATH, "//form//button[@type='submit']")))
+            # Submit
+            try:
+                submit_btn = form.find_element(By.XPATH, ".//button[@type='submit']")
+            except Exception:
+                submit_btn = WebDriverWait(self.driver, 8).until(EC.presence_of_element_located((By.XPATH, "//form//button[@type='submit']")))
+
+            # Wait for submit to be enabled
+            try:
+                WebDriverWait(self.driver, 8).until(lambda d: submit_btn.get_attribute("disabled") in (None, "", False))
+            except Exception:
+                # allow safe_click to attempt JS fallback
+                pass
+
             if not self.safe_click(submit_btn):
                 png, html = self._screenshot_and_snippet("task_submit_failed")
                 self.log_result("Add Task", False, f"Could not submit Task form (screenshot:{png})")
                 print("❌ Could not submit Task form.", png)
                 return
 
-            # Wait for the task to appear in the list
+            # Verify task created
             try:
-                task_element = self.wait.until(EC.presence_of_element_located((By.XPATH, f"//h3[contains(text(), '{task_name}')]")))
+                task_element = WebDriverWait(self.driver, 12).until(
+                    EC.presence_of_element_located((By.XPATH, f"//h3[contains(normalize-space(.), '{task_name}')]"))
+                )
                 if task_element:
                     self.log_result("Add Task", True, f"Task '{task_name}' added successfully.")
                     print(f"✅ Task '{task_name}' added successfully.")
                 else:
                     self.log_result("Add Task", False, f"Task '{task_name}' was not added.")
                     print(f"❌ Task '{task_name}' was not added.")
-            except Exception as e:
+            except Exception:
                 png, html = self._screenshot_and_snippet("task_not_found")
                 self.log_result("Add Task", False, f"Task '{task_name}' not found after submit (screenshot:{png})")
                 print(f"❌ Task '{task_name}' not found after submit. screenshot: {png}")
         except Exception as e:
-            error_message = getattr(e, 'msg', str(e))
+            error_message = getattr(e, "msg", str(e))
             self.log_result("Add Task", False, error_message)
             print(f"❌ An error occurred while adding task: \n- {error_message}")
 
     def run_all_tasks(self):
         print("\n📋 Running Task Page Tests...")
         try:
+            # login once to establish session/cookies
             LoginTests(self.driver, self.wait).login_valid()
+            # open task page and run adds
             self.land_task_page()
             self.add_task("Test Task 1")
             self.add_task("Test Task 2")
         except Exception as e:
-            error_message = getattr(e, 'msg', str(e))
+            error_message = getattr(e, "msg", str(e))
             self.log_result("Run All Tasks", False, error_message)
             print(f"❌ An error occurred during task tests: \n- {error_message}")
         finally:
