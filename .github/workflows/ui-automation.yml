@@ -44,3 +44,16 @@ jobs:
           TESTUSERNEWPASSWORD: ${{ vars.TESTUSERNEWPASSWORD }}
         run: |
           python test/e2e/run.py
+      
+      - name: List candidate artifact files (for debugging)
+        if: always()
+        run: |
+          echo "Listing /tmp png/html files"
+          ls -la /tmp/*.png /tmp/*.html || true
+
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: /tmp/*.png,/tmp/*.html

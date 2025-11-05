@@ -57,6 +57,8 @@ class TaskPageTests(BaseTestSuite):
             # Wait for disabled attribute to clear if present
             self.wait.until(lambda d: create_btn.get_attribute("disabled") in (None, "", False))
 
+            time.sleep(0.5)
+
             # Use safe_click helper
             if not self.safe_click(create_btn):
                 png, html = self._screenshot_and_snippet("create_click_failed")
