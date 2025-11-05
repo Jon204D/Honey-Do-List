@@ -74,7 +74,7 @@ const Login: React.FC = () => {
 
     try {
       const backendBase = (process.env.REACT_APP_BACKEND_BASE_URL || '').replace(/\/+$/, '');
-      const loginUrl = `${backendBase}/api/users/login`;
+      const loginUrl = `${backendBase}api/users/login`;
       // Make the API POST request
       const response = await fetch(loginUrl,
         {
