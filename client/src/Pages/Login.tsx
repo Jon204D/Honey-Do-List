@@ -73,8 +73,10 @@ const Login: React.FC = () => {
     lastSubmitTime.current = now;
 
     try {
+      const backendBase = (process.env.REACT_APP_BACKEND_BASE_URL || '').replace(/\/+$/, '');
+      const loginUrl = `${backendBase}/api/users/login`;
       // Make the API POST request
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}api/users/login`,
+      const response = await fetch(loginUrl,
         {
           method: "POST",
           headers: {"Content-Type": "application/json"},
