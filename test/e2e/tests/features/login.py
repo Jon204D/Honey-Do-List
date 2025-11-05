@@ -136,7 +136,7 @@ class LoginTests(BaseTestSuite):
                 WebDriverWait(self.driver, 20).until(
                     EC.any_of(
                         EC.url_changes(self.driver.current_url),
-                        EC.url_contains("tasks"),
+                        EC.url_contains("/tasks"),
                         EC.visibility_of_element_located((By.XPATH, "//div[text()='Your Tasks']"))
                     )
                 )
@@ -149,7 +149,7 @@ class LoginTests(BaseTestSuite):
 
             # final verification
             final_url = self.driver.current_url
-            if "tasks" in final_url or "settings" in final_url or self.driver.find_elements(By.XPATH, "//div[text()='Your Tasks']"):
+            if "/tasks" in final_url or "/settings" in final_url or self.driver.find_elements(By.XPATH, "//div[text()='Your Tasks']"):
                 self.log_result("Valid Login", True, "Successfully logged in and redirected.")
                 print("✅ Successfully logged in and redirected.")
                 # run guidance walkthrough only if present

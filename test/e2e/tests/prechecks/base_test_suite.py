@@ -7,6 +7,7 @@ from selenium.common.exceptions import (
     TimeoutException,
 )
 import time
+import json
 
 
 class BaseTestSuite:
@@ -64,6 +65,28 @@ class BaseTestSuite:
             return png, html
         except Exception:
             return None, None
+
+    def capture_browser_console(self):
+        """
+        Save browser console logs to /tmp and return the path.
+        Works for Chrome when logging is enabled on driver creation.
+        """
+        try:
+            ts = int(time.time())
+            fn = f"/tmp/browser_console_{ts}.txt"
+            try:
+                logs = self.driver.get_log("browser")
+            except Exception:
+                logs = []
+            with open(fn, "w", encoding="utf-8") as f:
+                for entry in logs:
+                    try:
+                        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+                    except Exception:
+                        f.write(str(entry) + "\n")
+            return fn
+        except Exception:
+            return None
 
     def dismiss_guidance_popover(self, timeout=8, wait_between=0.25):
         """
@@ -243,7 +266,7 @@ class BaseTestSuite:
         except Exception:
             return False
 
-    def safe_click(self, locator_or_element, retries=4, wait_between=0.6):
+    def safe_click(self, locator_or_element, retries=5, wait_between=0.6):
         """
         Robust click helper.
 
@@ -252,7 +275,8 @@ class BaseTestSuite:
         Behavior:
           - If locator tuple passed, waits for element_to_be_clickable and locates fresh before each try.
           - Retries on interception or stale element. On interception, attempts conservative JS removal
-            of likely overlays and then a JS click fallback.
+            of likely overlays and then a JS click fallback. If a Timeout occurs while locating, it will
+            attempt dismiss_guidance_popover() and retry.
         Returns True on success, False otherwise.
         """
         is_locator = isinstance(locator_or_element, tuple) and len(locator_or_element) == 2
@@ -260,23 +284,35 @@ class BaseTestSuite:
 
         for attempt in range(1, retries + 1):
             try:
-                # find element fresh when locator provided
-                if is_locator:
-                    # wait for clickable locator
-                    element = WebDriverWait(self.driver, max(5, int(self.wait._timeout))).until(
-                        EC.element_to_be_clickable(locator_or_element)
-                    )
-                else:
-                    element = locator_or_element
+                # find element fresh when locator provided; if Timeout, try dismissing overlays then retry
+                try:
+                    if is_locator:
+                        element = WebDriverWait(self.driver, max(5, int(self.wait._timeout))).until(
+                            EC.element_to_be_clickable(locator_or_element)
+                        )
+                    else:
+                        element = locator_or_element
+                except TimeoutException as te:
+                    last_exception = te
+                    # try dismissing overlays and re-trying immediately
+                    try:
+                        print("safe_click: timed out waiting for element; attempting to dismiss overlays and retry.")
+                        self.dismiss_guidance_popover(timeout=3)
+                        time.sleep(0.2)
+                        if is_locator:
+                            element = WebDriverWait(self.driver, 4).until(EC.element_to_be_clickable(locator_or_element))
+                        else:
+                            element = locator_or_element
+                    except Exception as inner:
+                        last_exception = inner
+                        time.sleep(wait_between)
+                        continue
 
                 # ensure displayed/enabled
                 try:
                     self.wait.until(lambda d: element.is_displayed() and element.is_enabled())
                 except Exception:
-                    # continue to next attempt after small pause
                     time.sleep(wait_between)
-                    # re-evaluate by continuing loop
-                    # if locator, loop will re-find
                     continue
 
                 # check disabled attribute
@@ -287,7 +323,6 @@ class BaseTestSuite:
                     disabled = None
                 if disabled not in (None, "", False):
                     time.sleep(wait_between)
-                    # retry
                     continue
 
                 # scroll into view
@@ -342,17 +377,12 @@ class BaseTestSuite:
                         continue
                 except StaleElementReferenceException as se:
                     last_exception = se
-                    # stale -> re-find in next iteration if locator, otherwise caller should re-find
                     time.sleep(wait_between)
                     continue
                 except Exception as e:
                     last_exception = e
                     time.sleep(wait_between)
                     continue
-            except TimeoutException as te:
-                last_exception = te
-                time.sleep(wait_between)
-                continue
             except Exception as outer:
                 last_exception = outer
                 time.sleep(wait_between)
@@ -362,6 +392,12 @@ class BaseTestSuite:
         try:
             png, html = self._screenshot_and_snippet("safe_click_failed")
             print("safe_click final failure screenshot:", png)
+        except Exception:
+            pass
+        # also capture console logs for triage
+        try:
+            console_fn = self.capture_browser_console()
+            print("Browser console saved to:", console_fn)
         except Exception:
             pass
         print("safe_click returning False; last exception:", repr(last_exception))
