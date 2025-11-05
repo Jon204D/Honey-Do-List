@@ -6,6 +6,9 @@ from selenium.common.exceptions import (
     StaleElementReferenceException,
     TimeoutException,
 )
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
+
 import time
 import json
 
@@ -131,6 +134,41 @@ class BaseTestSuite:
             return False
 
     def dismiss_guidance_popover(self, timeout=8, wait_between=0.25):
+        """
+        Try to dismiss known guidance/tour overlays. Strategy (best-effort, conservative):
+          - First try to call driver.js API if exposed (window.__hd_tour.destroy())
+          - Set tour-done localStorage flag so it won't relaunch
+          - Remove known driver.js / tour DOM nodes conservatively
+          - Then proceed with the usual dismissal logic (close buttons, backdrop click, pointer-events tweak)
+        Returns True if overlays are gone or absent, False otherwise.
+        """
+        # --- Try to stop tour via JS API and mark done in localStorage (non-destructive) ---
+        try:
+            self.driver.execute_script("""
+                try {
+                    // call destroy on exposed tour instance if present
+                    if (window.__hd_tour && typeof window.__hd_tour.destroy === 'function') {
+                        try { window.__hd_tour.destroy(); } catch(e) {}
+                    }
+                    // mark tour as seen in localStorage so app won't restart it
+                    try { localStorage.setItem('hd_tour_done_v1','true'); } catch(e) {}
+                    // remove common driver.js and tour DOM nodes conservatively
+                    const sel = [
+                      '.driver-popover', '.driver-overlay', '.driver-popover-content', '.driver-popover-close-btn',
+                      '.reactour__overlay-container', '.introjs-overlay', '.shepherd-modal-overlay-container',
+                      '.shepherd-overlay', '.tippy-box', '.tourguide-overlay', '.guided-tour'
+                    ];
+                    sel.forEach(s => document.querySelectorAll(s).forEach(n => { try { n.remove(); } catch(e){} }));
+                    document.body.classList.remove('driver-active','driver-fade','driver-active-element');
+                } catch(e) {}
+            """)
+            # allow a short settle
+            time.sleep(0.12)
+        except Exception:
+            # non-fatal — continue into normal dismissal attempts
+            pass
+
+        # Continue with the existing overlay dismissal logic (close buttons, backdrop click, pointer-events)
         selectors_to_check = [
             "#driver-popover-content.driver-popover",
             ".driver-popover",
@@ -138,6 +176,16 @@ class BaseTestSuite:
             "svg.driver-overlay",
             "[data-tour='task-modal']",
             ".reactour__overlay-container",
+            ".introjs-overlay",
+            ".introjs-helperLayer",
+            ".shepherd-modal-overlay-container",
+            ".shepherd-overlay",
+            ".tippy-box",
+            ".tourguide-overlay",
+            ".guided-tour",
+            ".overlay",
+            ".modal-backdrop",
+            ".popup-overlay",
         ]
         try:
             # quick presence check
@@ -154,41 +202,118 @@ class BaseTestSuite:
 
             end = time.time() + timeout
             while time.time() < end:
-                # try close buttons
+                # 1) Send ESC to close any keyboard-listening popovers
                 try:
-                    close_btns = self.driver.find_elements(By.CSS_SELECTOR, ".driver-popover-close-btn, button[aria-label='Close']")
+                    ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
+                    time.sleep(0.08)
+                except Exception:
+                    pass
+
+                # 2) Try explicit clicks on close/next/done inside overlays
+                try:
+                    close_btns = self.driver.find_elements(By.CSS_SELECTOR,
+                        ".driver-popover-close-btn, button[aria-label='Close'], button[title='Close'], .close, .close-btn, .tour-close, .introjs-skipbutton, .shepherd-button-secondary")
                     for b in close_btns:
                         try:
                             if b.is_displayed() and b.is_enabled():
                                 try:
                                     b.click()
                                 except Exception:
-                                    self.driver.execute_script("arguments[0].click();", b)
+                                    try:
+                                        self.driver.execute_script("arguments[0].click();", b)
+                                    except Exception:
+                                        pass
                                 time.sleep(wait_between)
                         except Exception:
                             continue
                 except Exception:
                     pass
 
-                # try internal next/done
+                # 3) Try clicking overlay/backdrop centers (some libraries close on backdrop click)
                 try:
-                    nav_btns = self.driver.find_elements(By.CSS_SELECTOR, ".driver-popover-navigation-btns button, .driver-popover-next-btn, .driver-popover-navigation-btns > button")
-                    for b in nav_btns:
+                    for sel in selectors_to_check:
                         try:
-                            txt = (b.text or "").strip().lower()
-                            aria = (b.get_attribute("aria-label") or "").strip().lower()
-                            if any(k in (txt + " " + aria) for k in ("next", "done", "finish")) and b.is_displayed() and b.is_enabled():
+                            elems = self.driver.find_elements(By.CSS_SELECTOR, sel)
+                            for el in elems:
                                 try:
-                                    b.click()
+                                    if not el.is_displayed():
+                                        continue
+                                    rect = self.driver.execute_script("return arguments[0].getBoundingClientRect().toJSON()", el)
+                                    cx = (rect['left'] + rect['right']) / 2
+                                    cy = (rect['top'] + rect['bottom']) / 2
+                                    # attempt to click the overlay/backdrop center (may close)
+                                    try:
+                                        self.driver.execute_script("document.elementFromPoint(arguments[0], arguments[1]).click()", cx, cy)
+                                    except Exception:
+                                        try:
+                                            self.driver.execute_script("arguments[0].click();", el)
+                                        except Exception:
+                                            pass
+                                    time.sleep(wait_between)
                                 except Exception:
-                                    self.driver.execute_script("arguments[0].click();", b)
-                                time.sleep(wait_between)
+                                    continue
                         except Exception:
                             continue
                 except Exception:
                     pass
 
-                # check if any selectors remain visible
+                # 4) Check whether selectors remain visible
+                still_here = False
+                for sel in selectors_to_check:
+                    try:
+                        elems = self.driver.find_elements(By.CSS_SELECTOR, sel)
+                        if elems:
+                            for e in elems:
+                                try:
+                                    if e.is_displayed():
+                                        still_here = True
+                                        break
+                                except Exception:
+                                    still_here = True
+                                    break
+                        if still_here:
+                            break
+                    except Exception:
+                        continue
+
+                if not still_here:
+                    # small stabilization pause
+                    time.sleep(0.12)
+                    return True
+
+                # 5) Intermediate fallback: temporarily disable pointer-events for overlays so underlying page is clickable
+                try:
+                    self.driver.execute_script("""
+                        try {
+                          const selList = arguments[0];
+                          selList.forEach(s => {
+                            document.querySelectorAll(s).forEach(n => {
+                              try { n.__savedPointer = n.style.pointerEvents; n.style.pointerEvents = 'none'; } catch(e){}
+                            });
+                          });
+                        } catch(e){}
+                    """, selectors_to_check)
+                    time.sleep(0.08)
+                except Exception:
+                    pass
+
+                # After disabling pointer-events, attempt to click a safe spot (top-left header where create button resides)
+                try:
+                    # click near top-right where +Create often sits to trigger UI if clickable now
+                    w = self.driver.execute_script("return window.innerWidth")
+                    h = self.driver.execute_script("return window.innerHeight")
+                    # click a little offset inside the header area
+                    cx = w - 80
+                    cy = 60
+                    try:
+                        self.driver.execute_script("document.elementFromPoint(arguments[0], arguments[1]).click()", cx, cy)
+                    except Exception:
+                        pass
+                    time.sleep(0.12)
+                except Exception:
+                    pass
+
+                # Re-check for visibility one more iteration; then attempt final removal if still blocking
                 still_here = False
                 for sel in selectors_to_check:
                     try:
@@ -207,36 +332,47 @@ class BaseTestSuite:
                         continue
 
                 if not still_here:
-                    time.sleep(0.2)
+                    # restore pointer-events if any saved (best-effort)
+                    try:
+                        self.driver.execute_script("""
+                            try {
+                              document.querySelectorAll('*').forEach(n => {
+                                if (n.__savedPointer !== undefined) { n.style.pointerEvents = n.__savedPointer; delete n.__savedPointer; }
+                              });
+                            } catch(e){}
+                        """)
+                    except Exception:
+                        pass
+                    time.sleep(0.12)
                     return True
+
+                # continue loop and try again (until timeout)
                 time.sleep(wait_between)
 
-            # last resort: generic targeted removal
+            # If we exit the loop, overlays did not clear; attempt conservative removal
             try:
                 self.driver.execute_script("""
-                    const known = ['#driver-popover-content.driver-popover', '.driver-popover', '.driver-overlay', 'svg.driver-overlay', '[data-tour="task-modal"]', '.reactour__overlay-container'];
-                    known.forEach(s => document.querySelectorAll(s).forEach(n => n.remove()));
-                    ['driver-active','driver-fade','driver-active-element'].forEach(c => document.body.classList.remove(c));
-                    document.body.removeAttribute('aria-haspopup');
-                    document.body.removeAttribute('aria-expanded');
-                    document.body.removeAttribute('aria-controls');
-                    const vw = window.innerWidth, vh = window.innerHeight;
-                    Array.from(document.querySelectorAll('body *')).forEach(el=>{
-                      try{
-                        const st = window.getComputedStyle(el);
-                        if (!st) return;
-                        if (st.position === 'fixed' || st.position === 'absolute') {
-                          const r = el.getBoundingClientRect();
-                          if (r.width >= vw*0.5 && r.height >= vh*0.25 && st.pointerEvents !== 'none') el.remove();
-                        }
-                      }catch(e){}
-                    });
-                """)
-                time.sleep(0.2)
+                    try {
+                      const known = arguments[0];
+                      known.forEach(s => document.querySelectorAll(s).forEach(n => {
+                        try {
+                          // avoid removing body/html
+                          if (n === document.body || n === document.documentElement) return;
+                          const st = window.getComputedStyle(n);
+                          // only remove large fixed/absolute overlays that likely block interactions
+                          if (st && (st.position === 'fixed' || st.position === 'absolute' || Number(st.zIndex) > 1000)) {
+                              n.remove();
+                          }
+                        } catch(e){}
+                      }));
+                      ['driver-active','driver-fade','driver-active-element'].forEach(c => document.body.classList.remove(c));
+                    } catch(e){}
+                """, selectors_to_check)
+                time.sleep(0.18)
             except Exception:
                 pass
 
-            # final verify
+            # final verification: if still present, capture screenshot and return False
             for sel in selectors_to_check:
                 try:
                     elems = self.driver.find_elements(By.CSS_SELECTOR, sel)
@@ -252,6 +388,7 @@ class BaseTestSuite:
                             return False
                 except Exception:
                     continue
+
             return True
         except Exception:
             try:

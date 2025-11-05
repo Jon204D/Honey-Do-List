@@ -5,16 +5,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import time
 from tests.prechecks.base_test_suite import BaseTestSuite
+from tests.features.login import LoginTests
 
 load_dotenv()
 
 
 class TaskPageTests(BaseTestSuite):
-    """
-    Simplified Task page test that uses straightforward, direct interactions
-    (reverting to the simpler behavior requested).
-    """
-
     def __init__(self, driver=None, wait=None):
         super().__init__(driver)
         # allow injecting a WebDriverWait from caller; otherwise use BaseTestSuite's wait
@@ -41,10 +37,9 @@ class TaskPageTests(BaseTestSuite):
             # Ensure we're on the tasks page
             if not self.driver.current_url.rstrip("/").endswith("/tasks"):
                 self.land_task_page()
-                self.dismiss_guidance_popover()
 
             print(f"➕ Attempting to add task: {task_name}...")
-
+            self.dismiss_guidance_popover()
             # Wait for the Create button to be present and clickable (simple direct interaction)
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), '+ Create Task') or contains(., '+ Create Task')]")))
@@ -162,8 +157,6 @@ class TaskPageTests(BaseTestSuite):
     def run_all_tasks(self):
         print("\n📋 Running Task Page Tests...")
         try:
-            # perform a login once (preserve existing behavior)
-            from tests.features.login import LoginTests
             LoginTests(self.driver, self.wait).login_valid()
 
             self.land_task_page()
