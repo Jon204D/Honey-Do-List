@@ -11,6 +11,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 import time
 import json
+import os
+import shutil
 
 class BaseTestSuite:
     def __init__(self, driver=None, default_wait=12):
@@ -57,6 +59,11 @@ class BaseTestSuite:
                     print(f"  - {result['test']}: {result['message']}")
 
     def _screenshot_and_snippet(self, name_prefix="failure"):
+        """
+        Save screenshot and a short HTML snippet to /tmp and (if ARTIFACTS_DIR set)
+        copy them into ARTIFACTS_DIR so the workflow uploader can pick them up.
+        Returns (png_path, html_path) or (None, None).
+        """
         try:
             ts = int(time.time())
             png = f"/tmp/{name_prefix}_{ts}.png"
@@ -70,11 +77,28 @@ class BaseTestSuite:
                     f.write(self.driver.page_source[:20000])
             except Exception:
                 html = None
+
+            # If an ARTIFACTS_DIR env var is set, copy artifacts there for Actions upload
+            try:
+                artifacts_dir = os.environ.get("ARTIFACTS_DIR") or os.path.join(os.environ.get("GITHUB_WORKSPACE", ""), "artifacts")
+                if artifacts_dir:
+                    os.makedirs(artifacts_dir, exist_ok=True)
+                    if png and os.path.exists(png):
+                        shutil.copy2(png, os.path.join(artifacts_dir, os.path.basename(png)))
+                    if html and os.path.exists(html):
+                        shutil.copy2(html, os.path.join(artifacts_dir, os.path.basename(html)))
+            except Exception:
+                pass
+
             return png, html
         except Exception:
             return None, None
 
     def capture_browser_console(self):
+        """
+        Save browser console logs to /tmp and also copy to ARTIFACTS_DIR if set.
+        Returns the path to the console file (or None).
+        """
         try:
             ts = int(time.time())
             fn = f"/tmp/browser_console_{ts}.txt"
@@ -82,12 +106,25 @@ class BaseTestSuite:
                 logs = self.driver.get_log("browser")
             except Exception:
                 logs = []
-            with open(fn, "w", encoding="utf-8") as f:
-                for entry in logs:
-                    try:
-                        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-                    except Exception:
-                        f.write(str(entry) + "\n")
+            try:
+                with open(fn, "w", encoding="utf-8") as f:
+                    for entry in logs:
+                        try:
+                            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+                        except Exception:
+                            f.write(str(entry) + "\n")
+            except Exception:
+                return None
+
+            # copy to artifacts dir if configured
+            try:
+                artifacts_dir = os.environ.get("ARTIFACTS_DIR") or os.path.join(os.environ.get("GITHUB_WORKSPACE", ""), "artifacts")
+                if artifacts_dir:
+                    os.makedirs(artifacts_dir, exist_ok=True)
+                    shutil.copy2(fn, os.path.join(artifacts_dir, os.path.basename(fn)))
+            except Exception:
+                pass
+
             return fn
         except Exception:
             return None
@@ -146,13 +183,10 @@ class BaseTestSuite:
         try:
             self.driver.execute_script("""
                 try {
-                    // call destroy on exposed tour instance if present
                     if (window.__hd_tour && typeof window.__hd_tour.destroy === 'function') {
                         try { window.__hd_tour.destroy(); } catch(e) {}
                     }
-                    // mark tour as seen in localStorage so app won't restart it
                     try { localStorage.setItem('hd_tour_done_v1','true'); } catch(e) {}
-                    // remove common driver.js and tour DOM nodes conservatively
                     const sel = [
                       '.driver-popover', '.driver-overlay', '.driver-popover-content', '.driver-popover-close-btn',
                       '.reactour__overlay-container', '.introjs-overlay', '.shepherd-modal-overlay-container',
@@ -162,13 +196,11 @@ class BaseTestSuite:
                     document.body.classList.remove('driver-active','driver-fade','driver-active-element');
                 } catch(e) {}
             """)
-            # allow a short settle
             time.sleep(0.12)
         except Exception:
-            # non-fatal — continue into normal dismissal attempts
             pass
 
-        # Continue with the existing overlay dismissal logic (close buttons, backdrop click, pointer-events)
+        # continue with the rest of the existing dismiss logic (unchanged)...
         selectors_to_check = [
             "#driver-popover-content.driver-popover",
             ".driver-popover",
@@ -299,10 +331,8 @@ class BaseTestSuite:
 
                 # After disabling pointer-events, attempt to click a safe spot (top-left header where create button resides)
                 try:
-                    # click near top-right where +Create often sits to trigger UI if clickable now
                     w = self.driver.execute_script("return window.innerWidth")
                     h = self.driver.execute_script("return window.innerHeight")
-                    # click a little offset inside the header area
                     cx = w - 80
                     cy = 60
                     try:
@@ -332,7 +362,6 @@ class BaseTestSuite:
                         continue
 
                 if not still_here:
-                    # restore pointer-events if any saved (best-effort)
                     try:
                         self.driver.execute_script("""
                             try {
@@ -346,7 +375,6 @@ class BaseTestSuite:
                     time.sleep(0.12)
                     return True
 
-                # continue loop and try again (until timeout)
                 time.sleep(wait_between)
 
             # If we exit the loop, overlays did not clear; attempt conservative removal
@@ -356,10 +384,8 @@ class BaseTestSuite:
                       const known = arguments[0];
                       known.forEach(s => document.querySelectorAll(s).forEach(n => {
                         try {
-                          // avoid removing body/html
                           if (n === document.body || n === document.documentElement) return;
                           const st = window.getComputedStyle(n);
-                          // only remove large fixed/absolute overlays that likely block interactions
                           if (st && (st.position === 'fixed' || st.position === 'absolute' || Number(st.zIndex) > 1000)) {
                               n.remove();
                           }

@@ -211,14 +211,16 @@ class LoginTests(BaseTestSuite):
             local_wait = WebDriverWait(self.driver, 6)
             try:
                 local_wait.until(EC.visibility_of_element_located(
-                    (By.XPATH, "//div//p[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'invalid') or contains(., 'Invalid email') or contains(., 'Invalid email or password')]")
+                    (By.XPATH, ".//div//p[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'invalid') or contains(., 'Invalid email') or contains(., 'Invalid email or password')]")
                 ))
                 self.log_result("Invalid Login", True, "Error message displayed for invalid login.")
                 print("✅ Error message displayed for invalid login.")
             except TimeoutException:
-                # no error visible — mark failed but continue
-                self.log_result("Invalid Login", False, "No error message displayed for invalid login (timeout).")
-                print("❌ No error message displayed for invalid login (timeout).")
+                # capture artifacts for debugging CI
+                png, html = self._screenshot_and_snippet("invalid_login_no_error")
+                console = self.capture_browser_console()
+                self.log_result("Invalid Login", False, f"No error message displayed for invalid login (screenshot:{png}, console:{console})")
+                print("❌ No error message displayed for invalid login (timeout). Artifacts:", png, html, console)
         except Exception as e:
             error_message = getattr(e, "msg", str(e))
             self.log_result("Invalid Login", False, error_message)
@@ -283,8 +285,11 @@ class LoginTests(BaseTestSuite):
                 )
             except TimeoutException:
                 current = self.driver.current_url
-                self.log_result("Valid Login", False, f"Did not redirect; current URL: {current}")
-                print(f"❌ Login did not redirect within timeout. Current URL: {current}.")
+                # capture artifacts for debugging CI runs
+                png, html = self._screenshot_and_snippet("login_no_redirect")
+                console = self.capture_browser_console()
+                self.log_result("Valid Login", False, f"Did not redirect; current URL: {current} (screenshot:{png}, console:{console})")
+                print(f"❌ Login did not redirect within timeout. Current URL: {current}. Artifacts: {png}, {html}, {console}")
                 return
 
             # final verification
@@ -300,7 +305,6 @@ class LoginTests(BaseTestSuite):
                 else:
                     print("ℹ️ No guidance popover detected after login — skipping walkthrough.")
             else:
-                # still a redirect but to unexpected place — log it
                 self.log_result("Valid Login", False, f"Unexpected redirect URL: {final_url}")
                 print(f"❌ Login redirected to unexpected URL: {final_url}")
         except Exception as e:
