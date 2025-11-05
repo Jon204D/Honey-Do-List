@@ -13,11 +13,15 @@ from tests.features.login import LoginTests
 
 load_dotenv()
 
-
 class TaskPageTests(BaseTestSuite):
     def __init__(self, driver=None, wait=None):
         super().__init__(driver)
         self.wait = wait if wait is not None else self.wait
+        # set a stable viewport for CI
+        try:
+            self.set_viewport(1366, 768)
+        except Exception:
+            pass
 
     def land_task_page(self):
         try:
@@ -87,7 +91,7 @@ class TaskPageTests(BaseTestSuite):
 
     def add_task(self, task_name):
         try:
-            # ensure we're on the tasks page
+            # ensure on tasks page
             current = self.driver.current_url
             base_root = BASE_URL.rstrip("/")
             if not (current.rstrip("/").endswith("/tasks") or current.rstrip("/") == base_root):
@@ -96,33 +100,24 @@ class TaskPageTests(BaseTestSuite):
 
             print(f"➕ Attempting to add task: {task_name}...")
 
-            # dismiss overlays and wait for them to be gone
+            # dismiss overlays
             try:
                 self.dismiss_guidance_popover()
             except Exception as e:
                 print("⚠️ dismiss_guidance_popover error:", e)
             self._wait_for_no_overlays(timeout=6)
 
-            # Create button - use locator so safe_click can re-find on stale
+            # Create button locator
             create_locator = (By.CSS_SELECTOR, "button[data-tour='create-task'], button[data-tour='create-task-button'], button[aria-label*='Create Task']")
 
-            # get clickable element (fresh)
-            try:
-                create_btn = WebDriverWait(self.driver, 12).until(EC.element_to_be_clickable(create_locator))
-            except Exception as e:
-                png, html = self._screenshot_and_snippet("create_button_not_found")
-                self.log_result("Add Task", False, f"Create button not found (screenshot:{png})")
-                print("❌ Create button not found. screenshot:", png)
-                return
-
-            # attempt to click via safe_click using locator (safe_click will locate each attempt)
+            # open modal using safe_click (locator-based)
             if not self.safe_click(create_locator):
                 png, html = self._screenshot_and_snippet("create_click_failed")
                 self.log_result("Add Task", False, f"Could not click Create Task (screenshot:{png})")
                 print("❌ Could not click Create Task. screenshot:", png)
                 return
 
-            # wait for form to appear
+            # wait for form
             try:
                 form_locator = (By.CSS_SELECTOR, "form[data-tour='task-form'], form")
                 form = WebDriverWait(self.driver, 12).until(EC.visibility_of_element_located(form_locator))
@@ -135,19 +130,11 @@ class TaskPageTests(BaseTestSuite):
                     self.log_result("Add Task", False, "Task form did not appear after clicking Create.")
                     return
 
-            # Title input - JS set then small real keystroke to ensure frameworks register change
+            # Title
             try:
                 title_input = form.find_element(By.XPATH, ".//input[@placeholder='Title' or @name='title']")
-                self.driver.execute_script(
-                    """
-                    arguments[0].value = arguments[1];
-                    arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
-                    arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
-                """,
-                    title_input,
-                    task_name,
-                )
-                # ensure frameworks see a user event
+                self.ensure_field_set(title_input, task_name)
+                # encourage framework to register real interaction
                 self._ensure_user_like_interaction(title_input)
             except Exception:
                 pass
@@ -155,15 +142,7 @@ class TaskPageTests(BaseTestSuite):
             # Description
             try:
                 desc_input = form.find_element(By.XPATH, ".//textarea[@placeholder='Description' or @name='description']")
-                self.driver.execute_script(
-                    """
-                    arguments[0].value = arguments[1];
-                    arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
-                    arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
-                """,
-                    desc_input,
-                    "Automated task created by E2E test.",
-                )
+                self.ensure_field_set(desc_input, "Automated task created by E2E test.")
                 self._ensure_user_like_interaction(desc_input)
             except Exception:
                 pass
@@ -187,19 +166,11 @@ class TaskPageTests(BaseTestSuite):
             except Exception:
                 pass
 
-            # date: set ISO value via JS and send a TAB
+            # date
             try:
                 date_input = form.find_element(By.XPATH, ".//input[@type='date']")
                 target_date = (datetime.now() + relativedelta(months=6)).strftime("%Y-%m-%d")
-                self.driver.execute_script(
-                    """
-                    arguments[0].value = arguments[1];
-                    arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
-                    arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
-                """,
-                    date_input,
-                    target_date,
-                )
+                self.ensure_field_set(date_input, target_date)
                 try:
                     date_input.send_keys(Keys.TAB)
                 except Exception:
@@ -208,24 +179,15 @@ class TaskPageTests(BaseTestSuite):
             except Exception:
                 pass
 
-            # Submit - use locator so safe_click can re-find if needed
+            # submit
             submit_locator = (By.XPATH, "//form//button[@type='submit']")
-            try:
-                # wait for presence
-                WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(submit_locator))
-            except Exception:
-                png, html = self._screenshot_and_snippet("submit_not_found")
-                self.log_result("Add Task", False, f"Submit button not found (screenshot:{png})")
-                print("❌ Submit button not found. screenshot:", png)
-                return
-
             if not self.safe_click(submit_locator):
                 png, html = self._screenshot_and_snippet("task_submit_failed")
                 self.log_result("Add Task", False, f"Could not submit Task form (screenshot:{png})")
                 print("❌ Could not submit Task form.", png)
                 return
 
-            # verify task added
+            # verify
             try:
                 task_element = WebDriverWait(self.driver, 12).until(
                     EC.presence_of_element_located((By.XPATH, f"//h3[contains(normalize-space(.), '{task_name}')]"))
@@ -240,11 +202,12 @@ class TaskPageTests(BaseTestSuite):
                 png, html = self._screenshot_and_snippet("task_not_found")
                 self.log_result("Add Task", False, f"Task '{task_name}' not found after submit (screenshot:{png})")
                 print(f"❌ Task '{task_name}' not found after submit. screenshot: {png}")
+
         except Exception as e:
             error_message = getattr(e, "msg", str(e))
             self.log_result("Add Task", False, error_message)
             print(f"❌ An error occurred while adding task: \n- {error_message}")
-
+            
     def run_all_tasks(self):
         print("\n📋 Running Task Page Tests...")
         try:

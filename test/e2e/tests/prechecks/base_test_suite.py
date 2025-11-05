@@ -9,17 +9,26 @@ from selenium.common.exceptions import (
 import time
 import json
 
-
 class BaseTestSuite:
     def __init__(self, driver=None, default_wait=12):
         if driver is None:
             from operations.webdriverCheck import get_available_driver
-
             self.driver = get_available_driver()
         else:
             self.driver = driver
         self.wait = WebDriverWait(self.driver, default_wait)
         self.test_results = []
+
+    def set_viewport(self, w=1366, h=768):
+        """Set the browser window size (helps headless CI match local)."""
+        try:
+            self.driver.set_window_size(w, h)
+        except Exception:
+            try:
+                # fallback to maximize
+                self.driver.maximize_window()
+            except Exception:
+                pass
 
     def log_result(self, test_name, passed, message):
         result = {"test": test_name, "passed": passed, "message": message}
@@ -37,11 +46,7 @@ class BaseTestSuite:
         print(f"Total Tests: {total_tests}")
         print(f"✅ Passed: {passed_tests}")
         print(f"❌ Failed: {failed_tests}")
-        print(
-            f"Success Rate: {(passed_tests/total_tests)*100:.1f}%"
-            if total_tests > 0
-            else "No tests run"
-        )
+        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%" if total_tests > 0 else "No tests run")
         if failed_tests > 0:
             print("\nFailed Tests:")
             for result in self.test_results:
@@ -67,10 +72,6 @@ class BaseTestSuite:
             return None, None
 
     def capture_browser_console(self):
-        """
-        Save browser console logs to /tmp and return the path.
-        Works for Chrome when logging is enabled on driver creation.
-        """
         try:
             ts = int(time.time())
             fn = f"/tmp/browser_console_{ts}.txt"
@@ -88,14 +89,48 @@ class BaseTestSuite:
         except Exception:
             return None
 
+    def _element_from_point_info(self, x, y):
+        """Return a dict with the tag, classes, id, and truncated outerHTML of element at (x,y)."""
+        try:
+            info = self.driver.execute_script("""
+                try {
+                    const x = arguments[0], y = arguments[1];
+                    const el = document.elementFromPoint(x, y);
+                    if (!el) return null;
+                    return {
+                        tag: el.tagName,
+                        id: el.id || '',
+                        classes: el.className || '',
+                        outer: (el.outerHTML || '').slice(0, 4000),
+                        rect: el.getBoundingClientRect ? el.getBoundingClientRect().toJSON() : null
+                    };
+                } catch(e) { return null; }
+            """, int(x), int(y))
+            return info
+        except Exception:
+            return None
+
+    def _remove_element_at_point(self, x, y):
+        """Remove the top element at x,y (if safe) and return True if removed."""
+        try:
+            removed = self.driver.execute_script("""
+                try {
+                    const x = arguments[0], y = arguments[1];
+                    const el = document.elementFromPoint(x, y);
+                    if (!el) return false;
+                    // do not remove body or html
+                    if (el === document.body || el === document.documentElement) return false;
+                    el.remove();
+                    return true;
+                } catch(e) {
+                    return false;
+                }
+            """, int(x), int(y))
+            return bool(removed)
+        except Exception:
+            return False
+
     def dismiss_guidance_popover(self, timeout=8, wait_between=0.25):
-        """
-        Try to dismiss known guidance/tour overlays. Conservative:
-         - Attempt to click close/next/done buttons if present
-         - Wait for selectors to disappear
-         - Final fallback: targeted JS removal of obvious overlays
-        Returns True if overlays are absent/dismissed, False otherwise.
-        """
         selectors_to_check = [
             "#driver-popover-content.driver-popover",
             ".driver-popover",
@@ -104,7 +139,6 @@ class BaseTestSuite:
             "[data-tour='task-modal']",
             ".reactour__overlay-container",
         ]
-
         try:
             # quick presence check
             present = False
@@ -120,7 +154,7 @@ class BaseTestSuite:
 
             end = time.time() + timeout
             while time.time() < end:
-                # try clicking close buttons if any
+                # try close buttons
                 try:
                     close_btns = self.driver.find_elements(By.CSS_SELECTOR, ".driver-popover-close-btn, button[aria-label='Close']")
                     for b in close_btns:
@@ -136,7 +170,7 @@ class BaseTestSuite:
                 except Exception:
                     pass
 
-                # try Next/Done internal buttons
+                # try internal next/done
                 try:
                     nav_btns = self.driver.find_elements(By.CSS_SELECTOR, ".driver-popover-navigation-btns button, .driver-popover-next-btn, .driver-popover-navigation-btns > button")
                     for b in nav_btns:
@@ -154,43 +188,38 @@ class BaseTestSuite:
                 except Exception:
                     pass
 
-                # are any of the selectors still visible?
+                # check if any selectors remain visible
                 still_here = False
                 for sel in selectors_to_check:
                     try:
                         elems = self.driver.find_elements(By.CSS_SELECTOR, sel)
-                        if elems:
-                            for e in elems:
-                                try:
-                                    if e.is_displayed():
-                                        still_here = True
-                                        break
-                                except Exception:
+                        for e in elems:
+                            try:
+                                if e.is_displayed():
                                     still_here = True
                                     break
+                            except Exception:
+                                still_here = True
+                                break
                         if still_here:
                             break
                     except Exception:
                         continue
 
                 if not still_here:
-                    # small stabilization pause
                     time.sleep(0.2)
                     return True
-
                 time.sleep(wait_between)
 
-            # Last resort: remove likely overlays via JS (conservative, targeted)
+            # last resort: generic targeted removal
             try:
-                self.driver.execute_script(
-                    """
+                self.driver.execute_script("""
                     const known = ['#driver-popover-content.driver-popover', '.driver-popover', '.driver-overlay', 'svg.driver-overlay', '[data-tour="task-modal"]', '.reactour__overlay-container'];
                     known.forEach(s => document.querySelectorAll(s).forEach(n => n.remove()));
                     ['driver-active','driver-fade','driver-active-element'].forEach(c => document.body.classList.remove(c));
                     document.body.removeAttribute('aria-haspopup');
                     document.body.removeAttribute('aria-expanded');
                     document.body.removeAttribute('aria-controls');
-                    // remove very large fixed elements that likely are overlays
                     const vw = window.innerWidth, vh = window.innerHeight;
                     Array.from(document.querySelectorAll('body *')).forEach(el=>{
                       try{
@@ -202,13 +231,12 @@ class BaseTestSuite:
                         }
                       }catch(e){}
                     });
-                """
-                )
+                """)
                 time.sleep(0.2)
             except Exception:
                 pass
 
-            # verify again
+            # final verify
             for sel in selectors_to_check:
                 try:
                     elems = self.driver.find_elements(By.CSS_SELECTOR, sel)
@@ -224,7 +252,6 @@ class BaseTestSuite:
                             return False
                 except Exception:
                     continue
-
             return True
         except Exception:
             try:
@@ -234,14 +261,9 @@ class BaseTestSuite:
                 pass
             return False
 
-    def ensure_field_set(self, element, value, timeout=1.0):
-        """
-        Set a field value and dispatch events so frameworks register changes.
-        Returns True if verification of value succeeded or best-effort applied.
-        """
+    def ensure_field_set(self, element, value, timeout=0.12):
         try:
-            self.driver.execute_script(
-                """
+            self.driver.execute_script("""
                 try{
                   const el = arguments[0];
                   const val = arguments[1];
@@ -253,54 +275,39 @@ class BaseTestSuite:
                   el.dispatchEvent(new KeyboardEvent('keyup', { key: 'a', bubbles: true }));
                   el.blur && el.blur();
                 } catch(e){}
-                """,
-                element,
-                value,
-            )
+            """, element, value)
             time.sleep(timeout)
             try:
                 applied = element.get_attribute("value")
-                return applied == value or value in (applied or "")
+                return applied == value or (applied and value in applied)
             except Exception:
                 return True
         except Exception:
             return False
 
-    def safe_click(self, locator_or_element, retries=5, wait_between=0.6):
-        """
-        Robust click helper.
-
-        Accepts:
-          - locator_or_element: either a locator tuple (By, selector) or a WebElement.
-        Behavior:
-          - If locator tuple passed, waits for element_to_be_clickable and locates fresh before each try.
-          - Retries on interception or stale element. On interception, attempts conservative JS removal
-            of likely overlays and then a JS click fallback. If a Timeout occurs while locating, it will
-            attempt dismiss_guidance_popover() and retry.
-        Returns True on success, False otherwise.
-        """
+    def safe_click(self, locator_or_element, retries=6, wait_between=0.6):
         is_locator = isinstance(locator_or_element, tuple) and len(locator_or_element) == 2
         last_exception = None
 
         for attempt in range(1, retries + 1):
             try:
-                # find element fresh when locator provided; if Timeout, try dismissing overlays then retry
+                # find fresh
                 try:
                     if is_locator:
-                        element = WebDriverWait(self.driver, max(5, int(self.wait._timeout))).until(
+                        element = WebDriverWait(self.driver, max(4, int(self.wait._timeout))).until(
                             EC.element_to_be_clickable(locator_or_element)
                         )
                     else:
                         element = locator_or_element
                 except TimeoutException as te:
                     last_exception = te
-                    # try dismissing overlays and re-trying immediately
+                    # try dismiss overlays and retry shortly
                     try:
                         print("safe_click: timed out waiting for element; attempting to dismiss overlays and retry.")
-                        self.dismiss_guidance_popover(timeout=3)
+                        self.dismiss_guidance_popover(timeout=2)
                         time.sleep(0.2)
                         if is_locator:
-                            element = WebDriverWait(self.driver, 4).until(EC.element_to_be_clickable(locator_or_element))
+                            element = WebDriverWait(self.driver, 3).until(EC.element_to_be_clickable(locator_or_element))
                         else:
                             element = locator_or_element
                     except Exception as inner:
@@ -315,8 +322,7 @@ class BaseTestSuite:
                     time.sleep(wait_between)
                     continue
 
-                # check disabled attribute
-                disabled = None
+                # disabled attr
                 try:
                     disabled = element.get_attribute("disabled")
                 except Exception:
@@ -331,6 +337,14 @@ class BaseTestSuite:
                 except Exception:
                     pass
 
+                # compute click point
+                try:
+                    rect = self.driver.execute_script("return arguments[0].getBoundingClientRect().toJSON()", element)
+                    cx = (rect['left'] + rect['right']) / 2
+                    cy = (rect['top'] + rect['bottom']) / 2
+                except Exception:
+                    cx, cy = None, None
+
                 # attempt normal click
                 try:
                     element.click()
@@ -339,10 +353,20 @@ class BaseTestSuite:
                     last_exception = ex
                     png, html = self._screenshot_and_snippet("click_intercepted")
                     print(f"⚠️ click intercepted on attempt {attempt}; screenshot: {png}")
-                    # conservative overlay removal
+                    # capture element at the click point for debugging
+                    if cx is not None and cy is not None:
+                        blocker = self._element_from_point_info(cx, cy)
+                        print("Element at click point:", blocker)
+                        # try targeted removal of the blocking element
+                        if blocker:
+                            removed = self._remove_element_at_point(cx, cy)
+                            print("Attempted to remove blocking element at point:", removed)
+                            time.sleep(0.12)
+                            # re-find next iteration will get fresh element
+                            continue
+                    # fallback: try generic overlay removal
                     try:
-                        self.driver.execute_script(
-                            """
+                        self.driver.execute_script("""
                             const vw = window.innerWidth, vh = window.innerHeight;
                             document.querySelectorAll('svg, div').forEach(el=>{
                               try{
@@ -356,25 +380,11 @@ class BaseTestSuite:
                             });
                             ['#driver-popover-content.driver-popover', '.driver-popover', '.driver-overlay', '[data-tour=\"task-modal\"]'].forEach(s => document.querySelectorAll(s).forEach(n=>n.remove()));
                             document.body.classList.remove('driver-active','driver-fade','driver-active-element');
-                        """
-                        )
-                        time.sleep(0.15)
-                    except Exception as js_e:
-                        print("⚠️ JS overlay removal attempt failed:", js_e)
-
-                    # try JS click as fallback
-                    try:
-                        self.driver.execute_script("arguments[0].click();", element)
-                        return True
-                    except StaleElementReferenceException as se:
-                        last_exception = se
-                        # on stale element, continue to retry and re-find if locator
-                        time.sleep(wait_between)
-                        continue
-                    except Exception as js_click_e:
-                        last_exception = js_click_e
-                        time.sleep(wait_between)
-                        continue
+                        """)
+                        time.sleep(0.12)
+                    except Exception:
+                        pass
+                    continue
                 except StaleElementReferenceException as se:
                     last_exception = se
                     time.sleep(wait_between)
@@ -388,13 +398,11 @@ class BaseTestSuite:
                 time.sleep(wait_between)
                 continue
 
-        # final failure: capture screenshot and return False
         try:
             png, html = self._screenshot_and_snippet("safe_click_failed")
             print("safe_click final failure screenshot:", png)
         except Exception:
             pass
-        # also capture console logs for triage
         try:
             console_fn = self.capture_browser_console()
             print("Browser console saved to:", console_fn)
