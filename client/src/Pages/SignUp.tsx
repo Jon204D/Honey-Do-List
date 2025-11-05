@@ -60,7 +60,7 @@ const SignUp: React.FC = () => {
 
     try {
       // Make the API POST request
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/register`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}api/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

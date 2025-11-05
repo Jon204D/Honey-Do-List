@@ -66,7 +66,7 @@ const Settings: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/user/${userId}`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}api/users/user/${userId}`, {
           method: "PUT",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({

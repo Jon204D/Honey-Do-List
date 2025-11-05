@@ -23,7 +23,7 @@ const Delete: React.FC<DeleteProps> = ({userId, clearAllAndGoHome, setFormMessag
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
       if (userId) {
-        const res = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/user/${userId}`, {
+        const res = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}api/users/user/${userId}`, {
            method: "DELETE", headers, credentials: "include" }
         )
 
