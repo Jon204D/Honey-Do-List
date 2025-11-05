@@ -80,7 +80,7 @@ class LoginTests(BaseTestSuite):
                 pass
             # reload login page to remove banners/modals
             try:
-                self.driver.get(BASE_URL + "/login")
+                self.driver.get(BASE_URL + "login")
                 # give the page a moment to settle
                 time.sleep(0.5)
                 self.wait.until(EC.visibility_of_element_located((By.NAME, "email")))
@@ -120,8 +120,8 @@ class LoginTests(BaseTestSuite):
                 local_wait.until(
                     EC.any_of(
                         EC.url_changes(prev_url),
-                        EC.url_contains("/tasks"),
-                        EC.url_contains("/settings"),
+                        EC.url_contains("tasks"),
+                        EC.url_contains("settings"),
                     )
                 )
             except TimeoutException:
@@ -132,7 +132,7 @@ class LoginTests(BaseTestSuite):
 
             # final verification
             final_url = self.driver.current_url
-            if "/tasks" in final_url or "/settings" in final_url:
+            if "tasks" in final_url or "settings" in final_url:
                 self.log_result("Valid Login", True, "Successfully logged in and redirected.")
                 print("✅ Successfully logged in and redirected.")
 
