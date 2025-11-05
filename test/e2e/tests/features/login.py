@@ -264,6 +264,9 @@ class LoginTests(BaseTestSuite):
             email_el.send_keys(email)
             pwd_el.send_keys(password)
 
+            if not self.dismiss_guidance_popover():
+                print("⚠️ Could not dismiss popover before login; continuing with caution.")
+
             submit = self.driver.find_element(By.XPATH, "//form//button[@type='submit']")
             prev_url = self.driver.current_url
             submit.click()

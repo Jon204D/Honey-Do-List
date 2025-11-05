@@ -43,7 +43,7 @@ class HoneyDoList(BaseTestSuite):
                 if self.dismiss_guidance_popover():
                     print("ℹ️ Guidance popover dismissed or not present.")
                 else:
-                    print("⚠️ Guidance popover still present after dismiss attempts.")
+                    print("⚠️ Guidance popover still present after attempts.")
             except Exception as e:
                 print("⚠️ Error trying to dismiss guidance popover:", e)
 

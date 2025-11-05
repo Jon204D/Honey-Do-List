@@ -11,7 +11,8 @@ class BaseTestSuite:
             self.driver = get_available_driver()
         else:
             self.driver = driver
-        self.wait = WebDriverWait(self.driver, 10)
+        # default waits can be increased for CI if needed
+        self.wait = WebDriverWait(self.driver, 12)
         self.test_results = []
 
     def log_result(self, test_name, passed, message):
@@ -41,103 +42,180 @@ class BaseTestSuite:
                 if bool(result["passed"]) is False:
                     print(f"  - {result['test']}: {result['message']}")
 
+    def _screenshot_and_snippet(self, name_prefix="failure"):
+        try:
+            ts = int(time.time())
+            png = f"/tmp/{name_prefix}_{ts}.png"
+            html = f"/tmp/{name_prefix}_{ts}.html"
+            try:
+                self.driver.save_screenshot(png)
+            except Exception:
+                png = None
+            try:
+                with open(html, "w", encoding="utf-8") as f:
+                    f.write(self.driver.page_source[:20000])
+            except Exception:
+                html = None
+            return png, html
+        except Exception:
+            return None, None
+
     def dismiss_guidance_popover(self, timeout=8, wait_between=0.25):
         """
-        Detect and dismiss the in-app guidance/popover that blocks clicks in CI.
+        Robustly dismiss overlays/popovers that block clicks in CI.
 
         Strategy:
-          1) Quick presence check for popover; if absent return True.
-          2) Try Close button on the popover.
-          3) Try clicking internal Next/Done buttons until popover disappears.
-          4) Final fallback: remove the popover DOM & driver-active classes via JS.
-        Returns True if popover dismissed or absent, False otherwise.
+         - Quick lookup for known overlay/popover/modal selectors
+         - Attempt natural closes (close button, Next/Done)
+         - Wait for invisibility; if still present, remove via JS including SVG overlays and data-tour modals
+         - Return True if absent/dismissed, False otherwise
         """
+        selectors_to_check = [
+            "#driver-popover-content.driver-popover",
+            ".driver-popover",
+            ".driver-overlay",                 # generic overlay element
+            "svg.driver-overlay",              # some overlays use svg
+            "body.driver-active",
+            "[data-tour='task-modal']",
+            "[data-tour='task-modal'] *",      # modal children
+        ]
+
         try:
-            # quick check for popover presence
-            try:
-                popover = self.driver.find_element(By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover")
-            except Exception:
-                return True
-
-            end_time = time.time() + timeout
-            while time.time() < end_time:
+            # quick presence check
+            present = False
+            for sel in selectors_to_check:
                 try:
-                    # 1) Try a visible close button
-                    try:
-                        close_btn = popover.find_element(By.CSS_SELECTOR, ".driver-popover-close-btn, button[aria-label='Close']")
-                        if close_btn.is_displayed() and close_btn.is_enabled():
-                            try:
-                                close_btn.click()
-                            except Exception:
-                                self.driver.execute_script("arguments[0].click();", close_btn)
-                            time.sleep(wait_between)
-                            try:
-                                popover = self.driver.find_element(By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover")
-                                # if still present, continue loop to try navigation
-                            except Exception:
-                                return True
-                    except Exception:
-                        pass
-
-                    # 2) Try internal navigation buttons (Next / Done / Finish)
-                    try:
-                        candidate = None
-                        nav_buttons = popover.find_elements(By.CSS_SELECTOR, ".driver-popover-navigation-btns button, .driver-popover-next-btn, .driver-popover-prev-btn, .driver-popover-navigation-btns > button")
-                        for b in nav_buttons:
-                            text = (b.text or "").strip().lower()
-                            aria = (b.get_attribute("aria-label") or "").strip().lower()
-                            label = f"{text} {aria}".strip()
-                            if any(k in label for k in ("done", "finish", "next")) and b.is_displayed() and b.is_enabled():
-                                candidate = b
-                                break
-
-                        if candidate:
-                            try:
-                                candidate.click()
-                            except Exception:
-                                self.driver.execute_script("arguments[0].click();", candidate)
-                            time.sleep(wait_between)
-                            try:
-                                popover = self.driver.find_element(By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover")
-                                # still present -> loop again
-                            except Exception:
-                                return True
-                            continue
-                    except Exception:
-                        pass
-
-                    # nothing else to try inside popover
+                    el = self.driver.find_element(By.CSS_SELECTOR, sel)
+                    present = True
                     break
                 except Exception:
-                    break
+                    continue
+            if not present:
+                return True
 
-            # 3) Final fallback: remove popover programmatically (last resort)
+            end = time.time() + timeout
+            while time.time() < end:
+                # 1) Try popover close buttons
+                try:
+                    close_btns = self.driver.find_elements(By.CSS_SELECTOR, ".driver-popover-close-btn, button[aria-label='Close']")
+                    for b in close_btns:
+                        if b.is_displayed() and b.is_enabled():
+                            try:
+                                b.click()
+                            except Exception:
+                                self.driver.execute_script("arguments[0].click();", b)
+                            time.sleep(wait_between)
+                except Exception:
+                    pass
+
+                # 2) Try internal Next/Done within popover(s)
+                try:
+                    nav_btns = self.driver.find_elements(By.CSS_SELECTOR, ".driver-popover-navigation-btns button, .driver-popover-next-btn, .driver-popover-prev-btn, .driver-popover-navigation-btns > button")
+                    for b in nav_btns:
+                        try:
+                            txt = (b.text or "").strip().lower()
+                            aria = (b.get_attribute("aria-label") or "").strip().lower()
+                            if any(k in (txt + " " + aria) for k in ("next", "done", "finish")) and b.is_displayed() and b.is_enabled():
+                                try:
+                                    b.click()
+                                except Exception:
+                                    self.driver.execute_script("arguments[0].click();", b)
+                                time.sleep(wait_between)
+                        except Exception:
+                            continue
+                except Exception:
+                    pass
+
+                # 3) If task-modal present, try to close it via Cancel/Close button inside
+                try:
+                    modals = self.driver.find_elements(By.CSS_SELECTOR, "[data-tour='task-modal']")
+                    for m in modals:
+                        try:
+                            # look for cancel or close buttons inside modal
+                            cancel = m.find_elements(By.XPATH, ".//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'cancel') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'close') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'done')]")
+                            if cancel:
+                                for c in cancel:
+                                    if c.is_displayed() and c.is_enabled():
+                                        try:
+                                            c.click()
+                                        except Exception:
+                                            self.driver.execute_script("arguments[0].click();", c)
+                                        time.sleep(wait_between)
+                                        break
+                        except Exception:
+                            continue
+                except Exception:
+                    pass
+
+                # 4) Wait for any of the known selectors to be invisible
+                still_here = False
+                for sel in selectors_to_check:
+                    try:
+                        elems = self.driver.find_elements(By.CSS_SELECTOR, sel)
+                        if elems:
+                            # If any element still visible, we are not done
+                            for e in elems:
+                                try:
+                                    if e.is_displayed():
+                                        still_here = True
+                                        break
+                                except Exception:
+                                    # if element stale or not queryable, ignore
+                                    still_here = True
+                                    break
+                        if still_here:
+                            break
+                    except Exception:
+                        continue
+
+                if not still_here:
+                    return True
+
+                time.sleep(wait_between)
+
+            # Final fallback: remove known overlay/popover nodes and classes via JS
             try:
                 self.driver.execute_script("""
-                    const pop = document.querySelector('#driver-popover-content.driver-popover, .driver-popover');
-                    if (pop && pop.parentNode) pop.parentNode.removeChild(pop);
-                    document.body.classList.remove('driver-active','driver-fade','driver-active-element');
+                    // remove common popovers / overlays
+                    const sels = ['#driver-popover-content.driver-popover', '.driver-popover', '.driver-overlay', 'svg.driver-overlay', '[data-tour=\"task-modal\"]'];
+                    sels.forEach(s => {
+                        document.querySelectorAll(s).forEach(n => n.remove());
+                    });
+                    // Also clean body classes/attrs that can block clicks
+                    ['driver-active','driver-fade','driver-active-element'].forEach(c => document.body.classList.remove(c));
                     document.body.removeAttribute('aria-haspopup');
                     document.body.removeAttribute('aria-expanded');
                     document.body.removeAttribute('aria-controls');
                 """)
                 time.sleep(0.2)
-                try:
-                    self.driver.find_element(By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover")
-                    # still found => failure
-                    return False
-                except Exception:
-                    return True
             except Exception:
-                # If JS removal fails, capture screenshot for CI debugging
+                pass
+
+            # final verification: ensure selectors are gone/hidden
+            for sel in selectors_to_check:
                 try:
-                    ts = int(time.time())
-                    fn = f"/tmp/popover_remove_failed_{ts}.png"
-                    self.driver.save_screenshot(fn)
-                    print(f"Failed to remove popover. Screenshot saved to: {fn}")
+                    elems = self.driver.find_elements(By.CSS_SELECTOR, sel)
+                    if elems:
+                        for e in elems:
+                            try:
+                                if e.is_displayed():
+                                    # still blocking
+                                    png, html = self._screenshot_and_snippet("popover_still_present")
+                                    print("Popover still present. screenshot:", png, "html:", html)
+                                    return False
+                            except Exception:
+                                # can't query displayed => assume still present
+                                png, html = self._screenshot_and_snippet("popover_query_error")
+                                print("Popover presence ambiguous. screenshot:", png, "html:", html)
+                                return False
                 except Exception:
-                    pass
-                return False
-        except Exception:
-            # unexpected error - don't crash tests, but report failure to dismiss
+                    continue
+
+            return True
+        except Exception as ex:
+            try:
+                png, html = self._screenshot_and_snippet("dismiss_error")
+                print("dismiss_guidance_popover unexpected error; screenshot:", png, "html:", html)
+            except Exception:
+                pass
             return False
