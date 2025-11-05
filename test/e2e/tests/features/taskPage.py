@@ -50,7 +50,18 @@ class TaskPageTests(BaseTestSuite):
                 print("⚠️ Could not remove guidance popover; continuing but click may be intercepted.")
 
             print(f"➕ Attempting to add task: {task_name}...")
-            self.driver.find_element(By.XPATH, "//button[contains(text(), '+ Create Task')]").click()
+            # wait for button presence
+            create_button = self.driver.find_element(By.XPATH, "//button[contains(text(), '+ Create Task')]")
+            
+            # now use safe_click (note: safe_click expects a WebElement)
+            if not self.safe_click(create_button):
+                # final fallback: take screenshot and abort this add attempt
+                png, html = self._screenshot_and_snippet("create_click_failed")
+                self.log_result("Add Task", False, f"Could not click Create Task (screenshot:{png})")
+                return
+            # after create click, wait for modal to appear
+            self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form[data-tour='task-form'], form")))
+
             self.driver.find_element(By.XPATH, "//form//input[@placeholder='Title']").send_keys(task_name)
             self.driver.find_element(By.XPATH, "//form//textarea[@placeholder='Description']").send_keys("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam a odio imperdiet, dictum diam id, fringilla sapien. Proin nec velit at magna dapibus convallis. Maecenas nec orci vel tellus pellentesque maximus id a tellus. Donec eget convallis lorem, nec dapibus magna. Duis vel malesuada lectus. Ut quis eleifend dolor. Proin imperdiet posuere sodales. In blandit malesuada massa, non accumsan velit sodales ut. Etiam non rutrum neque. Donec ut augue nec est sodales semper at sit amet odio. Cras quis velit a lorem aliquam rhoncus vel eget turpis. Morbi fringilla neque condimentum tortor gravida scelerisque. Vestibulum placerat leo vitae ipsum suscipit. Nullam a felis euismod, convallis erat in, facilisis libero. Nulla facilisi. In hac habitasse platea dictumst.")
             select_Status = self.driver.find_element(By.XPATH, "//form//select[option[contains(text(), 'Select Status')]]")

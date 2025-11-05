@@ -1,6 +1,7 @@
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import ElementClickInterceptedException, StaleElementReferenceException
 import time
 import traceback
 
@@ -219,3 +220,74 @@ class BaseTestSuite:
             except Exception:
                 pass
             return False
+        
+    def safe_click(self, el, retries=3, wait_between=0.4):
+        """
+        Robust click:
+        - Waits until element is displayed/enabled and not disabled attr
+        - Scrolls into view
+        - Tries normal click, on Intercepted -> remove overlays via JS and try JS click
+        - Retries a few times
+        """
+        for attempt in range(1, retries + 1):
+            try:
+                # ensure element is present and ready
+                self.wait.until(lambda d: el.is_displayed() and el.is_enabled())
+                # ensure not disabled attribute
+                disabled = el.get_attribute("disabled")
+                if disabled not in (None, "", False):
+                    # wait a little for enablement
+                    time.sleep(wait_between)
+                    continue
+
+                # bring into view
+                try:
+                    self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+                except Exception:
+                    pass
+
+                try:
+                    el.click()
+                    return True
+                except ElementClickInterceptedException as ex:
+                    # Take screenshot for debugging
+                    png, html = self._screenshot_and_snippet("click_intercepted")
+                    print(f"⚠️ click intercepted on attempt {attempt}; screenshot: {png}")
+                    # Remove likely overlay(s) (aggressive but targeted)
+                    try:
+                        self.driver.execute_script("""
+                        // remove big fixed overlays and top-level svg overlays covering the viewport
+                        const vw = window.innerWidth, vh = window.innerHeight;
+                        document.querySelectorAll('svg, div, section, header, main').forEach(el => {
+                            try {
+                            const s = window.getComputedStyle(el);
+                            if (s.position === 'fixed' || s.position === 'absolute') {
+                                const r = el.getBoundingClientRect();
+                                if (r.width >= vw*0.5 && r.height >= vh*0.25 && s.pointerEvents !== 'none') el.remove();
+                            }
+                            } catch(e){}
+                        });
+                        // known selectors cleanup (conservative)
+                        ['#driver-popover-content.driver-popover', '.driver-popover', '.driver-overlay', '[data-tour=\"task-modal\"]'].forEach(s => 
+                            document.querySelectorAll(s).forEach(n=>n.remove()));
+                        document.body.classList.remove('driver-active','driver-fade','driver-active-element');
+                        """)
+                    except Exception as js_e:
+                        print("⚠️ JS overlay removal failed:", js_e)
+                    # try JS click
+                    try:
+                        self.driver.execute_script("arguments[0].click();", el)
+                        return True
+                    except Exception as js_click_e:
+                        print("⚠️ JS click failed:", js_click_e)
+                        # fallthrough to retry loop
+                except StaleElementReferenceException:
+                    # re-find element likely needed by caller
+                    time.sleep(wait_between)
+                    continue
+                except Exception as e:
+                    print("⚠️ unexpected click error:", e)
+                    time.sleep(wait_between)
+            except Exception:
+                time.sleep(wait_between)
+        return False
