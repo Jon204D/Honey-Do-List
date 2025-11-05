@@ -19,7 +19,8 @@ class LoginTests(BaseTestSuite):
     def land_login_page(self):
         try:
             print("🚀 Launching Login page...")
-            self.driver.get(BASE_URL + "login")
+            # normalize URL building to avoid accidental double/missing slashes
+            self.driver.get(f"{BASE_URL.rstrip('/')}/login")
 
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//h2[text()='Log In']")))
@@ -35,58 +36,80 @@ class LoginTests(BaseTestSuite):
             self.log_result("Login Page Load", False, error_message)
             print(f"❌ An error occurred: \n- {error_message}")
 
+    def is_guidance_present(self, timeout=2):
+        """Quick presence check for the guidance/popover used on deployed site.
+        Returns True if popover is present within timeout, False otherwise."""
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover"))
+            )
+            return True
+        except TimeoutException:
+            return False
+        except Exception:
+            return False
+
     def guidanceWalkthrough(self, max_steps=20, wait_timeout=5):
+        """Walk through the in-app guidance popover if present.
+
+        Notes:
+        - First do a short-presence check and return immediately if no popover.
+        - Use safe waits for clickable state when candidate is a WebElement (WebDriver's element_to_be_clickable expects a locator tuple).
+        - Re-query the popover after each click because the DOM can be re-rendered.
+        """
         try:
             print("📝 Starting guidance walkthrough...")
 
-            # Wait for the popover container to appear
-            popover = self.wait.until(EC.presence_of_element_located(
-                (By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover")
-            ))
+            # short-circuit if no popover
+            try:
+                popover = WebDriverWait(self.driver, 2).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover"))
+                )
+            except TimeoutException:
+                print("ℹ️ No guidance popover present (quick check).")
+                return
+            except Exception:
+                print("ℹ️ No guidance popover present (error on quick check).")
+                return
 
-            # helper to read progress or title so we can detect change
-            def read_progress():
+            def read_progress(local_popover):
                 try:
-                    prog = popover.find_element(By.CSS_SELECTOR, ".driver-popover-progress-text")
+                    prog = local_popover.find_element(By.CSS_SELECTOR, ".driver-popover-progress-text")
                     return prog.text.strip()
                 except Exception:
-                    # fallback to header/title text
                     try:
-                        title = popover.find_element(By.CSS_SELECTOR, "#driver-popover-title, .driver-popover-title")
+                        title = local_popover.find_element(By.CSS_SELECTOR, "#driver-popover-title, .driver-popover-title")
                         return title.text.strip()
                     except Exception:
-                        # if nothing found return None
                         return None
 
-            prev_progress = read_progress()
+            prev_progress = read_progress(popover)
             steps = 0
 
             while steps < max_steps:
                 steps += 1
 
-                # find navigation buttons inside the popover only
-                nav_btns = popover.find_elements(By.CSS_SELECTOR, ".driver-popover-navigation-btns button, .driver-popover-navigation-btns > button, .driver-popover-next-btn, .driver-popover-prev-btn, button")
-                # filter for visible/usable buttons with text Next / Done / Finish / > / → etc.
+                # re-query nav buttons from the current popover instance
+                nav_btns = []
+                try:
+                    nav_btns = popover.find_elements(By.CSS_SELECTOR, ".driver-popover-navigation-btns button, .driver-popover-navigation-btns > button, .driver-popover-next-btn, .driver-popover-prev-btn, button")
+                except Exception:
+                    pass
+
                 candidate = None
                 for btn in nav_btns:
                     try:
                         text = (btn.text or "").strip().lower()
                         if not text:
-                            # sometimes icons-only buttons; check aria-label
                             text = (btn.get_attribute("aria-label") or "").strip().lower()
-                        # choose Next or final variants, prefer visible & enabled
-                        if text in ("next", "next →", "→", "done", "finish", "done", "next >", "next→", "next—", "done"):
-                            if btn.is_displayed() and btn.is_enabled():
-                                candidate = btn
-                                break
-                        # fallback: if 'next' substring present
-                        if "next" in text and btn.is_displayed() and btn.is_enabled():
+                        # prefer Next/Done/Finish labels
+                        if any(k in text for k in ("next", "done", "finish", "→", "→")) and btn.is_displayed() and btn.is_enabled():
                             candidate = btn
                             break
                     except Exception:
                         continue
 
-                # If we didn't find a nav button using the popover's buttons, try a more specific selector for next/done
+                # fallback xpath search inside popover
                 if candidate is None:
                     try:
                         candidate = popover.find_element(By.XPATH, ".//button[contains(translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'next') or contains(translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'done') or contains(translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'finish')]")
@@ -96,44 +119,40 @@ class LoginTests(BaseTestSuite):
                         candidate = None
 
                 if candidate is None:
-                    # No more navigation button inside popover -> finished
                     print("ℹ️ No popover navigation button found, assuming walkthrough finished.")
                     break
 
-                # click the candidate button in a safe manner
+                # wait for the WebElement candidate to be clickable using a lambda (since expected_conditions.element_to_be_clickable expects a locator tuple)
                 try:
-                    # wait until clickable
-                    self.wait.until(EC.element_to_be_clickable(candidate))
+                    WebDriverWait(self.driver, wait_timeout).until(lambda d: candidate.is_displayed() and candidate.is_enabled())
                 except Exception:
-                    # ignore this small custom wait fallback; just click via JS if normal click fails
+                    # if the wait fails, we'll still try to click (with JS fallback)
                     pass
 
                 try:
-                    # try normal click first
                     candidate.click()
                 except Exception:
-                    # fallback to JS click
                     try:
+                        # JS fallback click
                         self.driver.execute_script("arguments[0].click();", candidate)
                     except Exception:
-                        # if click completely fails, stop
                         raise
 
-                # wait for the popover content / progress to change
+                # wait for change in progress/title or popover disappearance
                 start = time.time()
                 changed = False
                 while time.time() - start < wait_timeout:
                     time.sleep(0.2)
                     try:
-                        # re-query popover, it might have been re-rendered
+                        # re-query popover (it might be re-rendered)
                         popover = self.driver.find_element(By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover")
-                        curr_progress = read_progress()
+                        curr_progress = read_progress(popover)
                         if curr_progress and curr_progress != prev_progress:
                             changed = True
                             prev_progress = curr_progress
                             break
                     except Exception:
-                        # if popover disappears, we finished
+                        # if element not found => disappeared => finished
                         changed = True
                         break
 
@@ -145,23 +164,20 @@ class LoginTests(BaseTestSuite):
                 except Exception:
                     break
 
-                # If we didn't observe change, continue but track steps to avoid infinite loops
+                # If progress didn't change, but button looked like final, assume done
                 if not changed:
-                    # If the candidate's label was a final variant, break
                     candidate_text = (candidate.text or "").strip().lower()
                     if any(k in candidate_text for k in ("done", "finish")):
                         print("ℹ️ Final button clicked but no progress change observed; assuming complete.")
                         break
-                    # else, continue to next iteration and attempt again
+                    # otherwise continue to next iteration and attempt again
             else:
-                # max_steps reached
                 print(f"⚠️ Reached max_steps={max_steps} without finishing the walkthrough.")
 
             self.log_result("Guidance Walkthrough", True, "Completed guidance walkthrough.")
             print("✅ Guidance walkthrough completed.")
         except Exception as e:
             tb = traceback.format_exc()
-            # Save diagnostics
             try:
                 timestamp = int(time.time())
                 png = f"/tmp/guidance_failure_{timestamp}.png"
@@ -218,7 +234,7 @@ class LoginTests(BaseTestSuite):
                 pass
             # reload login page to remove banners/modals
             try:
-                self.driver.get(BASE_URL + "login")
+                self.driver.get(f"{BASE_URL.rstrip('/')}/login")
                 # give the page a moment to settle
                 time.sleep(0.5)
                 self.wait.until(EC.visibility_of_element_located((By.NAME, "email")))
@@ -274,6 +290,12 @@ class LoginTests(BaseTestSuite):
                 self.log_result("Valid Login", True, "Successfully logged in and redirected.")
                 print("✅ Successfully logged in and redirected.")
 
+                # only run guidance walkthrough if the popover is present
+                if self.is_guidance_present(timeout=2):
+                    print("ℹ️ Guidance popover detected after login — running walkthrough.")
+                    self.guidanceWalkthrough()
+                else:
+                    print("ℹ️ No guidance popover detected after login — skipping walkthrough.")
             else:
                 # still a redirect but to unexpected place — log it
                 self.log_result("Valid Login", False, f"Unexpected redirect URL: {final_url}")
