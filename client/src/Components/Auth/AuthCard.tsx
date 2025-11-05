@@ -6,27 +6,27 @@ interface AuthCardProps {
 }
 
 /* Orange background with black card in the middle */
-const AuthCard: React.FC<AuthCardProps> = ({title, children}) => {
+const AuthCard: React.FC<AuthCardProps> = ({ title, children }) => {
   return (
-      <div
-        style = {{
-          top: "50%",                  
-          left: "50%",                 
-          width: "300px",
-          padding: "30px",
-          color: "orange",
-          position: "fixed",                                    
-          textAlign: "center",
-          borderRadius: "10px",
-          backgroundColor: "#212121",
-          transform: "translate(-50%, -50%)",           // Centers card
-          boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
-        }}
-      >
-        <h2 style={{margin: "0 0 15px 0"}}>{title}</h2>
-        {children}
-      </div>
-  )
-}
+    <div
+      style={{
+        top: "50%",
+        left: "50%",
+        width: 360,                 // slightly wider for nicer spacing
+        padding: 30,
+        color: "orange",
+        position: "fixed",
+        textAlign: "center",
+        borderRadius: 10,
+        backgroundColor: "#212121",
+        transform: "translate(-50%, -50%)",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+      }}
+    >
+      <h2 style={{ margin: "0 0 15px 0" }}>{title}</h2>
+      {children}
+    </div>
+  );
+};
 
 export default AuthCard;

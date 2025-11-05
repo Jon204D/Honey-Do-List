@@ -82,20 +82,6 @@ const Login: React.FC = () => {
         }
       )
 
-      {/* Irtiza - I keep getting an extra "/" so I kept this here for me to connect to the backend */}
-      
-      /* 
-      const base = (process.env.REACT_APP_BACKEND_BASE_URL || "").replace(/\/+$/, "");
-      const url = `${base}/api/users/login`;
-      console.log("LOGIN URL =>", url);
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({email, password}),
-      });
-      */
-
       /* Handle Response */
       if (response.ok) {
         const data = await response.json();

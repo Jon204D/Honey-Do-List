@@ -1,28 +1,13 @@
 import React from "react";
 
-interface Props {
-  email: string;
-}
-
 /* Read-only display of email */
-const EmailDisplay: React.FC<Props> = ({email}) => {
+const EmailDisplay: React.FC<{ email: string }> = ({ email }) => {
   return (
-    <div style = {{ 
-        fontWeight: "bold", 
-        marginBottom: "15px", 
-        textAlign: "left" 
-        }}
-    >
-      <label>Email</label>
-      <p style = {{ 
-        fontWeight: "normal", 
-        marginTop: "5px" 
-        }}
-      >
-        {email}
-      </p>
+    <div style={{display: "flex", flexDirection: "column", gap: 6, textAlign: "left"}}>
+      <label style={{fontWeight: "bold", color: "orange"}}>Email</label>
+      <p style={{margin: 0}}>{email}</p>
     </div>
-  )
-}
+  );
+};
 
 export default EmailDisplay;
