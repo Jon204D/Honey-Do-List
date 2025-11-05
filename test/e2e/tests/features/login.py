@@ -210,11 +210,16 @@ class LoginTests(BaseTestSuite):
             # short wait for error message to appear
             local_wait = WebDriverWait(self.driver, 6)
             try:
-                local_wait.until(EC.visibility_of_element_located(
+                if (local_wait.until(EC.visibility_of_element_located(
+                    (By.XPATH, ".//div//p[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'network') or contains(., 'error') or contains(., 'Network error')]")
+                ))):
+                    self.log_result("Invalid Login", False, "Network error message displayed for invalid login.")
+                    print("❌ Network error message displayed for invalid login.")
+                elif local_wait.until(EC.visibility_of_element_located(
                     (By.XPATH, ".//div//p[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'invalid') or contains(., 'Invalid email') or contains(., 'Invalid email or password')]")
-                ))
-                self.log_result("Invalid Login", True, "Error message displayed for invalid login.")
-                print("✅ Error message displayed for invalid login.")
+                )):
+                    self.log_result("Invalid Login", True, "Error message displayed for invalid login.")
+                    print("✅ Error message displayed for invalid login.")
             except TimeoutException:
                 # capture artifacts for debugging CI
                 png, html = self._screenshot_and_snippet("invalid_login_no_error")
@@ -245,6 +250,19 @@ class LoginTests(BaseTestSuite):
 
     def login_valid(self):
         try:
+            try:
+                email = os.getenv("TESTUSER1EMAIL")
+                password = os.getenv("TESTUSER1PASSWORD")
+                if email and password:
+                    self.driver.execute_script("""
+                        try {
+                            localStorage.setItem('fakeUser', JSON.stringify({ email: arguments[0], password: arguments[1], username: 'CI Test User' }));
+                        } catch(e) {}
+                    """, email, password)
+                    time.sleep(0.12)
+            except Exception:
+                pass
+
             # always start clean
             self.land_login_page()
 
