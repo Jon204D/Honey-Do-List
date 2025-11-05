@@ -15,18 +15,8 @@ load_dotenv()
 
 
 class TaskPageTests(BaseTestSuite):
-    """
-    Task page tests with robust interactions:
-      - dismisses overlays before fiddly clicks
-      - uses BaseTestSuite.ensure_field_set for inputs (dispatch events)
-      - adds explicit small keystroke simulation after JS-set so frameworks register 'user' interaction
-      - uses safe_click which tries normal click and JS fallback
-      - sets date inputs via ISO value (yyyy-mm-dd) using JS
-    """
-
     def __init__(self, driver=None, wait=None):
         super().__init__(driver)
-        # accept injected wait or use base wait
         self.wait = wait if wait is not None else self.wait
 
     def land_task_page(self):
@@ -80,12 +70,7 @@ class TaskPageTests(BaseTestSuite):
         return False
 
     def _ensure_user_like_interaction(self, element):
-        """
-        After using JS to set values, perform a tiny real-user keystroke sequence
-        so the app's event handlers (which might be keyed to real key events) run.
-        """
         try:
-            # prefer send_keys on the element
             element.click()
             element.send_keys(Keys.SPACE)
             element.send_keys(Keys.BACKSPACE)
@@ -94,7 +79,6 @@ class TaskPageTests(BaseTestSuite):
             return True
         except Exception:
             try:
-                # fallback to ActionChains
                 ActionChains(self.driver).move_to_element(element).click().send_keys(' ').send_keys(Keys.BACKSPACE).send_keys(Keys.TAB).perform()
                 time.sleep(0.12)
                 return True
@@ -103,7 +87,7 @@ class TaskPageTests(BaseTestSuite):
 
     def add_task(self, task_name):
         try:
-            # ensure on tasks page
+            # ensure we're on the tasks page
             current = self.driver.current_url
             base_root = BASE_URL.rstrip("/")
             if not (current.rstrip("/").endswith("/tasks") or current.rstrip("/") == base_root):
@@ -112,27 +96,33 @@ class TaskPageTests(BaseTestSuite):
 
             print(f"➕ Attempting to add task: {task_name}...")
 
-            # ensure overlays dismissed
+            # dismiss overlays and wait for them to be gone
             try:
                 self.dismiss_guidance_popover()
             except Exception as e:
                 print("⚠️ dismiss_guidance_popover error:", e)
-
             self._wait_for_no_overlays(timeout=6)
 
+            # Create button - use locator so safe_click can re-find on stale
             create_locator = (By.CSS_SELECTOR, "button[data-tour='create-task'], button[data-tour='create-task-button'], button[aria-label*='Create Task']")
-            create_btn = WebDriverWait(self.driver, 12).until(EC.presence_of_element_located(create_locator))
-            create_btn = WebDriverWait(self.driver, 12).until(EC.element_to_be_clickable(create_locator))
 
-            WebDriverWait(self.driver, 10).until(lambda d: create_btn.get_attribute("disabled") in (None, "", False))
+            # get clickable element (fresh)
+            try:
+                create_btn = WebDriverWait(self.driver, 12).until(EC.element_to_be_clickable(create_locator))
+            except Exception as e:
+                png, html = self._screenshot_and_snippet("create_button_not_found")
+                self.log_result("Add Task", False, f"Create button not found (screenshot:{png})")
+                print("❌ Create button not found. screenshot:", png)
+                return
 
-            if not self.safe_click(create_btn):
+            # attempt to click via safe_click using locator (safe_click will locate each attempt)
+            if not self.safe_click(create_locator):
                 png, html = self._screenshot_and_snippet("create_click_failed")
                 self.log_result("Add Task", False, f"Could not click Create Task (screenshot:{png})")
                 print("❌ Could not click Create Task. screenshot:", png)
                 return
 
-            # wait for form
+            # wait for form to appear
             try:
                 form_locator = (By.CSS_SELECTOR, "form[data-tour='task-form'], form")
                 form = WebDriverWait(self.driver, 12).until(EC.visibility_of_element_located(form_locator))
@@ -145,36 +135,35 @@ class TaskPageTests(BaseTestSuite):
                     self.log_result("Add Task", False, "Task form did not appear after clicking Create.")
                     return
 
-            # Title: set via JS then simulate keystrokes to make UI treat it like user input
+            # Title input - JS set then small real keystroke to ensure frameworks register change
             try:
                 title_input = form.find_element(By.XPATH, ".//input[@placeholder='Title' or @name='title']")
-                # set via JS so underlying value is correct
-                self.driver.execute_script("""
+                self.driver.execute_script(
+                    """
                     arguments[0].value = arguments[1];
                     arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
                     arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
-                """, title_input, task_name)
-                # then ensure user-like keystroke and blur
-                if not self._ensure_user_like_interaction(title_input):
-                    # fallback: send keys
-                    try:
-                        title_input.clear()
-                        title_input.send_keys(task_name)
-                        title_input.send_keys(Keys.TAB)
-                    except Exception:
-                        pass
+                """,
+                    title_input,
+                    task_name,
+                )
+                # ensure frameworks see a user event
+                self._ensure_user_like_interaction(title_input)
             except Exception:
                 pass
 
             # Description
             try:
                 desc_input = form.find_element(By.XPATH, ".//textarea[@placeholder='Description' or @name='description']")
-                self.driver.execute_script("""
+                self.driver.execute_script(
+                    """
                     arguments[0].value = arguments[1];
                     arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
                     arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
-                """, desc_input, "Automated task created by E2E test.")
-                # user-like keystroke for frameworks that need it
+                """,
+                    desc_input,
+                    "Automated task created by E2E test.",
+                )
                 self._ensure_user_like_interaction(desc_input)
             except Exception:
                 pass
@@ -198,16 +187,19 @@ class TaskPageTests(BaseTestSuite):
             except Exception:
                 pass
 
-            # Date: set ISO and emulate small user interaction (TAB) after JS set
+            # date: set ISO value via JS and send a TAB
             try:
                 date_input = form.find_element(By.XPATH, ".//input[@type='date']")
                 target_date = (datetime.now() + relativedelta(months=6)).strftime("%Y-%m-%d")
-                self.driver.execute_script("""
+                self.driver.execute_script(
+                    """
                     arguments[0].value = arguments[1];
                     arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
                     arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
-                """, date_input, target_date)
-                # emulate a TAB so UI registers the change
+                """,
+                    date_input,
+                    target_date,
+                )
                 try:
                     date_input.send_keys(Keys.TAB)
                 except Exception:
@@ -216,26 +208,24 @@ class TaskPageTests(BaseTestSuite):
             except Exception:
                 pass
 
-            # Submit
+            # Submit - use locator so safe_click can re-find if needed
+            submit_locator = (By.XPATH, "//form//button[@type='submit']")
             try:
-                submit_btn = form.find_element(By.XPATH, ".//button[@type='submit']")
+                # wait for presence
+                WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(submit_locator))
             except Exception:
-                submit_btn = WebDriverWait(self.driver, 8).until(EC.presence_of_element_located((By.XPATH, "//form//button[@type='submit']")))
+                png, html = self._screenshot_and_snippet("submit_not_found")
+                self.log_result("Add Task", False, f"Submit button not found (screenshot:{png})")
+                print("❌ Submit button not found. screenshot:", png)
+                return
 
-            # Wait for submit to be enabled
-            try:
-                WebDriverWait(self.driver, 8).until(lambda d: submit_btn.get_attribute("disabled") in (None, "", False))
-            except Exception:
-                # allow safe_click to attempt JS fallback
-                pass
-
-            if not self.safe_click(submit_btn):
+            if not self.safe_click(submit_locator):
                 png, html = self._screenshot_and_snippet("task_submit_failed")
                 self.log_result("Add Task", False, f"Could not submit Task form (screenshot:{png})")
                 print("❌ Could not submit Task form.", png)
                 return
 
-            # Verify task created
+            # verify task added
             try:
                 task_element = WebDriverWait(self.driver, 12).until(
                     EC.presence_of_element_located((By.XPATH, f"//h3[contains(normalize-space(.), '{task_name}')]"))
@@ -260,7 +250,8 @@ class TaskPageTests(BaseTestSuite):
         try:
             # login once to establish session/cookies
             LoginTests(self.driver, self.wait).login_valid()
-            # open task page and run adds
+
+            # navigate + run
             self.land_task_page()
             self.add_task("Test Task 1")
             self.add_task("Test Task 2")
