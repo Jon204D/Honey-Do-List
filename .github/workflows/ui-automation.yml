@@ -2,9 +2,9 @@ name: UI Automation Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, UI-Automation]
   pull_request:
-    branches: [main, develop, feature/*]
+    branches: [main, develop, UI-Automation, feature/*]
 jobs:
   test:
     runs-on: ubuntu-latest

@@ -15,7 +15,7 @@ class SignupTests(BaseTestSuite):
     def land_signup_page(self):
         try:
             print("🚀 Launching Signup page...")
-            self.driver.get(BASE_URL + "/signup")
+            self.driver.get(BASE_URL + "signup")
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='Create Account']")))
                 self.log_result("Signup Page Load", True, "Signup form is present.")
@@ -32,7 +32,7 @@ class SignupTests(BaseTestSuite):
 
     def signup_invalid(self):
         try:
-            if not self.driver.current_url.endswith("/signup"):
+            if not self.driver.current_url.endswith("signup"):
                 print("🔄 Redirecting to Signup page...")
                 self.land_signup_page()
 

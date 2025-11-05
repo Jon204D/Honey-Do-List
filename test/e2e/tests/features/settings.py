@@ -17,7 +17,7 @@ class SettingsTests(BaseTestSuite):
     def land_settings_page(self):
         try:
             print("🚀 Launching Settings page...")
-            self.driver.get(BASE_URL + "/settings")
+            self.driver.get(BASE_URL + "settings")
             self.wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='Account Settings']")))
             self.log_result("Settings Page Load", True, "Settings page is present.")
             print("✅ Settings page is present.")

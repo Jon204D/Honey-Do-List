@@ -14,7 +14,7 @@ class InviteTests(BaseTestSuite):
     def land_invite_page(self):
         try:
             print("🚀 Launching Invite page...")
-            self.driver.get(BASE_URL + "/invite")
+            self.driver.get(BASE_URL + "invite")
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//h3[text()='Send a New Invite']")))
                 self.log_result("Invite Page Load", True, "Invite form is present.")
@@ -31,7 +31,7 @@ class InviteTests(BaseTestSuite):
 
     def invite_invalid(self):
         try:
-            if not self.driver.current_url.endswith("/invite"):
+            if not self.driver.current_url.endswith("invite"):
                 print("🔄 Redirecting to Invite page...")
                 self.land_invite_page()
 
@@ -53,7 +53,7 @@ class InviteTests(BaseTestSuite):
 
     def invite_valid(self, valid_email):
         try:
-            if not self.driver.current_url.endswith("/invite"):
+            if not self.driver.current_url.endswith("invite"):
                 print("🔄 Redirecting to Invite page...")
                 self.land_invite_page()
 

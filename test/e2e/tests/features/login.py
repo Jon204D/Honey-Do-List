@@ -19,7 +19,7 @@ class LoginTests(BaseTestSuite):
     def land_login_page(self):
         try:
             print("🚀 Launching Login page...")
-            self.driver.get(BASE_URL + "/login")
+            self.driver.get(BASE_URL + "login")
 
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//h2[text()='Log In']")))

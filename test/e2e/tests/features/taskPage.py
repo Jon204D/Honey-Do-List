@@ -19,13 +19,13 @@ class TaskPageTests(BaseTestSuite):
     def land_task_page(self):
         try:
             print("🚀 Launching Task page...")
-            self.driver.get(BASE_URL + "/tasks")
+            self.driver.get(BASE_URL + "tasks")
 
-            if self.driver.current_url.endswith("/login"):
+            if self.driver.current_url.endswith("login"):
                 LoginTests(self.driver, self.wait).login_valid()
-                
-                if not self.driver.current_url.endswith("/tasks"):
-                    self.driver.get(BASE_URL + "/tasks")
+
+                if not self.driver.current_url.endswith("tasks"):
+                    self.driver.get(BASE_URL + "tasks")
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//div[text()='Your Tasks']")))
                 self.log_result("Task Page Load", True, "Task page is present.")
@@ -42,7 +42,7 @@ class TaskPageTests(BaseTestSuite):
 
     def add_task(self, task_name):
         try:
-            if not self.driver.current_url.endswith("/tasks"):
+            if not self.driver.current_url.endswith("tasks"):
                 print("🔄 Redirecting to Task page...")
                 self.land_task_page()
 
