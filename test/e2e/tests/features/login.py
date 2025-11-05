@@ -19,9 +19,7 @@ class LoginTests(BaseTestSuite):
     def land_login_page(self):
         try:
             print("🚀 Launching Login page...")
-            # normalize URL building to avoid accidental double/missing slashes
             self.driver.get(f"{BASE_URL.rstrip('/')}/login")
-
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//h2[text()='Log In']")))
                 self.log_result("Login Page Load", True, "Login form is present.")
@@ -37,8 +35,6 @@ class LoginTests(BaseTestSuite):
             print(f"❌ An error occurred: \n- {error_message}")
 
     def is_guidance_present(self, timeout=2):
-        """Quick presence check for the guidance/popover used on deployed site.
-        Returns True if popover is present within timeout, False otherwise."""
         try:
             WebDriverWait(self.driver, timeout).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover"))
@@ -48,147 +44,7 @@ class LoginTests(BaseTestSuite):
             return False
         except Exception:
             return False
-
-    def guidanceWalkthrough(self, max_steps=20, wait_timeout=5):
-        """Walk through the in-app guidance popover if present.
-
-        Notes:
-        - First do a short-presence check and return immediately if no popover.
-        - Use safe waits for clickable state when candidate is a WebElement (WebDriver's element_to_be_clickable expects a locator tuple).
-        - Re-query the popover after each click because the DOM can be re-rendered.
-        """
-        try:
-            print("📝 Starting guidance walkthrough...")
-
-            # short-circuit if no popover
-            try:
-                popover = WebDriverWait(self.driver, 2).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover"))
-                )
-            except TimeoutException:
-                print("ℹ️ No guidance popover present (quick check).")
-                return
-            except Exception:
-                print("ℹ️ No guidance popover present (error on quick check).")
-                return
-
-            def read_progress(local_popover):
-                try:
-                    prog = local_popover.find_element(By.CSS_SELECTOR, ".driver-popover-progress-text")
-                    return prog.text.strip()
-                except Exception:
-                    try:
-                        title = local_popover.find_element(By.CSS_SELECTOR, "#driver-popover-title, .driver-popover-title")
-                        return title.text.strip()
-                    except Exception:
-                        return None
-
-            prev_progress = read_progress(popover)
-            steps = 0
-
-            while steps < max_steps:
-                steps += 1
-
-                # re-query nav buttons from the current popover instance
-                nav_btns = []
-                try:
-                    nav_btns = popover.find_elements(By.CSS_SELECTOR, ".driver-popover-navigation-btns button, .driver-popover-navigation-btns > button, .driver-popover-next-btn, .driver-popover-prev-btn, button")
-                except Exception:
-                    pass
-
-                candidate = None
-                for btn in nav_btns:
-                    try:
-                        text = (btn.text or "").strip().lower()
-                        if not text:
-                            text = (btn.get_attribute("aria-label") or "").strip().lower()
-                        # prefer Next/Done/Finish labels
-                        if any(k in text for k in ("next", "done", "finish", "→", "→")) and btn.is_displayed() and btn.is_enabled():
-                            candidate = btn
-                            break
-                    except Exception:
-                        continue
-
-                # fallback xpath search inside popover
-                if candidate is None:
-                    try:
-                        candidate = popover.find_element(By.XPATH, ".//button[contains(translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'next') or contains(translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'done') or contains(translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'finish')]")
-                        if not (candidate.is_displayed() and candidate.is_enabled()):
-                            candidate = None
-                    except Exception:
-                        candidate = None
-
-                if candidate is None:
-                    print("ℹ️ No popover navigation button found, assuming walkthrough finished.")
-                    break
-
-                # wait for the WebElement candidate to be clickable using a lambda (since expected_conditions.element_to_be_clickable expects a locator tuple)
-                try:
-                    WebDriverWait(self.driver, wait_timeout).until(lambda d: candidate.is_displayed() and candidate.is_enabled())
-                except Exception:
-                    # if the wait fails, we'll still try to click (with JS fallback)
-                    pass
-
-                try:
-                    candidate.click()
-                except Exception:
-                    try:
-                        # JS fallback click
-                        self.driver.execute_script("arguments[0].click();", candidate)
-                    except Exception:
-                        raise
-
-                # wait for change in progress/title or popover disappearance
-                start = time.time()
-                changed = False
-                while time.time() - start < wait_timeout:
-                    time.sleep(0.2)
-                    try:
-                        # re-query popover (it might be re-rendered)
-                        popover = self.driver.find_element(By.CSS_SELECTOR, "#driver-popover-content.driver-popover, .driver-popover")
-                        curr_progress = read_progress(popover)
-                        if curr_progress and curr_progress != prev_progress:
-                            changed = True
-                            prev_progress = curr_progress
-                            break
-                    except Exception:
-                        # if element not found => disappeared => finished
-                        changed = True
-                        break
-
-                # If popover disappeared -> finished
-                try:
-                    if not popover.is_displayed():
-                        print("ℹ️ Popover disappeared after clicking, walkthrough complete.")
-                        break
-                except Exception:
-                    break
-
-                # If progress didn't change, but button looked like final, assume done
-                if not changed:
-                    candidate_text = (candidate.text or "").strip().lower()
-                    if any(k in candidate_text for k in ("done", "finish")):
-                        print("ℹ️ Final button clicked but no progress change observed; assuming complete.")
-                        break
-                    # otherwise continue to next iteration and attempt again
-            else:
-                print(f"⚠️ Reached max_steps={max_steps} without finishing the walkthrough.")
-
-            self.log_result("Guidance Walkthrough", True, "Completed guidance walkthrough.")
-            print("✅ Guidance walkthrough completed.")
-        except Exception as e:
-            tb = traceback.format_exc()
-            try:
-                timestamp = int(time.time())
-                png = f"/tmp/guidance_failure_{timestamp}.png"
-                self.driver.save_screenshot(png)
-                diag = f"Screenshot saved to {png}"
-            except Exception:
-                diag = "Failed to save screenshot"
-            error_message = getattr(e, "msg", str(e)) + " | " + diag + " | " + tb
-            self.log_result("Guidance Walkthrough", False, error_message)
-            print(f"❌ An error occurred during guidance walkthrough: \n- {error_message}")
-
+        
     def login_invalid(self):
         try:
             # always start from a fresh login page
@@ -248,9 +104,12 @@ class LoginTests(BaseTestSuite):
 
             email = os.getenv("TESTUSER1EMAIL")
             password = os.getenv("TESTUSER1PASSWORD")
-            
             if not email or not password:
                 raise Exception("TESTUSER1EMAIL or TESTUSER1PASSWORD not set")
+
+            # ensure overlays removed before interacting
+            if not self.dismiss_guidance_popover():
+                print("⚠️ Could not dismiss guidance popover before login; continuing with caution.")
 
             # wait for inputs
             self.wait.until(EC.visibility_of_element_located((By.NAME, "email")))
@@ -264,43 +123,42 @@ class LoginTests(BaseTestSuite):
             email_el.send_keys(email)
             pwd_el.send_keys(password)
 
-            if not self.dismiss_guidance_popover():
-                print("⚠️ Could not dismiss popover before login; continuing with caution.")
+            # submit with safe click if available
+            submit = self.wait.until(EC.presence_of_element_located((By.XPATH, "//form//button[@type='submit']")))
+            if not self.safe_click(submit):
+                png, html = self._screenshot_and_snippet("login_submit_failed")
+                self.log_result("Valid Login", False, f"Could not click login submit (screenshot:{png})")
+                print("❌ Could not click login submit.", png)
+                return
 
-            submit = self.driver.find_element(By.XPATH, "//form//button[@type='submit']")
-            prev_url = self.driver.current_url
-            submit.click()
-
-            local_wait = WebDriverWait(self.driver, 15)
+            # wait for redirect or dashboard marker (give more time in CI)
             try:
-                # wait for either url change OR a known post-login path
-                local_wait.until(
+                WebDriverWait(self.driver, 20).until(
                     EC.any_of(
-                        EC.url_changes(prev_url),
+                        EC.url_changes(self.driver.current_url),
                         EC.url_contains("tasks"),
-                        EC.url_contains("settings"),
+                        EC.visibility_of_element_located((By.XPATH, "//div[text()='Your Tasks']"))
                     )
                 )
             except TimeoutException:
                 current = self.driver.current_url
-                self.log_result("Valid Login", False, f"Did not redirect; current URL: {current}")
-                print(f"❌ Login did not redirect within timeout. Current URL: {current}.")
+                png, html = self._screenshot_and_snippet("login_no_redirect")
+                self.log_result("Valid Login", False, f"Did not redirect; current URL: {current} (screenshot:{png})")
+                print(f"❌ Login did not redirect within timeout. Current URL: {current}. Screenshot: {png}")
                 return
 
             # final verification
             final_url = self.driver.current_url
-            if "tasks" in final_url or "settings" in final_url:
+            if "tasks" in final_url or "settings" in final_url or self.driver.find_elements(By.XPATH, "//div[text()='Your Tasks']"):
                 self.log_result("Valid Login", True, "Successfully logged in and redirected.")
                 print("✅ Successfully logged in and redirected.")
-
-                # only run guidance walkthrough if the popover is present
+                # run guidance walkthrough only if present
                 if self.is_guidance_present(timeout=2):
                     print("ℹ️ Guidance popover detected after login — running walkthrough.")
                     self.guidanceWalkthrough()
                 else:
                     print("ℹ️ No guidance popover detected after login — skipping walkthrough.")
             else:
-                # still a redirect but to unexpected place — log it
                 self.log_result("Valid Login", False, f"Unexpected redirect URL: {final_url}")
                 print(f"❌ Login redirected to unexpected URL: {final_url}")
         except Exception as e:
