@@ -5,10 +5,11 @@ on:
     branches: [main, develop, UI-Automation]
   pull_request:
     branches: [main, develop, UI-Automation, feature/*]
+
 jobs:
   test:
     runs-on: ubuntu-latest
-    environment: Honey-Do-List FE (Develop) (pacific-recreation / production)
+    environment: "Honey-Do-List FE (Develop) (pacific-recreation / production)"
 
     steps:
       - name: Checkout code
@@ -18,6 +19,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Prepare artifacts dir
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/artifacts"
+          ls -la "$GITHUB_WORKSPACE"
 
       - name: Install dependencies
         run: |
@@ -30,6 +36,13 @@ jobs:
           sudo apt-get install -y wget unzip
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+          # Try to install chromedriver that matches the Chrome major version (best effort)
+          CHROME_VER=$(google-chrome --version | grep -oP '\d+' | head -1 || true)
+          if [ -n "$CHROME_VER" ]; then
+            echo "Chrome major version: $CHROME_VER"
+            # attempt to install chromedriver via apt (may differ by runner); ignore errors
+            sudo apt-get install -y chromedriver || true
+          fi
 
       - name: Run UI automation tests
         env:
@@ -42,17 +55,24 @@ jobs:
           TESTUSER3PASSWORD: ${{ vars.TESTUSER3PASSWORD }}
           TESTUSERNEWUSERNAME: ${{ vars.TESTUSERNEWUSERNAME }}
           TESTUSERNEWPASSWORD: ${{ vars.TESTUSERNEWPASSWORD }}
+          # ensure tests writing to workspace use this path
+          ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
         run: |
+          # ensure ARTIFACTS_DIR exists for tests to write to
+          mkdir -p "$ARTIFACTS_DIR"
+          # run tests (adjust path if needed)
           python test/e2e/run.py
-      
+
       - name: List candidate artifact files (for debugging)
         if: always()
         run: |
           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
           echo "Listing /tmp"
           ls -la /tmp || true
-          echo "Listing $GITHUB_WORKSPACE/artifacts (if used)"
+          echo "Listing $GITHUB_WORKSPACE/artifacts"
           ls -la "$GITHUB_WORKSPACE/artifacts" || true
+          echo "Find any png/html/txt files under workspace"
+          find "$GITHUB_WORKSPACE" -maxdepth 3 -type f \( -name "*.png" -o -name "*.html" -o -name "*.txt" \) -print || true
 
       - name: Upload E2E artifacts
         if: always()
@@ -62,5 +82,5 @@ jobs:
           path: |
             /tmp/*.png
             /tmp/*.html
-            ${{ github.workspace }}/artifacts/**
             /tmp/*.txt
+            ${{ github.workspace }}/artifacts/**
