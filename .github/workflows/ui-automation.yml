@@ -48,12 +48,19 @@ jobs:
       - name: List candidate artifact files (for debugging)
         if: always()
         run: |
-          echo "Listing /tmp png/html files"
-          ls -la /tmp/*.png /tmp/*.html /tmp/*.txt || true
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo "Listing /tmp"
+          ls -la /tmp || true
+          echo "Listing $GITHUB_WORKSPACE/artifacts (if used)"
+          ls -la "$GITHUB_WORKSPACE/artifacts" || true
 
       - name: Upload E2E artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-artifacts
-          path: /tmp/*.png,/tmp/*.html,/tmp/*.txt
+          path: |
+            /tmp/*.png
+            /tmp/*.html
+            ${{ github.workspace }}/artifacts/**
+            /tmp/*.txt
