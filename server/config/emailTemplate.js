@@ -2,10 +2,10 @@ require('dotenv').config();
 const sendGridAPI = process.env.SendGridApiKey;
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(sendGridAPI);
-const businessEmail = 'catchingsoulstrivia@outlook.com';
+const businessEmail = 'jdameus2025@fau.edu';
 const businessPOCEmail = 'jonathan.dameus@emerge-it.net';
 
-function sendVerification(email, firstName, lastName, username) {
+function sendVerification(email, username) {
     const sentEmail = false;
     const msg = {
     to: email,
