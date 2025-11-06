@@ -2,6 +2,7 @@
 
 const bcrypt = require("bcryptjs");
 const userQueries = require("../queries/userQueries");
+const emailTemplate = require("../config/emailTemplate");
 
 const registerUser = async (req, res) => {
   try {
@@ -14,14 +15,18 @@ const registerUser = async (req, res) => {
 
     // FIXED: Remove manual hashing - let the User model's pre-save hook handle it
     const newUser = await userQueries.createUser({ email, username, password });
-    
-    // Don't return the password in the response
-    res.status(201).json({
-      id: newUser._id,
-      email: newUser.email,
-      username: newUser.username,
-      createdAt: newUser.createdAt
-    });
+
+    // Send verification email
+    if (emailTemplate.sendVerification(newUser.email, newUser.username)) {
+      // Email sent successfully
+      // Don't return the password in the response
+      return res.status(201).json({
+        id: newUser._id,
+        email: newUser.email,
+        username: newUser.username,
+        createdAt: newUser.createdAt
+      });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -177,10 +182,13 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // TODO: Implement actual email sending with reset token
-    res.status(200).json({ 
-      message: "Password reset instructions sent to email (mock response)" 
-    });
+    // Send recovery email
+    if (emailTemplate.sendRecoveryVerification(user.email, user.username)) {
+      // TODO: Implement actual email sending with reset token
+      return res.status(200).json({ 
+        message: "Password reset instructions sent to email (mock response)" 
+      });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
