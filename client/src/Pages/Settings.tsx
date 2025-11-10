@@ -48,79 +48,85 @@ const Settings: React.FC = () => {
       setUsername(parsedUser.username || "");
       setEmail(parsedUser.email || "");
       setPassword(parsedUser.password || "");
-      setUserId(parsedUser._id || parsedUser.id || "");
+      setUserId(String(parsedUser._id ?? parsedUser.id ?? ""));
     }
     setLoaded(true);
   }, []);
+
+  /* Consume message so it doesn’t reappear on refresh */
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.message) {
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   /* Sends updates to backend
      - If backend succeeds: updates state & localStorage
      - If backend fails: shows backend error message
      - If network error: fallback to localStorage */
-  const saveUser = async (newUsername = username, newPassword = password, message = "Settings updated successfully!", onSuccess?: () => void) => {
-    if (!newUsername || !newPassword) {
-      setFormMessage("Username and password are required");
-      return;
-    }
-
+   const saveUser = async (updates: {username?: string; password?: string}, message: string, onSuccess?: () => void) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}api/users/user/${userId}`, {
-          method: "PUT",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({
-            username: newUsername,
-            email,
-            password: newPassword,
-          }),
-        }
-      );
+      let endpoint = "";
+      let bodyData: any = {};
 
-      // Backend Success
+      /* Update Username */
+      if (updates.username && !updates.password) {
+        endpoint = `${process.env.REACT_APP_BACKEND_BASE_URL}api/users/user/${userId}`;
+        bodyData = {username: updates.username}; 
+      }
+
+      /* Update Password */
+      else if (updates.password && !updates.username) {
+        endpoint = `${process.env.REACT_APP_BACKEND_BASE_URL}api/users/password/${userId}`;
+        bodyData = {password: updates.password}; 
+      }
+
+      /* Backend */
+      const response = await fetch(endpoint, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(bodyData),
+      });
+
       if (response.ok) {
-        setUsername(newUsername);
-        setPassword(newPassword);
+        // Update state
+        if (updates.username) setUsername(updates.username);
+        if (updates.password) setPassword(updates.password);
 
-        // Save user in localStorage
-        localStorage.setItem(
-          "fakeUser",
-          JSON.stringify({
-            username: newUsername,
-            email,
-            password: newPassword,
-            id: userId,
-          })
-        );
+        // Save to localStorage
+        const updatedUser = {
+          username: updates.username ?? username,
+          email,
+          password: updates.password ?? password,
+          id: userId,
+        };
+        localStorage.setItem("fakeUser", JSON.stringify(updatedUser));
 
         setFormMessage(message);
-
         onSuccess?.();
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setFormMessage(errorData.message || "Failed to update settings");
+        setFormMessage(errorData.message || "Failed to update user");
       }
     } catch (error) {
       console.error("Network error:", error);
-
-      // Local fallback
-      localStorage.setItem(
-        "fakeUser",
-        JSON.stringify({
-          username: newUsername,
-          email,
-          password: newPassword,
-          id: userId,
-        })
-      );
-      setUsername(newUsername);
-      setPassword(newPassword);
+      // Save locally if backend fails
+      const updatedUser = {
+        username: updates.username ?? username,
+        email,
+        password: updates.password ?? password,
+        id: userId,
+      };
+      localStorage.setItem("fakeUser", JSON.stringify(updatedUser));
       setFormMessage(`${message} (saved locally)`);
       onSuccess?.();
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
   // Clear only session data (used for logout)
   const clearSession = () => {
@@ -129,24 +135,24 @@ const Settings: React.FC = () => {
     localStorage.removeItem("sessionExpiry");
     localStorage.removeItem("authToken");
     window.dispatchEvent(new Event("sessionchange"));
-  };
+  }
 
   // Clear everything including user (used for delete)
   const clearAllAndGoHome = (message: string) => {
     clearSession();
     localStorage.removeItem("fakeUser");
-    navigate("/", { state: { message } });
-  };
+    navigate("/", {state: {message}});
+  }
 
   // Clear only session (used for logout)
   const clearSessionAndGoHome = (message: string) => {
     clearSession();
     navigate("/", { state: { message } });
-  };
+  }
 
   const handleLogout = () => {
     clearSessionAndGoHome("You have been logged out!");
-  };
+  }
 
   if (!loaded) {
     return (
@@ -164,8 +170,8 @@ const Settings: React.FC = () => {
         <UsernameDisplay
           username={username}
           password={password}
-          saveUser={(newUsername, currentPassword, onSuccess) =>
-            saveUser(newUsername, currentPassword, "Username updated!", onSuccess)
+          saveUser={(updates, onSuccess) =>
+            saveUser(updates, "Username updated!", onSuccess)
           }
           isSubmitting={isSubmitting}
         />
@@ -175,8 +181,8 @@ const Settings: React.FC = () => {
         <PasswordDisplay
           username={username}
           password={password}
-          saveUser={(currentUsername, newPassword, onSuccess) =>
-            saveUser(currentUsername, newPassword, "Password updated!", onSuccess)
+          saveUser={(updates, onSuccess) =>
+            saveUser(updates, "Password updated!", onSuccess)
           }
           isSubmitting={isSubmitting}
         />
@@ -195,14 +201,14 @@ const Settings: React.FC = () => {
           <AuthButton
             onClick={handleLogout}
             variant="primary"
-            style={{ width: "fit-content" }}
+            style={{width: "fit-content"}}
           >
             Log Out
           </AuthButton>
         </div>
       </div>
     </AuthCard>
-  );
-};
+  )
+}
 
 export default Settings;
