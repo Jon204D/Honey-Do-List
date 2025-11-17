@@ -1,15 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import AuthCard from "../Components/Auth/AuthCard";
-import FormMessage from "../Components/Auth/FormMessage";
-import { useNavigate, useLocation } from "react-router-dom";
-import { AuthInput, AuthButton } from "../Components/Auth/AuthStyles";
-import LoginExtraButtons from "../Components/Auth/LoginExtraButtons";
+import React, {useState} from "react";
+import AuthCard from "../components/AuthCard";
+import {useNavigate, useLocation} from "react-router-dom";
+import {AuthInput, AuthButton} from "../components/AuthStyles";
 
 /* Displays Login Form
-   - Calls backend or uses local fallback
-   - Saves login session in localStorage 
-   - Session only valid for 1 hour
-   - Displays success/error messages */
+   - Checks credentials saved in localStorage by SignUp
+   - sets "isLoggedIn" flag if they match
+   - displays success/error messages */
 const Login: React.FC = () => {
   useEffect(() => {
     document.title = "Honey-Do List Login";
@@ -20,41 +17,20 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [formMessage, setFormMessage] = useState<string | null>(
-    location.state?.message || null
-  )
+  /* Login Form */
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const lastSubmitTime = useRef<number>(0);
+    /* Get the stored user from localStorage */
+    const savedUser = localStorage.getItem("fakeUser");
+  
+    if (savedUser) {
+      // Parse saved user and check credentials
+      const {email: savedEmail, password: savedPassword} = JSON.parse(savedUser);
 
-  /* Validation */
-  const validateFields = (): string | null => {
-    if (!email || !password) {
-      return "All fields are required.";
-    }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      return "Invalid email format.";
-    }
-    return null;
-  }
-
-  const saveLoginSession = (userData: any) => {
-    const now = Date.now();
-    const sessionExpiry = now + 3600000;  // 1 hour in ms
-
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("loginTimestamp", now.toString());
-    localStorage.setItem("sessionExpiry", sessionExpiry.toString());
-    localStorage.setItem("fakeUser", JSON.stringify(userData));
-  }
-
-  /* Request to Backend */
-  const loginRequest = async () => {
-    // Field Validation
-    const validationError = validateFields();
-    if (validationError) {
-      setFormMessage(validationError);
-      return;
+    if (email === savedEmail && password === savedPassword) {
+      localStorage.setItem("isLoggedIn", "true");
+      navigate("/settings", {state: {message: "Welcome back!"}});
     } else {
       setFormMessage(null);
     }
@@ -127,63 +103,52 @@ const Login: React.FC = () => {
   }
 
   return (
-    <>
-      <AuthCard title="Log In">
-        {/* Success/Error Messages */}
-        {formMessage && <FormMessage message={formMessage} />}
+    <AuthCard title="Log In">
+      {/* Success/Error Messages */}
+      {message && <p style = {{color: "orange", fontWeight: "bold"}}>{message}</p>}   
+      
+      {/* Login Form */}
+      <form onSubmit={handleLogin} style = {{display: "flex", flexDirection: "column", gap: "10px"}}>
+        
+        {/* Email Input */}
+        <AuthInput
+          type="email"
+          name="email"
+          placeholder="Email"
+          autoComplete="username"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-        {/* Login Form */}
-        <form
-          onSubmit={handleLogin}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px"
-          }}
-        >
+        {/* Password Input */}
+        <AuthInput
+          type="password"
+          name="password"
+          placeholder="Password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
 
-          {/* Email Input */}
-          <AuthInput
-            type="email"
-            name="email"
-            placeholder="Email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+        {/* Submit Button */}
+        <AuthButton 
+          type="submit" 
+          variant="primary">
+            Log In
+        </AuthButton>
+      </form>
 
-          {/* Password Input */}
-          <AuthInput
-            type="password"
-            name="password"
-            placeholder="Password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-
-          {/* Submit Button */}
-          <AuthButton
-            type="submit"
-            variant="primary"
-            onClick={loginRequest}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Logging in..." : "Log In"}
-          </AuthButton>
-        </form>
-
-        {/* Forgot Password, Create Account, and Invite New User */}
-        <div
-          style={{
-            marginTop: "20px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px"
-          }}
-        >
+      {/* Forgot Password & Create Account */}
+      <div 
+        style = {{
+          marginTop: "20px", 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: "10px"
+        }}
+      >
 
           <AuthButton
             onClick={() => navigate("/forgot-password")}

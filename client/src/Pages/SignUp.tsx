@@ -5,6 +5,9 @@ import FormMessage from "../Components/Auth/FormMessage";
 import SignUpExtraButton from "../Components/Auth/SignUpExtraButon";
 import {AuthInput, AuthButton} from "../Components/Auth/AuthStyles";
 
+/* Registers username, email, and password
+   - Saves a fake user into localStorage
+   - Goes back to the "Login" page */
 const SignUp: React.FC = () => {
    useEffect(() => {
         document.title = "Sign Up - Honey-Do List";
@@ -113,6 +116,7 @@ const SignUp: React.FC = () => {
   }
 
   return (
+
     /* Title */
     <AuthCard title="Create Account">
       {formMessage && <FormMessage message={formMessage} />}
@@ -159,17 +163,25 @@ const SignUp: React.FC = () => {
         />
 
         {/* Create Button */}
-        <AuthButton
-          type="submit"
-          variant="primary"
-          onClick={signUpRequest}
-          disabled={isSubmitting}>
-          {isSubmitting ? 'Creating Account...' : 'Create Account'}
+        <AuthButton 
+          type="submit" 
+          variant="primary">
+            Create Account
         </AuthButton>
       </form>
 
       {/* Navigate to Login */}
-      <SignUpExtraButton/>
+      <div 
+        style = {{ 
+          marginTop: "20px" 
+        }}
+      >
+        <AuthButton 
+          onClick={() => navigate("/login")} 
+          variant="secondary">
+            Back to Login
+        </AuthButton>
+      </div>
     </AuthCard>
   )
 }
