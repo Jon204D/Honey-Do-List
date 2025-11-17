@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import AuthCard from "../Components/Auth/AuthCard";
 import FormMessage from "../Components/Auth/FormMessage";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthInput, AuthButton } from "../Components/Auth/AuthStyles";
-import axios from "axios";
 
 /* Displays Login Form
    - Calls backend or uses local fallback
@@ -22,7 +22,7 @@ const Login: React.FC = () => {
 
   const [formMessage, setFormMessage] = useState<string | null>(
     (location.state as any)?.message || null
-  )
+  );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const lastSubmitTime = useRef<number>(0);
@@ -36,7 +36,7 @@ const Login: React.FC = () => {
     localStorage.setItem("sessionExpiry", String(sessionExpiry));
     localStorage.setItem("fakeUser", JSON.stringify(userData));
     window.dispatchEvent(new Event("sessionchange")); // notify navbar
-  }
+  };
 
   /* Validation */
   const validateFields = (): string | null => {
@@ -47,9 +47,9 @@ const Login: React.FC = () => {
       return "Invalid email format.";
     }
     return null;
-  }
+  };
 
-  /* Request to Backend */
+  /* Request to Backend (robust handling for axios) */
   const loginRequest = async () => {
     const validationError = validateFields();
     if (validationError) {
@@ -61,7 +61,7 @@ const Login: React.FC = () => {
 
     // Throttle: Prevent submissions within 3 seconds
     const now = Date.now();
-    const throttleDelay = 3000;   // 3 seconds
+    const throttleDelay = 3000; // 3 seconds
 
     if (now - lastSubmitTime.current < throttleDelay) {
       console.log("Request throttled. Please wait before submitting again.");
@@ -74,24 +74,15 @@ const Login: React.FC = () => {
     lastSubmitTime.current = now;
 
     try {
-      // Make the API POST request
-      // const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/login`,
-      //   {
-      //     method: "POST",
-      //     headers: {"Content-Type": "application/json"},
-      //     body: JSON.stringify({email, password}),
-      //   }
-      // )
+      // Normalize backend base URL (trim trailing slashes) to avoid double slashes
+      const backendBase = (process.env.REACT_APP_BACKEND_BASE_URL || "").replace(/\/+$/, "");
+      const loginUrl = `${backendBase}/api/users/login`;
 
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/login`, {
-        email,
-        password,
-      });
+      const response = await axios.post(loginUrl, { email, password });
 
-      /* Handle Response */
-      if (response.data.message === "Login successful") {
+      // axios resolves only for 2xx status codes; check server-provided message
+      if (response.data?.message === "Login successful") {
         const data = response.data;
-        // Optional: store token if backend returns it
         if (data?.token) localStorage.setItem("authToken", String(data.token));
         if (!data?.user) {
           setFormMessage("Invalid server response.");
@@ -100,13 +91,25 @@ const Login: React.FC = () => {
         saveLoginSession(data.user);
         navigate("/settings", { state: { message: "Welcome back!" } });
       } else {
+        // server returned 2xx but not a success message
         const errorData = response.data || {};
         setFormMessage(errorData.message || "Invalid credentials");
       }
-    } catch (error) {
-      console.error("Network error:", error);
+    } catch (err) {
+      // Distinguish server-response errors from network/CORS errors.
+      // axios attaches `response` when server responded (non-2xx),
+      // and `request` when request was sent but no response (network / CORS / timeout).
+      console.error("Login error:", err);
 
-      // Fallback: Save fake user in localStorage for development
+      // If server responded with a non-2xx status, surface that message (better UX than "Network error")
+      if (axios.isAxiosError(err) && err.response) {
+        const serverMsg = err.response.data?.message || "Invalid credentials";
+        setFormMessage(serverMsg);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Network / CORS / no-response case: attempt local fallback (fakeUser)
       const savedUser = localStorage.getItem("fakeUser");
       if (savedUser) {
         try {
@@ -114,72 +117,64 @@ const Login: React.FC = () => {
           if (u?.email === email && u?.password === password) {
             saveLoginSession(u);
             navigate("/settings", { state: { message: "Welcome back! (offline)" } });
+            setIsSubmitting(false);
+            return;
+          } else {
+            // savedUser exists but credentials don't match -> show "Invalid credentials"
+            setFormMessage("Invalid credentials");
+            setIsSubmitting(false);
             return;
           }
-        } catch {}
+        } catch (e) {
+          // parse error, fall through to network message
+          console.warn("Could not parse fakeUser from localStorage", e);
+        }
       }
+
+      // No savedUser or fallback failed -> genuine network/CORS problem
       setFormMessage("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
   /* Login Form */
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-  }
+    loginRequest();
+  };
 
   return (
     <AuthCard title="Log In">
       {formMessage && <FormMessage message={formMessage} />}
 
-      {/* Login Form */}
-      <form
-        onSubmit={handleLogin}
-        style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-      >
-        {/* Email Input */}
+      <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <AuthInput
           type="email"
           name="email"
           placeholder="Email"
           autoComplete="username"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
           required
         />
 
-        {/* Password Input */} 
         <AuthInput
           type="password"
           name="password"
           placeholder="Password"
           autoComplete="current-password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
           required
         />
 
-        {/* Submit Button */}
-        <AuthButton
-          type="submit"
-          variant="primary"
-          onClick={loginRequest}
-          disabled={isSubmitting}
-        >
+        <AuthButton type="submit" variant="primary" disabled={isSubmitting}>
           {isSubmitting ? "Logging in..." : "Log In"}
         </AuthButton>
       </form>
 
-      {/* Forgot Password, Create Account, and Invite New User */}
-      <div
-        style={{
-          marginTop: "20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-        }}
-      >
+      <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
         <AuthButton onClick={() => navigate("/forgot-password")} variant="secondary">
           Forgot Password?
         </AuthButton>
@@ -192,9 +187,8 @@ const Login: React.FC = () => {
           Invite New User
         </AuthButton>
       </div>
-
-      </AuthCard>
-  )
-}
+    </AuthCard>
+  );
+};
 
 export default Login;
