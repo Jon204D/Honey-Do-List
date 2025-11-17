@@ -18,3 +18,5 @@ app.listen(5001, () => {
   console.log('🧪 Test server running on http://localhost:5001');
   console.log('Try: http://localhost:5001/test');
 });
+
+// To run this server, use the command: node server/test-server.js
