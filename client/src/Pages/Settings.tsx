@@ -74,13 +74,13 @@ const Settings: React.FC = () => {
 
       /* Update Username */
       if (updates.username && !updates.password) {
-        endpoint = `${process.env.REACT_APP_BACKEND_BASE_URL}api/users/user/${userId}`;
+        endpoint = `${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/user/${userId}`;
         bodyData = {username: updates.username}; 
       }
 
       /* Update Password */
       else if (updates.password && !updates.username) {
-        endpoint = `${process.env.REACT_APP_BACKEND_BASE_URL}api/users/password/${userId}`;
+        endpoint = `${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/password/${userId}`;
         bodyData = {password: updates.password}; 
       }
 

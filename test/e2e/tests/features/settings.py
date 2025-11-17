@@ -17,7 +17,7 @@ class SettingsTests(BaseTestSuite):
     def land_settings_page(self):
         try:
             print("🚀 Launching Settings page...")
-            self.driver.get(BASE_URL + "settings")
+            self.driver.get(BASE_URL + "/settings")
             self.wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='Account Settings']")))
             self.log_result("Settings Page Load", True, "Settings page is present.")
             print("✅ Settings page is present.")
@@ -169,7 +169,6 @@ class SettingsTests(BaseTestSuite):
     def run_all_settings(self):
         print("\n⚙️ Running Settings Tests...")
         expected_username = os.getenv("TESTUSER1USERNAME")
-        expected_email = os.getenv("TESTUSER1EMAIL")
         expected_password = os.getenv("TESTUSER1PASSWORD")
 
         current_username = os.getenv("TESTUSER1USERNAME")

@@ -4,7 +4,7 @@ import axios from 'axios'; // Make sure axios is installed: npm install axios
 import styles from './design/invite.module.css';
 import clsx from 'clsx';
 
-const API_URL = `${process.env.REACT_APP_BACKEND_BASE_URL}api/invites`;
+const API_URL = `${process.env.REACT_APP_BACKEND_BASE_URL}/api/invites`;
 // will probably need to be edited to have a similar fetch requests as the others
 
 interface Invite {
