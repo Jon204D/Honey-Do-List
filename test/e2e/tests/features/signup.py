@@ -32,7 +32,7 @@ class SignupTests(BaseTestSuite):
 
     def signup_invalid(self):
         try:
-            if not self.driver.current_url.endswith("/signup"):
+            if not self.driver.current_url.endswith("signup"):
                 print("🔄 Redirecting to Signup page...")
                 self.land_signup_page()
 
@@ -69,7 +69,7 @@ class SignupTests(BaseTestSuite):
 
     def signup_valid(self):
         try:
-            if not self.driver.current_url.endswith("/signup"):
+            if not self.driver.current_url.endswith("signup"):
                 print("🔄 Redirecting to Signup page...")
                 self.land_signup_page()
             email = os.getenv("TESTUSER1EMAIL")
@@ -81,6 +81,7 @@ class SignupTests(BaseTestSuite):
             self.driver.find_element(By.NAME, "email").send_keys(email)
             self.driver.find_element(By.NAME, "username").send_keys(username)
             self.driver.find_element(By.NAME, "password").send_keys(password)
+            self.dismiss_guidance_popover()
             self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
             error_element = self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "p")))
@@ -89,7 +90,7 @@ class SignupTests(BaseTestSuite):
             if "Email already in use / taken" in error_text:
                 print("✅ User already exists. Consider using different credentials.")
                 self.driver.get(BASE_URL + "/login")
-            elif self.wait.until(EC.url_contains("/login")):
+            elif self.wait.until(EC.url_contains("login")):
                 self.log_result("Valid Signup", True, "Successfully signed up and redirected to login.")
                 print("✅ Successfully signed up and redirected to login.")
             else:
@@ -101,7 +102,7 @@ class SignupTests(BaseTestSuite):
             print(f"❌ An error occurred while fetching credentials: \n- {error_message}")
 
     def run_all_signup(self):
-        print("🔍 Running signup feature tests...")
+        print("\n🔍 Running signup feature tests...")
         try:
             self.land_signup_page()
             self.signup_invalid()

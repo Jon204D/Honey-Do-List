@@ -2,9 +2,9 @@ name: Server User Seeding Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, UI-Automation]
   pull_request:
-    branches: [main, develop, feature/*]
+    branches: [main, develop, UI-Automation, feature/*]
 
 jobs:
   test:
@@ -39,7 +39,8 @@ jobs:
           node-version: '20' # or your preferred version
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci --prefix server
 
       - name: Run user seed tests
+        working-directory: server
         run: npx jest tests/seedUsers.test.js

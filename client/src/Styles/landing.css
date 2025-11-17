@@ -1,0 +1,86 @@
+/* === Layout & Card === */
+.landing-container {
+  font-family: "Segoe UI", sans-serif;
+  height: 88vh;  /* this made me want to kill somebody. do not adjust unless you send me an edible arrangement or a message on discord */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  
+  /* background display */
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)),
+    url("../assets/honeycomb.svg");
+  background-repeat: repeat;
+  background-size: 260px auto;
+  background-position: top center;
+
+  background-color: #ca8a04; /* base honey yellow */
+}
+
+.landing-card {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 3rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  width: 360px;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  transition: color 0.3s ease;
+}
+.title:hover {
+  color: #f59e0b;
+}
+
+.subtitle {
+  font-style: italic;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #ffffff;
+}
+
+/* same color + hover logic as .icon-circle */
+.honey-rect {
+  width: 100%;
+  background-color: #fbbf24; /* honey gold */
+  color: black;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 10px 0;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.honey-rect:hover {
+  background-color: #f59e0b; /* darker honey */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.honey-rect:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+@media (max-width: 480px) {
+  .landing-card {
+    width: 90%;
+    padding: 2rem;
+  }
+
+  .honey-rect {
+    font-size: 0.95rem;
+    padding: 10px 0;
+  }
+}

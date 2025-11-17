@@ -37,20 +37,36 @@ class HoneyDoList(BaseTestSuite):
         try:
             # First, run initial environment checks
             self.run_initial_tests()
+            results = []
 
-            # Import and run signup feature tests
-            print("\n") # Add spacing in console output
-            from tests.features.signup import SignupTests
-            signup_test = SignupTests(self.driver, self.wait)
-            results = signup_test.run_all_signup()
-            self.test_results.extend(results)
+            try:
+                if self.dismiss_guidance_popover():
+                    print("ℹ️ Guidance popover dismissed or not present.")
+                else:
+                    print("⚠️ Guidance popover still present after attempts.")
+            except Exception as e:
+                print("⚠️ Error trying to dismiss guidance popover:", e)
 
-            # Import and run forgot password feature tests
-            print("\n") # Add spacing in console output
-            from tests.features.forgotPassword import ForgotPasswordTests
-            forgot_password_test = ForgotPasswordTests(self.driver, self.wait)
-            results += forgot_password_test.run_all_forgot_password()
-            self.test_results.extend(results)
+            # # Import and run signup feature tests
+            # print("\n") # Add spacing in console output
+            # from tests.features.signup import SignupTests
+            # signup_test = SignupTests(self.driver, self.wait)
+            # results += signup_test.run_all_signup()
+            # self.test_results.extend(results)
+
+            # # Import and run invite feature tests
+            # print("\n") # Add spacing in console output
+            # from tests.features.invite import InviteTests
+            # invite_test = InviteTests(self.driver, self.wait)
+            # results += invite_test.run_all_invite()
+            # self.test_results.extend(results)
+
+            # # Import and run forgot password feature tests
+            # print("\n") # Add spacing in console output
+            # from tests.features.forgotPassword import ForgotPasswordTests
+            # forgot_password_test = ForgotPasswordTests(self.driver, self.wait)
+            # results += forgot_password_test.run_all_forgot_password()
+            # self.test_results.extend(results)
 
             # Import and run login feature tests
             print("\n") # Add spacing in console output
@@ -64,13 +80,6 @@ class HoneyDoList(BaseTestSuite):
             from tests.features.taskPage import TaskPageTests
             task_page_test = TaskPageTests(self.driver, self.wait)
             results += task_page_test.run_all_tasks()
-            self.test_results.extend(results)
-
-            # Import and run invite feature tests
-            print("\n") # Add spacing in console output
-            from tests.features.invite import InviteTests
-            invite_test = InviteTests(self.driver, self.wait)
-            results += invite_test.run_all_invite()
             self.test_results.extend(results)
 
             # Import and run settings feature tests

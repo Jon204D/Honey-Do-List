@@ -15,10 +15,11 @@ const {
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/forgot-password", forgotPassword);
-router.get("/", getAllUsers);
-router.get("/:id", getUser);
-router.put("/:id", updateUser);
 router.put("/:id/password", changePassword);
-router.delete("/:id", deleteUser);
+
+router.get("/", getAllUsers);
+router.get("/user/:id", getUser);
+router.put("/user/:id", updateUser);
+router.delete("/user/:id", deleteUser);
 
 module.exports = router;

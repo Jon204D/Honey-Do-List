@@ -74,7 +74,7 @@ const TaskBoard: React.FC = () => {
   // Add Task
   const handleAddTask = async (newTask: Task) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks`, {
+      const response = await fetch(`/api/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newTask),

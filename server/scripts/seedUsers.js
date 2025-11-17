@@ -15,12 +15,41 @@ mongoose.connect(process.env.MONGO_URI)
     process.exit(1);
 });
 
+// const users = [
+//     { email: 'jon@example.com', username: 'Jon204D', password: '123'},
+//     { email: 'kodie@example.com', username: 'kodie', password: '456'},
+//     { email: 'bunny@example.com', username: 'tee', password: '789'},
+//     { email: 'aiyaz@example.com', username: 'aiyaz', password: '000'}
+// ];
+
 const users = [
-    { email: 'jon@example.com', username: 'Jon204D', password: '123'},
-    { email: 'kodie@example.com', username: 'kodie', password: '456'},
-    { email: 'bunny@example.com', username: 'tee', password: '789'},
-    { email: 'aiyaz@example.com', username: 'aiyaz', password: '000'}
+  {
+    email: process.env.TESTUSER1EMAIL,
+    username: process.env.TESTUSER1USERNAME,
+    password: process.env.TESTUSER1PASSWORD,
+  },
+  {
+    email: process.env.TESTUSER2EMAIL,
+    username: process.env.TESTUSER2USERNAME,
+    password: process.env.TESTUSER2PASSWORD,
+  },
+  {
+    email: process.env.TESTUSER3EMAIL,
+    username: process.env.TESTUSER3USERNAME,
+    password: process.env.TESTUSER3PASSWORD,
+  },
+  {
+    email: process.env.TESTADMINEMAIL,
+    username: process.env.TESTADMINUSERNAME,
+    password: process.env.TESTADMINPASSWORD,
+  },
+  {
+    email: process.env.TESTDEMOEMAIL,
+    username: process.env.TESTDEMOUSERNAME,
+    password: process.env.TESTDEMOPASSWORD,
+  },
 ];
+
 
 const seedUsers = async () => {
   try {
