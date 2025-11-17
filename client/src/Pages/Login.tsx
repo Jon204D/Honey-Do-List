@@ -3,6 +3,7 @@ import AuthCard from "../Components/Auth/AuthCard";
 import FormMessage from "../Components/Auth/FormMessage";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthInput, AuthButton } from "../Components/Auth/AuthStyles";
+import axios from "axios";
 
 /* Displays Login Form
    - Calls backend or uses local fallback
@@ -74,17 +75,22 @@ const Login: React.FC = () => {
 
     try {
       // Make the API POST request
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/login`,
-        {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({email, password}),
-        }
-      )
+      // const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/login`,
+      //   {
+      //     method: "POST",
+      //     headers: {"Content-Type": "application/json"},
+      //     body: JSON.stringify({email, password}),
+      //   }
+      // )
+
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/login`, {
+        email,
+        password,
+      });
 
       /* Handle Response */
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data.message === "Login successful") {
+        const data = response.data;
         // Optional: store token if backend returns it
         if (data?.token) localStorage.setItem("authToken", String(data.token));
         if (!data?.user) {
@@ -94,7 +100,7 @@ const Login: React.FC = () => {
         saveLoginSession(data.user);
         navigate("/settings", { state: { message: "Welcome back!" } });
       } else {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = response.data || {};
         setFormMessage(errorData.message || "Invalid credentials");
       }
     } catch (error) {
