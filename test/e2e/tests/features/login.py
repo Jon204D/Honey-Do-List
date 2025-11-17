@@ -210,7 +210,7 @@ class LoginTests(BaseTestSuite):
             except Exception:
                 pass
             try:
-                self.driver.get(f"{BASE_URL.rstrip('/')}/login")
+                self.driver.get(BASE_URL + "/login")
                 time.sleep(0.5)
                 self.wait.until(EC.visibility_of_element_located((By.NAME, "email")))
             except Exception:
