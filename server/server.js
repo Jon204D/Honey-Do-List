@@ -49,6 +49,13 @@ function normalizeSlashes(req, res, next) {
   next();
 }
 
+// ---------------------------
+// Early OPTIONS logging for debugging preflight problems (temporary)
+// ---------------------------
+function logOptions(req, res, next) {
+  next();
+}
+
 // ─── CORS Configuration ───────
 // Be explicit about allowed origins; in CI you may want to include the FE origin used by Actions
 const allowedOrigins = [
