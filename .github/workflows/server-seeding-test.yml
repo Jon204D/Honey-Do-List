@@ -42,4 +42,5 @@ jobs:
         run: npm ci --prefix server
 
       - name: Run user seed tests
+        working-directory: server
         run: npx jest tests/seedUsers.test.js
