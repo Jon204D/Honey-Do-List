@@ -49,25 +49,6 @@ function normalizeSlashes(req, res, next) {
   next();
 }
 
-// ---------------------------
-// Early OPTIONS logging for debugging preflight problems (temporary)
-// ---------------------------
-function logOptions(req, res, next) {
-  if (req.method === 'OPTIONS') {
-    console.log('PRELIGHT:', {
-      originalUrl: req.originalUrl,
-      path: req.path,
-      method: req.method,
-      headers: {
-        origin: req.headers.origin,
-        acrm: req.headers['access-control-request-method'],
-        acrh: req.headers['access-control-request-headers'],
-      },
-    });
-  }
-  next();
-}
-
 // ─── CORS Configuration ───────
 // Be explicit about allowed origins; in CI you may want to include the FE origin used by Actions
 const allowedOrigins = [
