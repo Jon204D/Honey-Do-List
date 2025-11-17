@@ -314,20 +314,23 @@ class LoginTests(BaseTestSuite):
                 print("❌ Could not click login submit. Artifacts:", png, html, console)
                 return
             
-            if self.wait.until(EC.visibility_of_element_located((By.XPATH, "//div//p[text()='Invalid email or password']"))):
-                print("❌ 'Invalid email or password' message shown before submitting valid login.\nAttempting to login with test user 3 instead.")
-                
-                # Capture artifacts
-                png, html = self._screenshot_and_snippet("invalid_email_or_password")
-                console = self.capture_browser_console()
-                
-                # Login as test user 3 instead
-                email = os.getenv("TESTUSER3EMAIL")
-                password = os.getenv("TESTUSER3PASSWORD")
-                email_el.clear()
-                pwd_el.clear()
-                email_el.send_keys(email)
-                pwd_el.send_keys(password)
+            try:
+                if self.wait.until(EC.visibility_of_element_located((By.XPATH, "//div//p[text()='Invalid email or password']"))):
+                    print("❌ 'Invalid email or password' message shown before submitting valid login.\nAttempting to login with test user 3 instead.")
+                    
+                    # Capture artifacts
+                    png, html = self._screenshot_and_snippet("invalid_email_or_password")
+                    console = self.capture_browser_console()
+                    
+                    # Login as test user 3 instead
+                    email = os.getenv("TESTUSER3EMAIL")
+                    password = os.getenv("TESTUSER3PASSWORD")
+                    email_el.clear()
+                    pwd_el.clear()
+                    email_el.send_keys(email)
+                    pwd_el.send_keys(password)
+            except Exception:
+                pass
 
             # Wait for redirect or known post-login url fragment
             local_wait = WebDriverWait(self.driver, 15)
