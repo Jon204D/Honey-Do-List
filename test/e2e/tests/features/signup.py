@@ -15,7 +15,7 @@ class SignupTests(BaseTestSuite):
     def land_signup_page(self):
         try:
             print("🚀 Launching Signup page...")
-            self.driver.get(BASE_URL + "signup")
+            self.driver.get(BASE_URL + "/signup")
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='Create Account']")))
                 self.log_result("Signup Page Load", True, "Signup form is present.")
@@ -89,7 +89,7 @@ class SignupTests(BaseTestSuite):
 
             if "Email already in use / taken" in error_text:
                 print("✅ User already exists. Consider using different credentials.")
-                self.driver.get(BASE_URL + "login")
+                self.driver.get(BASE_URL + "/login")
             elif self.wait.until(EC.url_contains("login")):
                 self.log_result("Valid Signup", True, "Successfully signed up and redirected to login.")
                 print("✅ Successfully signed up and redirected to login.")

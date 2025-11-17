@@ -14,7 +14,7 @@ class InviteTests(BaseTestSuite):
     def land_invite_page(self):
         try:
             print("\n🚀 Launching Invite page...")
-            self.driver.get(BASE_URL + "invite")
+            self.driver.get(BASE_URL + "/invite")
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//h3[text()='Send a New Invite']")))
                 self.log_result("Invite Page Load", True, "Invite form is present.")

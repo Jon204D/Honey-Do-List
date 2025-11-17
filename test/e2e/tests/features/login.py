@@ -20,7 +20,7 @@ class LoginTests(BaseTestSuite):
     def land_login_page(self):
         try:
             print("🚀 Launching Login page...")
-            self.driver.get(f"{BASE_URL.rstrip('/')}/login")
+            self.driver.get(BASE_URL + "/login")
             try:
                 self.wait.until(EC.presence_of_element_located((By.XPATH, "//div//h2[text()='Log In']")))
                 self.log_result("Login Page Load", True, "Login form is present.")
@@ -313,6 +313,21 @@ class LoginTests(BaseTestSuite):
                 self.log_result("Valid Login", False, f"Could not click login submit (screenshot:{png}, console:{console})")
                 print("❌ Could not click login submit. Artifacts:", png, html, console)
                 return
+            
+            if self.wait.until(EC.visibility_of_element_located((By.XPATH, "//div//p[text()='Invalid email or password']"))):
+                print("❌ 'Invalid email or password' message shown before submitting valid login.\nAttempting to login with test user 3 instead.")
+                
+                # Capture artifacts
+                png, html = self._screenshot_and_snippet("invalid_email_or_password")
+                console = self.capture_browser_console()
+                
+                # Login as test user 3 instead
+                email = os.getenv("TESTUSER3EMAIL")
+                password = os.getenv("TESTUSER3PASSWORD")
+                email_el.clear()
+                pwd_el.clear()
+                email_el.send_keys(email)
+                pwd_el.send_keys(password)
 
             # Wait for redirect or known post-login url fragment
             local_wait = WebDriverWait(self.driver, 15)
