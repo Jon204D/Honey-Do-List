@@ -117,15 +117,15 @@ describe('User Seeding Tests', () => {
     });
 
     it('should find user by email', async () => {
-      const user = await User.findOne({ email: 'roottest01@test.com' });
+      const user = await User.findOne({ email: process.env.TESTUSER1EMAIL });
       expect(user).toBeTruthy();
-      expect(user.username).toBe('roottest01');
+      expect(user.username).toBe(process.env.TESTUSER1USERNAME);
     });
 
     it('should find user by username', async () => {
-      const user = await User.findOne({ username: 'admintest' });
+      const user = await User.findOne({ username: process.env.TESTADMINUSERNAME });
       expect(user).toBeTruthy();
-      expect(user.email).toBe('admintest@test.com');
+      expect(user.email).toBe(process.env.TESTADMINEMAIL);
     });
   });
 

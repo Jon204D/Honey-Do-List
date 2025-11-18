@@ -40,9 +40,9 @@ describe('Task Controller Tests', () => {
   beforeEach(async () => {
     await cleanupTestData();
     
-    // Create test users and task
-    testUser1 = await createTestUser({ email: 'owner@test.com', username: 'owner' });
-    testUser2 = await createTestUser({ email: 'assignee@test.com', username: 'assignee' });
+    // Create test users and task (using createTestUser which already generates unique emails)
+    testUser1 = await createTestUser({ username: 'owner' });
+    testUser2 = await createTestUser({ username: 'assignee' });
     testTask = await createTestTask({
       owner: testUser1._id,
       assignedTo: testUser2._id,
@@ -70,9 +70,9 @@ describe('Task Controller Tests', () => {
     it('should handle errors gracefully', async () => {
       const { req, res } = createMockReqRes();
       
-      // Mock database error: return a chainable object with populate().exec() rejecting
+      // Mock database error: populate() returns a promise that rejects
       jest.spyOn(Task, 'find').mockReturnValueOnce({
-        populate: jest.fn(() => ({ exec: () => Promise.reject(new Error('Database error')) }))
+        populate: jest.fn(() => Promise.reject(new Error('Database error')))
       });
 
       await getAllTasks(req, res);

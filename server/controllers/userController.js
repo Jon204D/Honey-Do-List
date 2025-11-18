@@ -183,12 +183,11 @@ const forgotPassword = async (req, res) => {
     }
 
     // Send recovery email
-    if (emailTemplate.sendRecoveryVerification(user.email, user.username) === 'success') {
-      // TODO: Implement actual email sending with reset token
-      return res.status(200).json({
-        message: "Password reset instructions sent to email (mock response)" 
-      });
-    }
+    await emailTemplate.sendRecoveryVerification(user.email, user.username);
+    // TODO: Implement actual email sending with reset token
+    return res.status(200).json({
+      message: "Password reset instructions sent to email (mock response)" 
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

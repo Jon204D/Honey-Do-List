@@ -1,5 +1,11 @@
 // tests/userController.test.js - Unit tests for user controller functionality
 
+// Mock the email template BEFORE any imports that use it
+jest.mock('../config/emailTemplate', () => ({
+  sendVerification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' }),
+  sendRecoveryVerification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' })
+}));
+
 require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -15,12 +21,7 @@ const {
   forgotPassword
 } = require('../controllers/userController');
 const emailTemplate = require('../config/emailTemplate');
-
-// Mock the email template
-jest.mock('../config/emailTemplate', () => ({
-  sendVerification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' }),
-  sendRecoveryVerification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' })
-}));
+const { generateUniqueEmail } = require('./testUtils');
 
 describe('User Controller Tests', () => {
   let testUser;
@@ -48,9 +49,9 @@ describe('User Controller Tests', () => {
     // Clear users before each test
     await User.deleteMany({});
 
-    // Create a test user
+    // Create a test user with unique email
     testUser = await User.create({
-      email: 'test@example.com',
+      email: generateUniqueEmail('test'),
       username: 'testuser',
       password: 'password123'
     });
@@ -72,8 +73,9 @@ describe('User Controller Tests', () => {
 
   describe('registerUser', () => {
     it('should register a new user successfully', async () => {
+      const newEmail = generateUniqueEmail('newuser');
       req.body = {
-        email: 'newuser@example.com',
+        email: newEmail,
         username: 'newuser',
         password: 'password123'
       };
@@ -83,14 +85,14 @@ describe('User Controller Tests', () => {
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          email: 'newuser@example.com',
+          email: newEmail,
           username: 'newuser'
         })
       );
-      expect(emailTemplate.sendVerification).toHaveBeenCalledWith('newuser@example.com', 'newuser');
+      expect(emailTemplate.sendVerification).toHaveBeenCalledWith(newEmail, 'newuser');
 
       // Verify user was created in database
-      const user = await User.findOne({ email: 'newuser@example.com' });
+      const user = await User.findOne({ email: newEmail });
       expect(user).toBeTruthy();
       expect(user.username).toBe('newuser');
     });
@@ -145,7 +147,7 @@ describe('User Controller Tests', () => {
 
     it('should reject login with invalid email', async () => {
       req.body = {
-        email: 'nonexistent@example.com',
+        email: generateUniqueEmail('nonexistent'),
         password: 'password123'
       };
 
@@ -189,8 +191,9 @@ describe('User Controller Tests', () => {
   describe('getAllUsers', () => {
     it('should return all users without passwords', async () => {
       // Create another test user
+      const user2Email = generateUniqueEmail('user2');
       await User.create({
-        email: 'user2@example.com',
+        email: user2Email,
         username: 'user2',
         password: 'password123'
       });
@@ -205,7 +208,7 @@ describe('User Controller Tests', () => {
             username: testUser.username
           }),
           expect.objectContaining({
-            email: 'user2@example.com',
+            email: user2Email,
             username: 'user2'
           })
         ])
@@ -248,10 +251,11 @@ describe('User Controller Tests', () => {
 
   describe('updateUser', () => {
     it('should update user successfully', async () => {
+      const updatedEmail = generateUniqueEmail('updated');
       req.params.id = testUser._id.toString();
       req.body = {
         username: 'updateduser',
-        email: 'updated@example.com'
+        email: updatedEmail
       };
 
       await updateUser(req, res);
@@ -260,7 +264,7 @@ describe('User Controller Tests', () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           username: 'updateduser',
-          email: 'updated@example.com'
+          email: updatedEmail
         })
       );
     });
@@ -392,7 +396,7 @@ describe('User Controller Tests', () => {
 
     it('should handle forgot password request for non-existent user', async () => {
       req.body = {
-        email: 'nonexistent@example.com'
+        email: generateUniqueEmail('nonexistent')
       };
 
       await forgotPassword(req, res);

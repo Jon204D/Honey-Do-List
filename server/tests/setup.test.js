@@ -38,3 +38,11 @@ if (!process.env.SendGridApiKey) {
 if (!process.env.FRONTEND_BASE_URL) {
   process.env.FRONTEND_BASE_URL = 'http://localhost:3000';
 }
+
+// Add a simple test to satisfy Jest requirement
+describe('Test Setup', () => {
+  it('should set up test environment correctly', () => {
+    expect(process.env.NODE_ENV).toBe('test');
+    expect(process.env.MONGO_URI).toBeDefined();
+  });
+});
