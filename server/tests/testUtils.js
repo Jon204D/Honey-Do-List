@@ -160,6 +160,35 @@ const createUserWithHashedPassword = async (plainPassword = 'password123') => {
   return user;
 };
 
+/**
+ * Helpers for mocking mongoose chainable queries like Model.find().populate(...).exec()
+ */
+function mockFindPopulate(model, returnValue) {
+  // central mock function
+  const fn = jest.fn();
+  if (returnValue instanceof Error) {
+    fn.mockRejectedValue(returnValue);
+  } else {
+    fn.mockResolvedValue(returnValue);
+  }
+
+  // return an object that supports populate and exec chaining
+  const chainable = {
+    populate: (...args) => ({ exec: () => fn(...args) }),
+    exec: () => fn()
+  };
+
+  // ensure populate itself is callable as a function that returns a promise
+  chainable.populate = jest.fn(() => ({ exec: () => fn() }));
+  // also make populate().then work for environments that await the returned object:
+  chainable.populate.mockImplementation(() => ({ then: (res) => fn().then(res) }));
+
+  // spy on model.find and return the chainable object
+  jest.spyOn(model, 'find').mockReturnValue(chainable);
+
+  return fn;
+}
+
 module.exports = {
   createTestUser,
   createTestTask,
@@ -172,5 +201,6 @@ module.exports = {
   generateTestEmail,
   generateTestUsername,
   validateObjectStructure,
-  createUserWithHashedPassword
+  createUserWithHashedPassword,
+  mockFindPopulate
 };
