@@ -24,8 +24,8 @@ jobs:
       mongodb:
         image: mongo:7.0
         env:
-          MONGO_INITDB_ROOT_USERNAME: root
-          MONGO_INITDB_ROOT_PASSWORD: password
+              MONGO_INITDB_ROOT_USERNAME: ${{ vars.MONGODB_USER }}
+              MONGO_INITDB_ROOT_PASSWORD: ${{ vars.MONGODB_PASS }}
         ports:
           - 27017:27017
         options: >-
@@ -35,10 +35,10 @@ jobs:
           --health-retries 5
 
     env:
-      MONGO_URI: mongodb://root:password@localhost:27017/honey-do-list-test?authSource=admin
+      MONGO_URI: ${{ vars.MONGO_URI }}
       NODE_ENV: test
-      SendGridApiKey: test-sendgrid-api-key-for-testing
-      FRONTEND_BASE_URL: http://localhost:3000
+      SendGridApiKey: ${{ vars.SendGridApiKey }}
+      FRONTEND_BASE_URL: ${{ vars.REACT_APP_FRONTEND_BASE_URL }}
       # User seeding test variables
       TESTUSER1EMAIL: ${{ vars.TESTUSER1EMAIL }}
       TESTUSER1USERNAME: ${{ vars.TESTUSER1USERNAME }}
