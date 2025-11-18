@@ -1,6 +1,7 @@
 // server/tests/testSetup.js
 // Jest setup to ensure tests run against a clean DB and to fail early if env vars are missing.
 
+require('dotenv').config();
 const mongoose = require('mongoose');
 
 const requiredEnv = [
