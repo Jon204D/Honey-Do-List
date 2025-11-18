@@ -14,7 +14,7 @@ const {
   getUserTasksQuery,
   getTasksAssignedToUserQuery
 } = require('../queries/taskQueries');
-const { generateUniqueEmail } = require('./testUtils');
+const { createTestUser, createTestTask } = require('./testUtils');
 
 describe('Task Controller Tests', () => {
   let testUser1, testUser2;
@@ -27,21 +27,17 @@ describe('Task Controller Tests', () => {
     await Task.deleteMany({});
     await User.deleteMany({});
 
-    // Create test users with unique emails
-    testUser1 = await User.create({
-      email: generateUniqueEmail('taskowner'),
-      username: 'taskowner',
-      password: 'password123'
+    // Create test users using helper
+    testUser1 = await createTestUser({
+      username: 'taskowner'
     });
 
-    testUser2 = await User.create({
-      email: generateUniqueEmail('taskassignee'),
-      username: 'taskassignee',
-      password: 'password123'
+    testUser2 = await createTestUser({
+      username: 'taskassignee'
     });
 
-    // Create a test task
-    testTask = await Task.create({
+    // Create a test task using helper
+    testTask = await createTestTask({
       owner: testUser1._id,
       title: 'Test Task',
       description: 'This is a test task',
@@ -222,8 +218,8 @@ describe('Task Controller Tests', () => {
 
   describe('Task Filtering and Queries', () => {
     beforeEach(async () => {
-      // Create additional tasks for filtering tests
-      await Task.create({
+      // Create additional tasks for filtering tests using helper
+      await createTestTask({
         owner: testUser1._id,
         title: 'High Priority Task',
         assignedTo: testUser2._id,
@@ -232,7 +228,7 @@ describe('Task Controller Tests', () => {
         tags: ['urgent']
       });
 
-      await Task.create({
+      await createTestTask({
         owner: testUser2._id,
         title: 'Low Priority Task',
         assignedTo: testUser1._id,
