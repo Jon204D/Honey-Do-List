@@ -3,32 +3,33 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const { generateUniqueEmail } = require('./testUtils');
 
 const testUsers = [
   {
-    email: process.env.TESTUSER1EMAIL,
-    username: process.env.TESTUSER1USERNAME,
-    password: process.env.TESTUSER1PASSWORD,
+    email: process.env.TESTUSER1EMAIL || generateUniqueEmail('testuser1'),
+    username: process.env.TESTUSER1USERNAME || 'testuser1',
+    password: process.env.TESTUSER1PASSWORD || 'password123',
   },
   {
-    email: process.env.TESTUSER2EMAIL,
-    username: process.env.TESTUSER2USERNAME,
-    password: process.env.TESTUSER2PASSWORD,
+    email: process.env.TESTUSER2EMAIL || generateUniqueEmail('testuser2'),
+    username: process.env.TESTUSER2USERNAME || 'testuser2',
+    password: process.env.TESTUSER2PASSWORD || 'password123',
   },
   {
-    email: process.env.TESTUSER3EMAIL,
-    username: process.env.TESTUSER3USERNAME,
-    password: process.env.TESTUSER3PASSWORD,
+    email: process.env.TESTUSER3EMAIL || generateUniqueEmail('testuser3'),
+    username: process.env.TESTUSER3USERNAME || 'testuser3',
+    password: process.env.TESTUSER3PASSWORD || 'password123',
   },
   {
-    email: process.env.TESTADMINEMAIL,
-    username: process.env.TESTADMINUSERNAME,
-    password: process.env.TESTADMINPASSWORD,
+    email: process.env.TESTADMINEMAIL || generateUniqueEmail('testadmin'),
+    username: process.env.TESTADMINUSERNAME || 'testadmin',
+    password: process.env.TESTADMINPASSWORD || 'password123',
   },
   {
-    email: process.env.TESTDEMOEMAIL,
-    username: process.env.TESTDEMOUSERNAME,
-    password: process.env.TESTDEMOPASSWORD,
+    email: process.env.TESTDEMOEMAIL || generateUniqueEmail('testdemo'),
+    username: process.env.TESTDEMOUSERNAME || 'testdemo',
+    password: process.env.TESTDEMOPASSWORD || 'password123',
   },
 ];
 
@@ -117,15 +118,15 @@ describe('User Seeding Tests', () => {
     });
 
     it('should find user by email', async () => {
-      const user = await User.findOne({ email: process.env.TESTUSER1EMAIL });
+      const user = await User.findOne({ email: testUsers[0].email });
       expect(user).toBeTruthy();
-      expect(user.username).toBe(process.env.TESTUSER1USERNAME);
+      expect(user.username).toBe(testUsers[0].username);
     });
 
     it('should find user by username', async () => {
-      const user = await User.findOne({ username: process.env.TESTADMINUSERNAME });
+      const user = await User.findOne({ username: testUsers[3].username });
       expect(user).toBeTruthy();
-      expect(user.email).toBe(process.env.TESTADMINEMAIL);
+      expect(user.email).toBe(testUsers[3].email);
     });
   });
 
