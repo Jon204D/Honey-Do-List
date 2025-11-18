@@ -70,9 +70,9 @@ describe('Task Controller Tests', () => {
     it('should handle errors gracefully', async () => {
       const { req, res } = createMockReqRes();
       
-      // Mock database error: return a chainable object with populate().exec() rejecting
+      // Mock database error: populate() returns a promise that rejects
       jest.spyOn(Task, 'find').mockReturnValueOnce({
-        populate: jest.fn(() => ({ exec: () => Promise.reject(new Error('Database error')) }))
+        populate: jest.fn(() => Promise.reject(new Error('Database error')))
       });
 
       await getAllTasks(req, res);
