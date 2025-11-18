@@ -5,33 +5,36 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const { generateUniqueEmail } = require('./testUtils');
 
-const testUsers = [
-  {
-    email: process.env.TESTUSER1EMAIL || generateUniqueEmail('testuser1'),
-    username: process.env.TESTUSER1USERNAME || 'testuser1',
-    password: process.env.TESTUSER1PASSWORD || 'password123',
-  },
-  {
-    email: process.env.TESTUSER2EMAIL || generateUniqueEmail('testuser2'),
-    username: process.env.TESTUSER2USERNAME || 'testuser2',
-    password: process.env.TESTUSER2PASSWORD || 'password123',
-  },
-  {
-    email: process.env.TESTUSER3EMAIL || generateUniqueEmail('testuser3'),
-    username: process.env.TESTUSER3USERNAME || 'testuser3',
-    password: process.env.TESTUSER3PASSWORD || 'password123',
-  },
-  {
-    email: process.env.TESTADMINEMAIL || generateUniqueEmail('testadmin'),
-    username: process.env.TESTADMINUSERNAME || 'testadmin',
-    password: process.env.TESTADMINPASSWORD || 'password123',
-  },
-  {
-    email: process.env.TESTDEMOEMAIL || generateUniqueEmail('testdemo'),
-    username: process.env.TESTDEMOUSERNAME || 'testdemo',
-    password: process.env.TESTDEMOPASSWORD || 'password123',
-  },
-];
+// Helper function to create unique test users for each test
+function createTestUsersData() {
+  return [
+    {
+      email: generateUniqueEmail('testuser1'),
+      username: `testuser1-${Date.now()}`,
+      password: 'password123',
+    },
+    {
+      email: generateUniqueEmail('testuser2'),
+      username: `testuser2-${Date.now()}`,
+      password: 'password123',
+    },
+    {
+      email: generateUniqueEmail('testuser3'),
+      username: `testuser3-${Date.now()}`,
+      password: 'password123',
+    },
+    {
+      email: generateUniqueEmail('testadmin'),
+      username: `testadmin-${Date.now()}`,
+      password: 'password123',
+    },
+    {
+      email: generateUniqueEmail('testdemo'),
+      username: `testdemo-${Date.now()}`,
+      password: 'password123',
+    },
+  ];
+}
 
 describe('User Seeding Tests', () => {
   // Connection is handled by testSetup.js (setupFilesAfterEnv)
@@ -43,6 +46,9 @@ describe('User Seeding Tests', () => {
 
   describe('User Creation', () => {
     it('should create all test users successfully', async () => {
+      // Create unique test users for this test
+      const testUsers = createTestUsersData();
+      
       // Create test users
       const createdUsers = await User.insertMany(testUsers);
 
@@ -60,6 +66,7 @@ describe('User Seeding Tests', () => {
     });
 
     it('should create users with timestamps', async () => {
+      const testUsers = createTestUsersData();
       const createdUsers = await User.insertMany(testUsers);
       
       const firstUser = createdUsers[0];
@@ -68,20 +75,34 @@ describe('User Seeding Tests', () => {
     });
 
     it('should prevent duplicate email addresses', async () => {
-      // First create a user
-      await User.create(testUsers[0]);
+      // Create a fixed email for this specific test
+      const fixedEmail = `duplicate-test-${Date.now()}@test.com`;
+      
+      // First create a user with the fixed email
+      await User.create({
+        email: fixedEmail,
+        username: `user1-${Date.now()}`,
+        password: 'password123'
+      });
 
       // Try to create another user with the same email
       await expect(
         User.create({
-          ...testUsers[1],
-          email: testUsers[0].email,
+          email: fixedEmail,  // Same email as above
+          username: `user2-${Date.now()}`,
+          password: 'password123'
         })
       ).rejects.toThrow();
     });
 
     it('should store passwords as provided (if not hashed in model)', async () => {
-      const user = await User.create(testUsers[0]);
+      const testUser = {
+        email: generateUniqueEmail('password-test'),
+        username: `pwdtest-${Date.now()}`,
+        password: 'password123'
+      };
+      
+      const user = await User.create(testUser);
       const dbUser = await User.findById(user._id);
       
       // This test depends on whether you have password hashing in your model
@@ -91,23 +112,28 @@ describe('User Seeding Tests', () => {
   });
 
   describe('User Retrieval', () => {
-    beforeEach(async () => {
-      // Create test users before each test in this suite
-      await User.insertMany(testUsers);
-    });
-
     it('should retrieve all test users', async () => {
+      // Create unique test users for this test
+      const testUsers = createTestUsersData();
+      await User.insertMany(testUsers);
+      
       const users = await User.find({});
       expect(users.length).toBe(testUsers.length);
     });
 
     it('should find user by email', async () => {
+      const testUsers = createTestUsersData();
+      await User.insertMany(testUsers);
+      
       const user = await User.findOne({ email: testUsers[0].email });
       expect(user).toBeTruthy();
       expect(user.username).toBe(testUsers[0].username);
     });
 
     it('should find user by username', async () => {
+      const testUsers = createTestUsersData();
+      await User.insertMany(testUsers);
+      
       const user = await User.findOne({ username: testUsers[3].username });
       expect(user).toBeTruthy();
       expect(user.email).toBe(testUsers[3].email);
@@ -116,6 +142,9 @@ describe('User Seeding Tests', () => {
 
   describe('User Cleanup', () => {
     it('should successfully remove test users by email', async () => {
+      // Create unique test users for this test locally
+      const testUsers = createTestUsersData();
+      
       // First create all test users
       await User.insertMany(testUsers);
 
@@ -132,7 +161,13 @@ describe('User Seeding Tests', () => {
     });
 
     it('should delete a specific user by ID', async () => {
-      const user = await User.create(testUsers[0]);
+      const testUser = {
+        email: generateUniqueEmail('delete-test'),
+        username: `deletetest-${Date.now()}`,
+        password: 'password123'
+      };
+      
+      const user = await User.create(testUser);
       const userId = user._id;
 
       await User.findByIdAndDelete(userId);
