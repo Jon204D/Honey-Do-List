@@ -20,3 +20,6 @@ yarn-error.log*
 # Build artifacts (client-specific)
 **/build/
 **/artifacts*
+
+# Test coverage
+**/coverage/
