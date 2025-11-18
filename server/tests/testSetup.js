@@ -22,6 +22,12 @@ beforeAll(async () => {
 
   // Drop the whole test DB once at the start (ensures a clean slate)
   await mongoose.connection.dropDatabase();
+  
+  // Ensure all model indexes are created after dropping database
+  const User = require('../models/User');
+  const Task = require('../models/Task');
+  await User.createIndexes();
+  await Task.createIndexes();
 });
 
 afterEach(async () => {

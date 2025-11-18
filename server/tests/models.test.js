@@ -117,15 +117,15 @@ describe('Model Tests', () => {
       });
 
       it('should enforce unique email', async () => {
-        const uniqueEmail = generateUniqueEmail('test');
+        const sharedEmail = 'duplicate@example.com';
         await User.create({
-          email: uniqueEmail,
+          email: sharedEmail,
           username: 'testuser1',
           password: 'password123'
         });
 
         const duplicateUser = new User({
-          email: uniqueEmail, // Same email
+          email: sharedEmail, // Same email
           username: 'testuser2',
           password: 'password123'
         });
