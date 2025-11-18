@@ -22,8 +22,8 @@ jobs:
       mongodb:
         image: mongo:7.0
         env:
-          MONGO_INITDB_ROOT_USERNAME: root
-          MONGO_INITDB_ROOT_PASSWORD: password
+          MONGO_INITDB_ROOT_USERNAME: ${{ vars.MONGODB_USER }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ vars.MONGODB_PASS }}
         ports:
           - 27017:27017
         options: >-
