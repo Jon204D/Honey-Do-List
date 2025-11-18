@@ -26,7 +26,7 @@ jobs:
           - 27017:27017
 
     env:
-      MONGO_URI: ${{ vars.MONGO_URI }}
+      MONGO_URI: mongodb://localhost:27017/honey-do-test
       NODE_ENV: test
       SendGridApiKey: ${{ vars.SendGridApiKey }}
       FRONTEND_BASE_URL: ${{ vars.REACT_APP_FRONTEND_BASE_URL }}
