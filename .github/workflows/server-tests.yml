@@ -69,11 +69,6 @@ jobs:
           npm ci
           echo "✅ Dependencies installed"
 
-      - name: Verify MongoDB Connection
-        run: |
-          timeout 60s bash -c 'until mongosh --host localhost:27017 --eval "db.adminCommand(\"ping\")" --quiet; do sleep 2; done'
-          echo "✅ MongoDB connection verified"
-
       - name: Run Unit Tests
         if: matrix.test-type == 'unit'
         working-directory: server

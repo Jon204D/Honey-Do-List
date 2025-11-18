@@ -63,10 +63,6 @@ jobs:
         working-directory: server
         run: npm ci
 
-      - name: Wait for MongoDB
-        run: |
-          timeout 60s bash -c 'until mongosh --host localhost:27017 --eval "db.adminCommand(\"ping\")" --quiet; do sleep 1; done'
-
       - name: Run User Seeding Tests
         working-directory: server
         run: |
