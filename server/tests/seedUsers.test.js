@@ -5,6 +5,37 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const { generateUniqueEmail } = require('./testUtils');
 
+// Helper function to create unique test users for each test
+function createTestUsersData() {
+  return [
+    {
+      email: generateUniqueEmail('testuser1'),
+      username: `testuser1-${Date.now()}`,
+      password: 'password123',
+    },
+    {
+      email: generateUniqueEmail('testuser2'),
+      username: `testuser2-${Date.now()}`,
+      password: 'password123',
+    },
+    {
+      email: generateUniqueEmail('testuser3'),
+      username: `testuser3-${Date.now()}`,
+      password: 'password123',
+    },
+    {
+      email: generateUniqueEmail('testadmin'),
+      username: `testadmin-${Date.now()}`,
+      password: 'password123',
+    },
+    {
+      email: generateUniqueEmail('testdemo'),
+      username: `testdemo-${Date.now()}`,
+      password: 'password123',
+    },
+  ];
+}
+
 describe('User Seeding Tests', () => {
   // Connection is handled by testSetup.js (setupFilesAfterEnv)
 
@@ -15,35 +46,9 @@ describe('User Seeding Tests', () => {
 
   describe('User Creation', () => {
     it('should create all test users successfully', async () => {
-      // Create test users with unique emails
-      const testUsers = [
-        {
-          email: generateUniqueEmail('testuser1'),
-          username: 'testuser1',
-          password: 'password123',
-        },
-        {
-          email: generateUniqueEmail('testuser2'),
-          username: 'testuser2',
-          password: 'password123',
-        },
-        {
-          email: generateUniqueEmail('testuser3'),
-          username: 'testuser3',
-          password: 'password123',
-        },
-        {
-          email: generateUniqueEmail('testadmin'),
-          username: 'testadmin',
-          password: 'password123',
-        },
-        {
-          email: generateUniqueEmail('testdemo'),
-          username: 'testdemo',
-          password: 'password123',
-        },
-      ];
-
+      // Create unique test users for this test
+      const testUsers = createTestUsersData();
+      
       // Create test users
       const createdUsers = await User.insertMany(testUsers);
 
@@ -61,19 +66,7 @@ describe('User Seeding Tests', () => {
     });
 
     it('should create users with timestamps', async () => {
-      const testUsers = [
-        {
-          email: generateUniqueEmail('testuser1'),
-          username: 'testuser1',
-          password: 'password123',
-        },
-        {
-          email: generateUniqueEmail('testuser2'),
-          username: 'testuser2',
-          password: 'password123',
-        },
-      ];
-
+      const testUsers = createTestUsersData();
       const createdUsers = await User.insertMany(testUsers);
       
       const firstUser = createdUsers[0];
@@ -82,36 +75,33 @@ describe('User Seeding Tests', () => {
     });
 
     it('should prevent duplicate email addresses', async () => {
-      const testUser1 = {
-        email: generateUniqueEmail('testuser1'),
-        username: 'testuser1',
-        password: 'password123',
-      };
-      const testUser2 = {
-        email: generateUniqueEmail('testuser2'),
-        username: 'testuser2',
-        password: 'password123',
-      };
-
-      // First create a user
-      await User.create(testUser1);
+      // Create a fixed email for this specific test
+      const fixedEmail = `duplicate-test-${Date.now()}@test.com`;
+      
+      // First create a user with the fixed email
+      await User.create({
+        email: fixedEmail,
+        username: `user1-${Date.now()}`,
+        password: 'password123'
+      });
 
       // Try to create another user with the same email
       await expect(
         User.create({
-          ...testUser2,
-          email: testUser1.email,
+          email: fixedEmail,  // Same email as above
+          username: `user2-${Date.now()}`,
+          password: 'password123'
         })
       ).rejects.toThrow();
     });
 
     it('should store passwords as provided (if not hashed in model)', async () => {
       const testUser = {
-        email: generateUniqueEmail('testuser'),
-        username: 'testuser',
-        password: 'password123',
+        email: generateUniqueEmail('password-test'),
+        username: `pwdtest-${Date.now()}`,
+        password: 'password123'
       };
-
+      
       const user = await User.create(testUser);
       const dbUser = await User.findById(user._id);
       
@@ -123,50 +113,28 @@ describe('User Seeding Tests', () => {
 
   describe('User Retrieval', () => {
     it('should retrieve all test users', async () => {
-      const testUsers = [
-        {
-          email: generateUniqueEmail('testuser1'),
-          username: 'testuser1',
-          password: 'password123',
-        },
-        {
-          email: generateUniqueEmail('testuser2'),
-          username: 'testuser2',
-          password: 'password123',
-        },
-      ];
-
-      // Create test users before test
+      // Create unique test users for this test
+      const testUsers = createTestUsersData();
       await User.insertMany(testUsers);
-
+      
       const users = await User.find({});
       expect(users.length).toBe(testUsers.length);
     });
 
     it('should find user by email', async () => {
-      const testUser = {
-        email: generateUniqueEmail('testuser'),
-        username: 'testuser',
-        password: 'password123',
-      };
-
-      await User.create(testUser);
-
-      const user = await User.findOne({ email: testUser.email });
+      const testUsers = createTestUsersData();
+      await User.insertMany(testUsers);
+      
+      const user = await User.findOne({ email: testUsers[0].email });
       expect(user).toBeTruthy();
       expect(user.username).toBe(testUser.username);
     });
 
     it('should find user by username', async () => {
-      const testUser = {
-        email: generateUniqueEmail('testadmin'),
-        username: 'testadmin',
-        password: 'password123',
-      };
-
-      await User.create(testUser);
-
-      const user = await User.findOne({ username: testUser.username });
+      const testUsers = createTestUsersData();
+      await User.insertMany(testUsers);
+      
+      const user = await User.findOne({ username: testUsers[3].username });
       expect(user).toBeTruthy();
       expect(user.email).toBe(testUser.email);
     });
@@ -174,27 +142,11 @@ describe('User Seeding Tests', () => {
 
   describe('User Cleanup', () => {
     it('should successfully remove test users by email', async () => {
-      // Create test users locally within this test
-      const localUsers = [
-        {
-          email: generateUniqueEmail('deleteuser1'),
-          username: 'deleteuser1',
-          password: 'password123',
-        },
-        {
-          email: generateUniqueEmail('deleteuser2'),
-          username: 'deleteuser2',
-          password: 'password123',
-        },
-        {
-          email: generateUniqueEmail('deleteuser3'),
-          username: 'deleteuser3',
-          password: 'password123',
-        },
-      ];
-
-      // Insert users
-      await User.insertMany(localUsers);
+      // Create unique test users for this test locally
+      const testUsers = createTestUsersData();
+      
+      // First create all test users
+      await User.insertMany(testUsers);
 
       // Get test emails
       const testEmails = localUsers.map((u) => u.email);
@@ -210,11 +162,11 @@ describe('User Seeding Tests', () => {
 
     it('should delete a specific user by ID', async () => {
       const testUser = {
-        email: generateUniqueEmail('testuser'),
-        username: 'testuser',
-        password: 'password123',
+        email: generateUniqueEmail('delete-test'),
+        username: `deletetest-${Date.now()}`,
+        password: 'password123'
       };
-
+      
       const user = await User.create(testUser);
       const userId = user._id;
 
