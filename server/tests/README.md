@@ -7,14 +7,16 @@ This directory contains comprehensive unit and integration tests for the Honey-D
 ```
 tests/
 ├── setup.test.js           # Test configuration and setup
+├── setupMocks.js           # Early mocks (runs before module imports)
+├── testSetup.js            # Global DB setup and teardown
 ├── seedUsers.test.js       # User seeding functionality tests
 ├── task.test.js            # Task model and query tests
 ├── userController.test.js  # User controller unit tests
 ├── taskController.test.js  # Task controller unit tests
 ├── models.test.js          # Mongoose model tests
 ├── emailTemplate.test.js   # Email functionality tests
-├── testUtils.js           # Utility functions for testing
-└── README.md              # This file
+├── testUtils.js            # Utility functions for testing
+└── README.md               # This file
 ```
 
 ## Test Categories
@@ -30,8 +32,10 @@ tests/
 - **Task Query Tests** (`task.test.js`): Tests complex task queries and database interactions
 
 ### Utility Files
-- **Test Utilities** (`testUtils.js`): Helper functions for creating test data and mocking
+- **Test Utilities** (`testUtils.js`): Helper functions for creating test data, mocking, and generating unique test emails
 - **Setup** (`setup.test.js`): Global test configuration and environment setup
+- **Setup Mocks** (`setupMocks.js`): Early mocks that run before module imports (prevents network calls)
+- **Test Setup** (`testSetup.js`): Global database setup, cleanup, and index creation
 
 ## Running Tests
 
@@ -87,16 +91,18 @@ The test suite covers:
 ## Mocking
 
 The tests use Jest mocking for:
-- **SendGrid Email API**: Prevents actual emails from being sent during testing
+- **SendGrid Email API**: Automatically mocked via `setupMocks.js` (runs before all imports) and manual mock in `__mocks__/@sendgrid/mail.js`. Prevents actual emails from being sent during testing.
 - **Database Operations**: Some tests mock database errors to test error handling
-- **Express Request/Response**: Mock objects for controller testing
+- **Express Request/Response**: Mock objects for controller testing using `createMockReqRes()` from testUtils
 
 ## Database Considerations
 
 - Tests use a separate test database to avoid conflicts
-- Each test suite cleans up data before and after tests
-- Database connections are properly opened and closed
-- Tests are isolated and can run in parallel
+- **Global setup** (`testSetup.js`): Connects to DB, drops database, and creates indexes before all tests
+- **Global cleanup** (`testSetup.js`): Clears all collections after each test and disconnects after all tests
+- Individual test files no longer need their own connection/disconnection code
+- **Tests run in-band** (`--runInBand` flag): Prevents race conditions with shared test database
+- **Unique emails**: Use `generateUniqueEmail()` from testUtils to avoid duplicate key errors
 
 ## Writing New Tests
 
@@ -104,21 +110,30 @@ When adding new tests:
 
 1. **Follow the naming convention**: `feature.test.js`
 2. **Use the test utilities**: Import from `testUtils.js` for common operations
-3. **Clean up after tests**: Use `beforeEach`/`afterEach` to clean test data
-4. **Mock external services**: Don't make real API calls in tests
-5. **Test both success and error cases**: Include edge cases and error conditions
+3. **Use unique emails**: Always use `generateUniqueEmail()` or `createTestUser()` to avoid duplicate key errors
+4. **Don't create DB connections**: `testSetup.js` handles global DB connection/disconnection
+5. **Clean up in beforeEach**: Clear test data in `beforeEach` (global `afterEach` also cleans up)
+6. **Mock external services**: Don't make real API calls in tests (SendGrid is auto-mocked)
+7. **Test both success and error cases**: Include edge cases and error conditions
 
 ### Example Test Structure
 
 ```javascript
+const { generateUniqueEmail, createTestUser } = require('./testUtils');
+
 describe('Feature Tests', () => {
+  // No need for beforeAll/afterAll - testSetup.js handles DB connection
+  
   beforeEach(async () => {
+    // Clean up test data (optional - global afterEach also does this)
     await cleanupTestData();
-    // Setup test data
+    // Setup test data with unique emails
   });
 
   describe('Success Cases', () => {
     it('should perform expected action', async () => {
+      // Use generateUniqueEmail or createTestUser for unique test data
+      const user = await createTestUser();
       // Test implementation
     });
   });
@@ -137,8 +152,10 @@ describe('Feature Tests', () => {
 
 1. **Tests timeout**: Increase timeout in Jest config or individual tests
 2. **Database connection errors**: Ensure MongoDB is running and accessible
-3. **Mock issues**: Clear mocks between tests using `jest.clearAllMocks()`
-4. **Memory leaks**: Ensure database connections are properly closed
+3. **Duplicate key errors (E11000)**: Use `generateUniqueEmail()` or `createTestUser()` instead of fixed emails
+4. **Mock issues**: Clear mocks between tests using `jest.clearAllMocks()`
+5. **"populate is not a function"**: Use `mockFindPopulate()` from testUtils for chainable mocks
+6. **Race conditions**: Tests run in-band by default to prevent concurrent DB access
 
 ### Debug Mode
 
@@ -155,12 +172,15 @@ node --inspect-brk ./node_modules/.bin/jest --runInBand
 ## CI/CD Integration
 
 These tests are designed to run in CI/CD environments:
-- No external dependencies (mocked)
-- Configurable database connection
-- Proper cleanup and isolation
-- Detailed error reporting
+- **No external dependencies**: All external services (SendGrid) are mocked via `setupMocks.js`
+- **Configurable database connection**: Uses `MONGO_URI` environment variable
+- **Proper cleanup and isolation**: Global setup/teardown in `testSetup.js`
+- **Deterministic execution**: Tests run in-band (`--runInBand`) to prevent race conditions
+- **Unique test data**: Uses timestamp and random strings to avoid duplicate key errors
+- **Early mocking**: `setupMocks.js` in setupFiles ensures mocks are active before any imports
 
 For GitHub Actions or similar, ensure:
-1. MongoDB service is available
-2. Environment variables are set
+1. MongoDB service is available (e.g., `services: mongodb: image: mongo:7.0`)
+2. Environment variables are set (`MONGO_URI`, `NODE_ENV=test`, etc.)
 3. Test database is separate from production
+4. Tests run with `--runInBand` flag (already configured in package.json)

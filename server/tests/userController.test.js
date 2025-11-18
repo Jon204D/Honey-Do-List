@@ -27,23 +27,7 @@ describe('User Controller Tests', () => {
   let testUser;
   let req, res;
 
-  beforeAll(async () => {
-    try {
-      await mongoose.connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      console.log('✅ Test database connected for user controller tests');
-    } catch (error) {
-      console.error('❌ Error connecting to the database:', error);
-      throw error;
-    }
-  }, 30000);
-
-  afterAll(async () => {
-    await mongoose.connection.close();
-    console.log('🔌 Test database connection closed');
-  });
+  // Connection is handled by testSetup.js (setupFilesAfterEnv)
 
   beforeEach(async () => {
     // Clear users before each test

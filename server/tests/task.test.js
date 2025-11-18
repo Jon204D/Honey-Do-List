@@ -14,43 +14,28 @@ const {
   getUserTasksQuery,
   getTasksAssignedToUserQuery
 } = require('../queries/taskQueries');
+const { generateUniqueEmail } = require('./testUtils');
 
 describe('Task Controller Tests', () => {
   let testUser1, testUser2;
   let testTask;
 
-  beforeAll(async () => {
-    try {
-      await mongoose.connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      console.log('✅ Test database connected for task tests');
-    } catch (error) {
-      console.error('❌ Error connecting to the database:', error);
-      throw error;
-    }
-  }, 30000);
-
-  afterAll(async () => {
-    await mongoose.connection.close();
-    console.log('🔌 Test database connection closed');
-  });
+  // Connection is handled by testSetup.js (setupFilesAfterEnv)
 
   beforeEach(async () => {
     // Clear all tasks and users before each test
     await Task.deleteMany({});
     await User.deleteMany({});
 
-    // Create test users
+    // Create test users with unique emails
     testUser1 = await User.create({
-      email: 'taskowner@test.com',
+      email: generateUniqueEmail('taskowner'),
       username: 'taskowner',
       password: 'password123'
     });
 
     testUser2 = await User.create({
-      email: 'taskassignee@test.com',
+      email: generateUniqueEmail('taskassignee'),
       username: 'taskassignee',
       password: 'password123'
     });
