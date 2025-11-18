@@ -17,7 +17,7 @@ const registerUser = async (req, res) => {
     const newUser = await userQueries.createUser({ email, username, password });
 
     // Send verification email
-    if (emailTemplate.sendVerification(newUser.email, newUser.username)) {
+    if ((await emailTemplate.sendVerification(newUser.email, newUser.username)).status === 'success') {
       // Email sent successfully
       // Don't return the password in the response
       return res.status(201).json({
@@ -183,9 +183,9 @@ const forgotPassword = async (req, res) => {
     }
 
     // Send recovery email
-    if (emailTemplate.sendRecoveryVerification(user.email, user.username)) {
+    if (emailTemplate.sendRecoveryVerification(user.email, user.username) === 'success') {
       // TODO: Implement actual email sending with reset token
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: "Password reset instructions sent to email (mock response)" 
       });
     }

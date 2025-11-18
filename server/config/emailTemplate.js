@@ -17,12 +17,21 @@ async function sendVerification(email, username) {
         '\n<p style="font-size: 16px; font-family: Montserrat, sans-serif;"><a href="'+ process.env.FRONTEND_BASE_URL + "/AccountVerification/" + username.toLowerCase() + '">Verify my account</a></p>'
         };
 
-        await sgMail.send(msg);
+        const result = await sgMail.send(msg);
         
-        return true; // email was sent
+        return {
+            status: 'success',
+            messageId: result[0]?.headers?.['x-message-id'],
+            timestamp: new Date().toISOString()
+        };
     } catch (error) {
-        console.error(error);
-        return false; //email was not sent
+        console.error('Email sending failed:', error);
+        return {
+            status: 'failed',
+            error: error.message,
+            code: error.code,
+            timestamp: new Date().toISOString()
+        };
     }
 }
 
@@ -38,12 +47,21 @@ async function sendRecoveryVerification(email, username) {
             '\n<p style="font-size: 16px; font-family: Montserrat, sans-serif;"><a href="'+ process.env.FRONTEND_BASE_URL + '/ForgotPasswordVerification/' + username.toLowerCase() + '">Recover my account</a></p>'
         }
         
-        await sgMail.send(msg);
+        const result = await sgMail.send(msg);
 
-        return true;
+        return {
+            status: 'success',
+            messageId: result[0]?.headers?.['x-message-id'],
+            timestamp: new Date().toISOString()
+        };
     } catch (error) {
-        console.error(error);
-        return false;
+        console.error('Recovery email sending failed:', error);
+        return {
+            status: 'failed',
+            error: error.message,
+            code: error.code,
+            timestamp: new Date().toISOString()
+        };
     }
 }
 

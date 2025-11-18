@@ -5,16 +5,21 @@ const createInvite = async (req, res) => {
     try {
         const { email } = req.body;
 
-    if (!email) {
-        return res.status(400).json({ message: "Email is required." });
-    }
+        if (!email) {
+            return res.status(400).json({ message: "Email is required." });
+        }
 
-    const savedInvite = await inviteQueries.createInviteQuery(email);
-    res.status(201).json(savedInvite);
+        if (emailTemplate.sendVerification(newUser.email, newUser.username).status === 'success') {
+        
+            const savedInvite = await inviteQueries.createInviteQuery(email);
+            res.status(201).json(savedInvite);
+        } else {
+            throw new Error("Error sending verification email.");
+        }
     } catch (error) {
-    res
-        .status(500)
-        .json({ message: "Error creating invite.", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error creating invite.", error: error.message });
     }
 };
 

@@ -30,12 +30,15 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "jest": "^30.2.0"
+    "jest": "^30.2.0",
+    "supertest": "^7.0.0"
   },
   "jest": {
     "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup.test.js"],
     "coveragePathIgnorePatterns": [
-      "/node_modules/"
+      "/node_modules/",
+      "/tests/setup.test.js"
     ],
     "testMatch": [
       "**/tests/**/*.test.js",
@@ -45,9 +48,12 @@
       "**/*.js",
       "!**/node_modules/**",
       "!**/coverage/**",
+      "!**/tests/setup.test.js",
       "!jest.config.js",
-      "!seedUsers.js"
+      "!seedUsers.js",
+      "!server.js"
     ],
-    "testTimeout": 30000
+    "testTimeout": 30000,
+    "verbose": true
   }
 }
