@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1763477481118" clover="3.2.0">
-  <project timestamp="1763477481118" name="All files">
+<coverage generated="1763483570384" clover="3.2.0">
+  <project timestamp="1763483570384" name="All files">
     <metrics statements="409" coveredstatements="232" conditionals="86" coveredconditionals="48" methods="74" coveredmethods="39" elements="569" coveredelements="319" complexity="0" loc="409" ncloc="409" packages="9" files="18" classes="18"/>
     <package name="server">
       <metrics statements="9" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="0"/>
@@ -424,13 +424,13 @@
       <metrics statements="66" coveredstatements="31" conditionals="21" coveredconditionals="5" methods="23" coveredmethods="5"/>
       <file name="testUtils.js" path="/home/runner/work/Honey-Do-List/Honey-Do-List/server/tests/testUtils.js">
         <metrics statements="66" coveredstatements="31" conditionals="21" coveredconditionals="5" methods="23" coveredmethods="5"/>
-        <line num="3" count="4" type="stmt"/>
-        <line num="4" count="4" type="stmt"/>
-        <line num="5" count="4" type="stmt"/>
-        <line num="10" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="3" count="5" type="stmt"/>
+        <line num="4" count="5" type="stmt"/>
+        <line num="5" count="5" type="stmt"/>
+        <line num="10" count="5" type="cond" truecount="1" falsecount="0"/>
         <line num="11" count="30" type="stmt"/>
         <line num="17" count="30" type="stmt"/>
-        <line num="23" count="4" type="cond" truecount="0" falsecount="1"/>
+        <line num="23" count="5" type="cond" truecount="0" falsecount="1"/>
         <line num="24" count="14" type="stmt"/>
         <line num="25" count="14" type="stmt"/>
         <line num="28" count="14" type="cond" truecount="1" falsecount="1"/>
@@ -441,16 +441,16 @@
         <line num="35" count="0" type="stmt"/>
         <line num="38" count="14" type="stmt"/>
         <line num="49" count="14" type="stmt"/>
-        <line num="55" count="4" type="stmt"/>
+        <line num="55" count="5" type="stmt"/>
         <line num="56" count="14" type="stmt"/>
         <line num="57" count="14" type="stmt"/>
-        <line num="63" count="4" type="cond" truecount="0" falsecount="1"/>
+        <line num="63" count="5" type="cond" truecount="0" falsecount="1"/>
         <line num="64" count="0" type="stmt"/>
         <line num="65" count="0" type="stmt"/>
         <line num="66" count="0" type="stmt"/>
         <line num="70" count="0" type="stmt"/>
         <line num="72" count="0" type="stmt"/>
-        <line num="78" count="4" type="cond" truecount="0" falsecount="2"/>
+        <line num="78" count="5" type="cond" truecount="0" falsecount="2"/>
         <line num="79" count="0" type="cond" truecount="0" falsecount="4"/>
         <line num="80" count="0" type="stmt"/>
         <line num="83" count="0" type="stmt"/>
@@ -458,24 +458,24 @@
         <line num="85" count="0" type="stmt"/>
         <line num="92" count="0" type="stmt"/>
         <line num="94" count="0" type="stmt"/>
-        <line num="100" count="4" type="stmt"/>
+        <line num="100" count="5" type="stmt"/>
         <line num="101" count="0" type="stmt"/>
-        <line num="107" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="107" count="5" type="cond" truecount="2" falsecount="0"/>
         <line num="108" count="14" type="stmt"/>
         <line num="115" count="14" type="stmt"/>
         <line num="122" count="14" type="stmt"/>
-        <line num="128" count="4" type="stmt"/>
+        <line num="128" count="5" type="stmt"/>
         <line num="129" count="0" type="stmt"/>
-        <line num="135" count="4" type="cond" truecount="0" falsecount="1"/>
+        <line num="135" count="5" type="cond" truecount="0" falsecount="1"/>
         <line num="136" count="0" type="stmt"/>
-        <line num="142" count="4" type="cond" truecount="0" falsecount="1"/>
-        <line num="143" count="66" type="stmt"/>
-        <line num="149" count="4" type="cond" truecount="0" falsecount="1"/>
+        <line num="142" count="5" type="cond" truecount="0" falsecount="1"/>
+        <line num="143" count="133" type="stmt"/>
+        <line num="149" count="5" type="cond" truecount="0" falsecount="1"/>
         <line num="150" count="0" type="stmt"/>
-        <line num="156" count="4" type="stmt"/>
+        <line num="156" count="5" type="stmt"/>
         <line num="157" count="0" type="stmt"/>
         <line num="158" count="0" type="stmt"/>
-        <line num="164" count="4" type="cond" truecount="0" falsecount="1"/>
+        <line num="164" count="5" type="cond" truecount="0" falsecount="1"/>
         <line num="165" count="0" type="stmt"/>
         <line num="167" count="0" type="stmt"/>
         <line num="175" count="0" type="stmt"/>
@@ -489,7 +489,7 @@
         <line num="191" count="0" type="stmt"/>
         <line num="194" count="0" type="stmt"/>
         <line num="196" count="0" type="stmt"/>
-        <line num="199" count="4" type="stmt"/>
+        <line num="199" count="5" type="stmt"/>
       </file>
     </package>
   </project>
