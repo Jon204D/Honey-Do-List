@@ -34,26 +34,10 @@ const testUsers = [
 ];
 
 describe('User Seeding Tests', () => {
-  beforeAll(async () => {
-    try {
-      await mongoose.connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      console.log('✅ Test database connected');
-    } catch (error) {
-      console.error('❌ Error connecting to the database:', error);
-      throw error;
-    }
-  }, 30000); // Increase timeout for database connection
-
-  afterAll(async () => {
-    await mongoose.connection.close();
-    console.log('🔌 Test database connection closed');
-  });
+  // Connection is handled by testSetup.js (setupFilesAfterEnv)
 
   beforeEach(async () => {
-    // Clear all users before each test
+    // Clear all users before each test (testSetup.js also clears after each test)
     await User.deleteMany({});
   });
 
@@ -170,7 +154,7 @@ describe('User Seeding Tests', () => {
 
     it('should require username field', async () => {
       const invalidUser = {
-        email: 'test@test.com',
+        email: generateUniqueEmail('test'),
         password: 'password123',
       };
 
@@ -179,7 +163,7 @@ describe('User Seeding Tests', () => {
 
     it('should require password field', async () => {
       const invalidUser = {
-        email: 'test@test.com',
+        email: generateUniqueEmail('test'),
         username: 'testuser',
       };
 

@@ -8,26 +8,10 @@ const Task = require('../models/Task');
 const { generateUniqueEmail } = require('./testUtils');
 
 describe('Model Tests', () => {
-  beforeAll(async () => {
-    try {
-      await mongoose.connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      console.log('✅ Test database connected for model tests');
-    } catch (error) {
-      console.error('❌ Error connecting to the database:', error);
-      throw error;
-    }
-  }, 30000);
-
-  afterAll(async () => {
-    await mongoose.connection.close();
-    console.log('🔌 Test database connection closed');
-  });
-
+  // Connection is handled by testSetup.js (setupFilesAfterEnv)
+  
   beforeEach(async () => {
-    // Clear all data before each test
+    // Clear all data before each test (testSetup.js also clears after each test, but being explicit here)
     await User.deleteMany({});
     await Task.deleteMany({});
   });

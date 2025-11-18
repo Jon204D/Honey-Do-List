@@ -19,23 +19,7 @@ const { createMockReqRes, createTestUser, createTestTask, cleanupTestData } = re
 describe('Task Controller Tests', () => {
   let testUser1, testUser2, testTask;
 
-  beforeAll(async () => {
-    try {
-      await mongoose.connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      console.log('✅ Test database connected for task controller tests');
-    } catch (error) {
-      console.error('❌ Error connecting to the database:', error);
-      throw error;
-    }
-  }, 30000);
-
-  afterAll(async () => {
-    await mongoose.connection.close();
-    console.log('🔌 Test database connection closed');
-  });
+  // Connection is handled by testSetup.js (setupFilesAfterEnv)
 
   beforeEach(async () => {
     await cleanupTestData();
