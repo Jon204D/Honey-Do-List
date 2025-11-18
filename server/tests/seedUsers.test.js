@@ -127,7 +127,7 @@ describe('User Seeding Tests', () => {
       
       const user = await User.findOne({ email: testUsers[0].email });
       expect(user).toBeTruthy();
-      expect(user.username).toBe(testUsers[0].username);
+      expect(user.username).toBe(testUser.username);
     });
 
     it('should find user by username', async () => {
@@ -136,7 +136,7 @@ describe('User Seeding Tests', () => {
       
       const user = await User.findOne({ username: testUsers[3].username });
       expect(user).toBeTruthy();
-      expect(user.email).toBe(testUsers[3].email);
+      expect(user.email).toBe(testUser.email);
     });
   });
 
@@ -149,11 +149,11 @@ describe('User Seeding Tests', () => {
       await User.insertMany(testUsers);
 
       // Get test emails
-      const testEmails = testUsers.map((u) => u.email);
+      const testEmails = localUsers.map((u) => u.email);
 
       // Delete users
       const deleteResult = await User.deleteMany({ email: { $in: testEmails } });
-      expect(deleteResult.deletedCount).toBe(testUsers.length);
+      expect(deleteResult.deletedCount).toBe(localUsers.length);
 
       // Verify users were deleted
       const remainingUsers = await User.find({ email: { $in: testEmails } });
