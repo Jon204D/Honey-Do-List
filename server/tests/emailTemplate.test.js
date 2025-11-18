@@ -1,14 +1,14 @@
 // tests/emailTemplate.test.js - Unit tests for email template functionality
 
-require('dotenv').config();
-const sgMail = require('@sendgrid/mail');
-const { sendVerification, sendRecoveryVerification } = require('../config/emailTemplate');
-
-// Mock SendGrid
+// Mock SendGrid BEFORE any imports that use it
 jest.mock('@sendgrid/mail', () => ({
   setApiKey: jest.fn(),
   send: jest.fn()
 }));
+
+require('dotenv').config();
+const sgMail = require('@sendgrid/mail');
+const { sendVerification, sendRecoveryVerification } = require('../config/emailTemplate');
 
 describe('Email Template Tests', () => {
   beforeEach(() => {

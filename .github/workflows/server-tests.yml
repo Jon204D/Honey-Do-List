@@ -75,14 +75,14 @@ jobs:
         working-directory: server
         run: |
           echo "🧪 Running Unit Tests on Node.js ${{ matrix.node-version }}"
-          npx jest tests/setup.test.js tests/models.test.js tests/userController.test.js tests/taskController.test.js tests/emailTemplate.test.js --verbose --detectOpenHandles --forceExit
+          npx jest tests/setup.test.js tests/models.test.js tests/userController.test.js tests/taskController.test.js tests/emailTemplate.test.js --runInBand --verbose --detectOpenHandles --forceExit
 
       - name: Run Integration Tests
         if: matrix.test-type == 'integration'
         working-directory: server
         run: |
           echo "🔗 Running Integration Tests on Node.js ${{ matrix.node-version }}"
-          npx jest tests/task.test.js tests/seedUsers.test.js --verbose --detectOpenHandles --forceExit
+          npx jest tests/task.test.js tests/seedUsers.test.js --runInBand --verbose --detectOpenHandles --forceExit
 
       - name: Run All Tests with Coverage
         if: matrix.test-type == 'coverage' && matrix.node-version == '20'

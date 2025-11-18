@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Task = require('../models/Task');
+const { generateUniqueEmail } = require('./testUtils');
 
 describe('Model Tests', () => {
   beforeAll(async () => {
@@ -36,7 +37,7 @@ describe('Model Tests', () => {
       it('should hash password before saving', async () => {
         const plainPassword = 'testPassword123';
         const user = new User({
-          email: 'test@example.com',
+          email: generateUniqueEmail('test'),
           username: 'testuser',
           password: plainPassword
         });
@@ -50,7 +51,7 @@ describe('Model Tests', () => {
 
       it('should not rehash password if not modified', async () => {
         const user = await User.create({
-          email: 'test@example.com',
+          email: generateUniqueEmail('test'),
           username: 'testuser',
           password: 'password123'
         });
@@ -67,7 +68,7 @@ describe('Model Tests', () => {
 
       it('should rehash password when password is modified', async () => {
         const user = await User.create({
-          email: 'test@example.com',
+          email: generateUniqueEmail('test'),
           username: 'testuser',
           password: 'password123'
         });
@@ -99,7 +100,7 @@ describe('Model Tests', () => {
 
       it('should require username', async () => {
         const user = new User({
-          email: 'test@example.com',
+          email: generateUniqueEmail('test'),
           password: 'password123'
         });
 
@@ -108,7 +109,7 @@ describe('Model Tests', () => {
 
       it('should require password', async () => {
         const user = new User({
-          email: 'test@example.com',
+          email: generateUniqueEmail('test'),
           username: 'testuser'
         });
 
@@ -116,14 +117,15 @@ describe('Model Tests', () => {
       });
 
       it('should enforce unique email', async () => {
+        const uniqueEmail = generateUniqueEmail('test');
         await User.create({
-          email: 'test@example.com',
+          email: uniqueEmail,
           username: 'testuser1',
           password: 'password123'
         });
 
         const duplicateUser = new User({
-          email: 'test@example.com', // Same email
+          email: uniqueEmail, // Same email
           username: 'testuser2',
           password: 'password123'
         });
@@ -135,7 +137,7 @@ describe('Model Tests', () => {
     describe('Timestamps', () => {
       it('should add createdAt and updatedAt timestamps', async () => {
         const user = await User.create({
-          email: 'test@example.com',
+          email: generateUniqueEmail('test'),
           username: 'testuser',
           password: 'password123'
         });
@@ -147,7 +149,7 @@ describe('Model Tests', () => {
 
       it('should update updatedAt on modification', async () => {
         const user = await User.create({
-          email: 'test@example.com',
+          email: generateUniqueEmail('test'),
           username: 'testuser',
           password: 'password123'
         });
@@ -170,13 +172,13 @@ describe('Model Tests', () => {
 
     beforeEach(async () => {
       testUser1 = await User.create({
-        email: 'user1@example.com',
+        email: generateUniqueEmail('user1'),
         username: 'user1',
         password: 'password123'
       });
 
       testUser2 = await User.create({
-        email: 'user2@example.com',
+        email: generateUniqueEmail('user2'),
         username: 'user2',
         password: 'password123'
       });

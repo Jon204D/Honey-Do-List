@@ -40,9 +40,9 @@ describe('Task Controller Tests', () => {
   beforeEach(async () => {
     await cleanupTestData();
     
-    // Create test users and task
-    testUser1 = await createTestUser({ email: 'owner@test.com', username: 'owner' });
-    testUser2 = await createTestUser({ email: 'assignee@test.com', username: 'assignee' });
+    // Create test users and task (using createTestUser which already generates unique emails)
+    testUser1 = await createTestUser({ username: 'owner' });
+    testUser2 = await createTestUser({ username: 'assignee' });
     testTask = await createTestTask({
       owner: testUser1._id,
       assignedTo: testUser2._id,

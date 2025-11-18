@@ -137,6 +137,13 @@ const generateTestEmail = (prefix = 'test') => {
 };
 
 /**
+ * Generate unique email addresses for tests to avoid duplicate key errors
+ */
+const generateUniqueEmail = (base = 'test') => {
+  return `${base}-${Date.now()}-${Math.random().toString(36).substring(7)}@example.com`;
+};
+
+/**
  * Generate test usernames
  */
 const generateTestUsername = (prefix = 'user') => {
@@ -200,6 +207,7 @@ module.exports = {
   sleep,
   generateTestEmail,
   generateTestUsername,
+  generateUniqueEmail,
   validateObjectStructure,
   createUserWithHashedPassword,
   mockFindPopulate
