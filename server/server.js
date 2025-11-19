@@ -86,7 +86,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Request logging middleware (helpful for debugging)
 app.use((req, res, next) => {
-  console.log(`📨 ${req.method} ${req.path} - Origin: ${req.get('origin') || 'none'}`);
+  //console.log(`📨 ${req.method} ${req.path} - Origin: ${req.get('origin') || 'none'}`);
   next();
 });
 
