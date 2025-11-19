@@ -22,11 +22,19 @@ jobs:
     services:
       mongodb:
         image: mongo:7.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ vars.MONGODB_USER }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ vars.MONGODB_PASS }}
         ports:
           - 27017:27017
-
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
     env:
-      MONGO_URI: mongodb://localhost:27017/honey-do-test
+      MONGO_URI: ${{ vars.MONGO_URI }}
       NODE_ENV: test
       SendGridApiKey: ${{ vars.SendGridApiKey }}
       FRONTEND_BASE_URL: ${{ vars.REACT_APP_FRONTEND_BASE_URL }}
