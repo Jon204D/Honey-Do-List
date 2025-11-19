@@ -33,7 +33,6 @@ const getTaskById = async (req, res) => {
 
 // Create a new task
 const createTask = async (req, res) => {
-  console.log('Creating task with data:', req.body);
   try {
     const newTask = await createTaskQuery(req.body);
     res.status(201).json(newTask);
