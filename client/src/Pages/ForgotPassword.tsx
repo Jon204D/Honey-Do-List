@@ -5,15 +5,10 @@ import FormMessage from "../Components/Auth/FormMessage";
 import {AuthInput, AuthButton} from "../Components/Auth/AuthStyles";
 
 /* Request Password Reset Link
-<<<<<<< HEAD
-   - go back to the "Login" page
-   - recieve message that the email was sent */
-=======
    - Validates email
    - Sends request to backend
    - Shows success / error messages
    - Go back to the "Login" page */
->>>>>>> develop
 const ForgotPassword: React.FC = () => {
    useEffect(() => {
         document.title = "Forgot Password - Honey-Do List";
@@ -95,12 +90,6 @@ const ForgotPassword: React.FC = () => {
   // Prevent default form submit fresh
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-<<<<<<< HEAD
-
-    /* Send success message to show code works */
-    navigate("/login", {state: {message: "Password link set to your email!"}});
-=======
->>>>>>> develop
   }
 
   return (
@@ -136,10 +125,7 @@ const ForgotPassword: React.FC = () => {
         </AuthButton>
       </form>
 
-<<<<<<< HEAD
-=======
       {/* Naviagte to Login */}
->>>>>>> develop
       <div 
         style = {{
           marginTop: "20px"
