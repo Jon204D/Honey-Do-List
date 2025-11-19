@@ -1,5 +1,5 @@
 // routes/userRoutes.js
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const {
   registerUser,
@@ -10,16 +10,18 @@ const {
   changePassword,
   loginUser,
   forgotPassword,
-} = require("../controllers/userController");
+} = require('../controllers/userController');
 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
-router.post("/forgot-password", forgotPassword);
-router.put("/:id/password", changePassword);
+// Auth routes
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.post('/forgot-password', forgotPassword);
 
-router.get("/", getAllUsers);
-router.get("/user/:id", getUser);
-router.put("/user/:id", updateUser);
-router.delete("/user/:id", deleteUser);
+// User CRUD routes
+router.get('/', getAllUsers);
+router.get('/:id', getUser);
+router.put('/:id', updateUser);
+router.delete('/:id', deleteUser);
+router.put('/:id/password', changePassword);
 
 module.exports = router;
