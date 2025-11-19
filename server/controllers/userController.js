@@ -3,7 +3,6 @@
 const bcrypt = require("bcryptjs");
 const userQueries = require("../queries/userQueries");
 const emailTemplate = require("../config/emailTemplate");
-const enviornmentCheck = require("../function/enviornmentCheck");
 
 const registerUser = async (req, res) => {
   try {
@@ -18,24 +17,15 @@ const registerUser = async (req, res) => {
     const newUser = await userQueries.createUser({ email, username, password });
 
     // Send verification email
-    if (await enviornmentCheck.isProd()) {
-      if ((await emailTemplate.sendVerification(newUser.email, newUser.username)).status === 'success') {
-        return res.status(201).json({
-          id: newUser._id,
-          email: newUser.email,
-          username: newUser.username,
-          createdAt: newUser.createdAt
-        });
-      } else {
-        throw new Error("Error sending verification email.");
-      }
-    } else {
+    if ((await emailTemplate.sendVerification(newUser.email, newUser.username)).status === 'success') {
       return res.status(201).json({
         id: newUser._id,
         email: newUser.email,
         username: newUser.username,
         createdAt: newUser.createdAt
       });
+    } else {
+      throw new Error("Error sending verification email.");
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -92,22 +82,14 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (await enviornmentCheck.isProd()) {
-      if ((await emailTemplate.sendUpdateNotification(updatedUser.email, updatedUser.username)).status === 'success') {
-        res.status(200).json({
-          id: updatedUser._id,
-          email: updatedUser.email,
-          username: updatedUser.username
-        });
-      } else {
-        throw new Error("Error sending update notification email.");
-      }
-    } else {
+    if ((await emailTemplate.sendUpdateNotification(updatedUser.email, updatedUser.username)).status === 'success') {
       res.status(200).json({
         id: updatedUser._id,
         email: updatedUser.email,
         username: updatedUser.username
       });
+    } else {
+      throw new Error("Error sending update notification email.");
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -122,14 +104,10 @@ const deleteUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (await enviornmentCheck.isProd()) {
-      if ((await emailTemplate.sendDeleteNotification(deletedUser.email, deletedUser.username)).status === 'success') {
-        res.status(200).json({ message: "User deleted successfully" });
-      } else {
-        throw new Error("Error sending deletion notification email.");
-      }
-    } else {
+    if ((await emailTemplate.sendDeleteNotification(deletedUser.email, deletedUser.username)).status === 'success') {
       res.status(200).json({ message: "User deleted successfully" });
+    } else {
+      throw new Error("Error sending deletion notification email.");
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -213,18 +191,12 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    if (await enviornmentCheck.isProd()) {
-      if ((await emailTemplate.sendRecoveryVerification(user.email, user.username)).status === 'success') {
-        return res.status(200).json({
-          message: "Password reset instructions sent to email (mock response)" 
-        });
-      } else {
-        throw new Error("Error sending recovery email.");
-      }
-    } else {
+    if ((await emailTemplate.sendRecoveryVerification(user.email, user.username)).status === 'success') {
       return res.status(200).json({
         message: "Password reset instructions sent to email (mock response)" 
       });
+    } else {
+      throw new Error("Error sending recovery email.");
     }
   } catch (err) {
     res.status(500).json({ message: err.message });

@@ -8,11 +8,6 @@ jest.mock('../config/emailTemplate', () => ({
   sendUpdateNotification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' })
 }));
 
-// Mock the environment check to return true so email functions are called (and mocked)
-jest.mock('../function/enviornmentCheck', () => ({
-  isProd: jest.fn().mockResolvedValue(true)
-}));
-
 require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
