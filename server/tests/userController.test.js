@@ -8,9 +8,9 @@ jest.mock('../config/emailTemplate', () => ({
   sendUpdateNotification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' })
 }));
 
-// Mock the environment check to avoid email sending in tests
+// Mock the environment check to return true so email functions are called (and mocked)
 jest.mock('../function/enviornmentCheck', () => ({
-  isProd: jest.fn().mockResolvedValue(false)
+  isProd: jest.fn().mockResolvedValue(true)
 }));
 
 require('dotenv').config();
