@@ -10,7 +10,6 @@ const createInvite = async (req, res) => {
         }
 
         if (emailTemplate.sendVerification(newUser.email, newUser.username).status === 'success') {
-        
             const savedInvite = await inviteQueries.createInviteQuery(email);
             res.status(201).json(savedInvite);
         } else {
