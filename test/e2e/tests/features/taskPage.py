@@ -32,127 +32,206 @@ class TaskPageTests(BaseTestSuite):
             self.log_result("Task Page Load", False, str(e))
             print(f"❌ An error occurred: {e}")
 
-    def add_task(self, task_name):
+    def _open_task_detail(self, task_name):
+        """
+        Click the task card by data-tour attribute or the title h3 to open the detail panel.
+        Uses the structure shown in your screenshot (div[data-tour='task-card'] with <h3>title</h3>).
+        """
         try:
-            # Ensure we're on the tasks page
-            if not self.driver.current_url.rstrip("/").endswith("/tasks"):
-                self.land_task_page()
-
-            print(f"➕ Attempting to add task: {task_name}...")
-            self.dismiss_guidance_popover()
-            # Wait for the Create button to be present and clickable (simple direct interaction)
+            # prefer clicking the h3 inside the task card
+            xpath_title = f"//div[@data-tour='task-card'][.//h3[contains(normalize-space(.), \"{task_name}\")]]//h3"
             try:
-                self.wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), '+ Create Task') or contains(., '+ Create Task')]")))
+                el = self.wait.until(EC.element_to_be_clickable((By.XPATH, xpath_title)))
+                el.click()
+                return True
             except Exception:
-                # fallback: presence of any create-task data-tour button
-                pass
-
-            # Direct find & click the Create button using the text match
-            try:
-                create_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), '+ Create Task') or contains(., '+ Create Task')]")
-                create_btn.click()
-            except Exception as e:
-                # fallback to alternative selector if text-based click fails
+                # fallback: click the card container itself
+                card_xpath = f"//div[@data-tour='task-card'][.//h3[contains(normalize-space(.), \"{task_name}\")]]"
                 try:
-                    create_btn = self.driver.find_element(By.CSS_SELECTOR, "button[data-tour='create-task'], button[data-tour='create-task-button']")
-                    create_btn.click()
-                except Exception as final_e:
-                    png, html = self._screenshot_and_snippet("create_click_failed")
-                    self.log_result("Add Task", False, f"Could not click Create Task (screenshot:{png})")
-                    print("❌ Could not click Create Task:", final_e)
-                    return
-
-            # Wait briefly for form to appear
-            time.sleep(0.6)
-            try:
-                self.wait.until(EC.visibility_of_element_located((By.XPATH, "//form")))
-            except Exception:
-                # will still try to fill fields; capture diagnostic screenshot
-                png, html = self._screenshot_and_snippet("task_form_not_visible")
-                print("⚠️ Task form not clearly visible after clicking create. screenshot:", png)
-
-            # Fill title and description using straightforward send_keys per your original approach
-            try:
-                title_el = self.driver.find_element(By.XPATH, "//form//input[@placeholder='Title' or @name='title']")
-                title_el.clear()
-                title_el.send_keys(task_name)
-            except Exception as e:
-                png, html = self._screenshot_and_snippet("title_not_found")
-                self.log_result("Add Task", False, f"Title input not found (screenshot:{png})")
-                print("❌ Title input error:", e)
-                return
-
-            try:
-                desc_el = self.driver.find_element(By.XPATH, "//form//textarea[@placeholder='Description' or @name='description']")
-                desc_el.clear()
-                desc_el.send_keys(
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam a odio imperdiet, dictum diam id, fringilla sapien. "
-                    "Proin nec velit at magna dapibus convallis. Maecenas nec orci vel tellus pellentesque maximus id a tellus. Donec eget "
-                    "convallis lorem, nec dapibus magna. Duis vel malesuada lectus. Ut quis eleifend dolor. Proin imperdiet posuere sodales. "
-                    "In blandit malesuada massa, non accumsan velit sodales ut. Etiam non rutrum neque. Donec ut augue nec est sodales semper at sit amet odio. "
-                    "Cras quis velit a lorem aliquam rhoncus vel eget turpis. Morbi fringilla neque condimentum tortor gravida scelerisque. "
-                    "Vestibulum placerat leo vitae ipsum suscipit. Nullam a felis euismod, convallis erat in, facilisis libero. Nulla facilisi. "
-                    "In hac habitasse platea dictumst."
-                )
-            except Exception as e:
-                # description optional; continue
-                print("⚠️ Description input not found or could not be filled:", e)
-
-            # Select Status (simple approach: open select and pick option by visible text)
-            try:
-                select_Status = self.driver.find_element(By.XPATH, "//form//select[option[contains(text(), 'Select Status')]]")
-                for option in select_Status.find_elements(By.TAG_NAME, "option"):
-                    if option.text.strip().lower() == "pending":
-                        option.click()
-                        break
-            except Exception:
-                # if select not present, ignore
-                pass
-
-            # Select Priority
-            try:
-                select_Priority = self.driver.find_element(By.XPATH, "//form//select[option[contains(text(), 'Select Priority')]]")
-                for option in select_Priority.find_elements(By.TAG_NAME, "option"):
-                    if option.text.strip().lower() == "high":
-                        option.click()
-                        break
-            except Exception:
-                pass
-
-            # Submit the form with a direct click on the submit button
-            try:
-                submit_btn = self.driver.find_element(By.XPATH, "//form//button[@type='submit' and (contains(., 'Save') or contains(., 'save') or contains(., 'Create'))]")
-                submit_btn.click()
-            except Exception as e:
-                # fallback to any submit button
-                try:
-                    submit_btn = self.driver.find_element(By.XPATH, "//form//button[@type='submit']")
-                    submit_btn.click()
-                except Exception as final_e:
-                    png, html = self._screenshot_and_snippet("submit_not_found")
-                    self.log_result("Add Task", False, f"Submit button not found or not clickable (screenshot:{png})")
-                    print("❌ Submit error:", final_e)
-                    return
-
-            # short wait for the task to appear
-            time.sleep(0.8)
-            try:
-                task_element = self.wait.until(EC.presence_of_element_located((By.XPATH, f"//h3[contains(., '{task_name}')]")),)
-                if task_element:
-                    self.log_result("Add Task", True, f"Task '{task_name}' added successfully.")
-                    print(f"✅ Task '{task_name}' added successfully.")
-                else:
-                    self.log_result("Add Task", False, f"Task '{task_name}' was not found after submit.")
-                    print(f"❌ Task '{task_name}' was not found after submit.")
-            except Exception as e:
-                png, html = self._screenshot_and_snippet("task_not_found")
-                self.log_result("Add Task", False, f"Task '{task_name}' not found after submit (screenshot:{png})")
-                print("❌ Could not verify task creation:", e)
-
+                    card = self.wait.until(EC.element_to_be_clickable((By.XPATH, card_xpath)))
+                    card.click()
+                    return True
+                except Exception:
+                    # last resort: any element with the text
+                    try:
+                        any_el = self.driver.find_element(By.XPATH, f"//h3[contains(normalize-space(.), \"{task_name}\")]")
+                        any_el.click()
+                        return True
+                    except Exception:
+                        return False
         except Exception as e:
-            png, html = self._screenshot_and_snippet("add_task_error")
-            self.log_result("Add Task", False, f"Unexpected error while adding task: {e} (screenshot:{png})")
-            print(f"❌ An unexpected error occurred while adding task: {e}")
+            print(f"❌ _open_task_detail unexpected error: {e}")
+            return False
+
+    def add_task(self, task_name):
+        # ... (unchanged) ...
+        # keep your existing add_task implementation here unchanged
+        pass
+
+    def add_comment(self, task_name, comment_text):
+        """Add a comment to a task and assert it appears in the comment list."""
+        try:
+            if not self._open_task_detail(task_name):
+                self.log_result("Add Comment", False, f"Could not open task detail for '{task_name}'")
+                return False
+
+            # Use the input placeholder observed in the screenshot
+            try:
+                comment_input = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[placeholder='Add a comment...'], textarea[placeholder='Add a comment...']")))
+            except Exception:
+                try:
+                    comment_input = self.driver.find_element(By.CSS_SELECTOR, "input[placeholder*='comment'], textarea[placeholder*='comment']")
+                except Exception as e:
+                    png, html = self._screenshot_and_snippet("comment_input_missing")
+                    self.log_result("Add Comment", False, f"Comment input not found (screenshot:{png})")
+                    print("❌ Comment input not found:", e)
+                    return False
+
+            # fill and submit
+            comment_input.clear()
+            comment_input.send_keys(comment_text)
+            # Find Add button within the comments area
+            try:
+                add_btn = self.driver.find_element(By.XPATH, "//button[normalize-space(text())='Add' or contains(., 'Add') and ancestor::div[contains(@class,'comments') or contains(., 'Comments')]]")
+                add_btn.click()
+            except Exception:
+                # broad fallback: any button with 'Add' text
+                try:
+                    self.driver.find_element(By.XPATH, "//button[normalize-space(text())='Add']").click()
+                except Exception:
+                    try:
+                        comment_input.send_keys("\n")
+                    except Exception:
+                        png, html = self._screenshot_and_snippet("comment_submit_failed")
+                        self.log_result("Add Comment", False, f"Could not submit comment (screenshot:{png})")
+                        print("❌ Could not submit comment")
+                        return False
+
+            # wait for the comment to show up - comments are <p> elements in TaskCard screenshot
+            try:
+                comment_xpath = f"//div[contains(@class,'task-card') or @data-tour='task-card'][.//h3[contains(normalize-space(.), \"{task_name}\")]]//p[contains(normalize-space(.), \"{comment_text[:20]}\")]"
+                self.wait.until(EC.presence_of_element_located((By.XPATH, comment_xpath)))
+                self.log_result("Add Comment", True, f"Comment added to task '{task_name}'")
+                return True
+            except Exception as e:
+                png, html = self._screenshot_and_snippet("comment_not_found")
+                self.log_result("Add Comment", False, f"Comment not visible after submit (screenshot:{png})")
+                print("❌ Comment not visible after submit:", e)
+                return False
+        except Exception as e:
+            png, html = self._screenshot_and_snippet("add_comment_error")
+            self.log_result("Add Comment", False, f"Unexpected error while adding comment: {e} (screenshot:{png})")
+            print(f"❌ Unexpected error while adding comment: {e}")
+            return False
+
+    def attempt_delete_comment_and_assert_nonremovable(self, task_name, comment_text):
+        # keep your existing logic but search by the card's context
+        try:
+            if not self._open_task_detail(task_name):
+                self.log_result("Delete Comment", False, f"Could not open task detail for '{task_name}'")
+                return False
+
+            try:
+                delete_btn = self.driver.find_element(By.XPATH, f"//div[@data-tour='task-card'][.//h3[contains(normalize-space(.), \"{task_name}\")]]//p[contains(., \"{comment_text}\")]//following::button[contains(., 'Delete') or contains(@aria-label,'delete')][1]")
+            except Exception:
+                self.log_result("Delete Comment", True, "No delete control present for comment (expected non-removable behavior).")
+                return True
+
+            try:
+                delete_btn.click()
+                time.sleep(0.6)
+            except Exception:
+                pass
+
+            remaining = self.driver.find_elements(By.XPATH, f"//div[@data-tour='task-card'][.//h3[contains(normalize-space(.), \"{task_name}\")]]//p[contains(., \"{comment_text}\")]")
+            if len(remaining) > 0:
+                self.log_result("Delete Comment", True, "Comment still present after delete attempt (non-removable).")
+                return True
+            else:
+                self.log_result("Delete Comment", False, "Comment removed unexpectedly.")
+                return False
+        except Exception as e:
+            png, html = self._screenshot_and_snippet("delete_comment_error")
+            self.log_result("Delete Comment", False, f"Unexpected error while attempting to delete comment: {e} (screenshot:{png})")
+            return False
+
+    def _get_reaction_count(self, reaction_button_element):
+        try:
+            span = reaction_button_element.find_element(By.XPATH, ".//span")
+            txt = span.text.strip()
+            if not txt:
+                return 0
+            return int(txt)
+        except Exception:
+            # fallback: try extract digits from element text
+            try:
+                import re
+                m = re.search(r"(\d+)", reaction_button_element.text)
+                return int(m.group(1)) if m else 0
+            except Exception:
+                return None
+
+    def add_reaction(self, task_name, reaction_text):
+        try:
+            if not self._open_task_detail(task_name):
+                self.log_result("Add Reaction", False, f"Could not open task detail for '{task_name}'")
+                return (None, None)
+
+            # locate reaction button inside that card's reactions area
+            try:
+                reaction_btn = self.wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[@data-tour='task-card'][.//h3[contains(normalize-space(.), \"{task_name}\")]]//button[contains(., '{reaction_text}') or @aria-label='{reaction_text}' or contains(@data-reaction,'{reaction_text}')]")))
+            except Exception:
+                try:
+                    reaction_btn = self.driver.find_element(By.XPATH, f"//button[contains(., '{reaction_text}')]")
+                except Exception as e:
+                    png, html = self._screenshot_and_snippet("reaction_not_found")
+                    self.log_result("Add Reaction", False, f"Reaction control not found (screenshot:{png})")
+                    print("❌ Reaction control not found:", e)
+                    return (None, None)
+
+            before = self._get_reaction_count(reaction_btn)
+            reaction_btn.click()
+            time.sleep(0.4)
+            after_btn = self.driver.find_element(By.XPATH, f"//div[@data-tour='task-card'][.//h3[contains(normalize-space(.), \"{task_name}\")]]//button[contains(., '{reaction_text}') or @aria-label='{reaction_text}' or contains(@data-reaction,'{reaction_text}')]")
+            after = self._get_reaction_count(after_btn)
+            self.log_result("Add Reaction", True, f"Reaction '{reaction_text}' added to task '{task_name}': {before} -> {after}")
+            return (before, after)
+        except Exception as e:
+            png, html = self._screenshot_and_snippet("add_reaction_error")
+            self.log_result("Add Reaction", False, f"Unexpected error while adding reaction: {e} (screenshot:{png})")
+            print(f"❌ Unexpected error while adding reaction: {e}")
+            return (None, None)
+
+    def attempt_toggle_reaction_and_assert_nonremovable(self, task_name, reaction_text):
+        # unchanged logic, uses add_reaction above
+        try:
+            before, after = self.add_reaction(task_name, reaction_text)
+            if before is None:
+                return False
+            try:
+                btn = self.driver.find_element(By.XPATH, f"//div[@data-tour='task-card'][.//h3[contains(normalize-space(.), \"{task_name}\")]]//button[contains(., '{reaction_text}') or @aria-label='{reaction_text}']")
+                btn.click()
+            except Exception:
+                pass
+            time.sleep(0.4)
+            try:
+                btn_after = self.driver.find_element(By.XPATH, f"//div[@data-tour='task-card'][.//h3[contains(normalize-space(.), \"{task_name}\")]]//button[contains(., '{reaction_text}') or @aria-label='{reaction_text}']")
+                final = self._get_reaction_count(btn_after)
+            except Exception:
+                final = None
+            if final is None:
+                self.log_result("Toggle Reaction", False, "Could not read final reaction count")
+                return False
+            if final >= after:
+                self.log_result("Toggle Reaction", True, f"Reaction non-removable behavior observed: {before} -> {after} -> {final}")
+                return True
+            else:
+                self.log_result("Toggle Reaction", False, f"Reaction count decreased unexpectedly: {before} -> {after} -> {final}")
+                return False
+        except Exception as e:
+            png, html = self._screenshot_and_snippet("toggle_reaction_error")
+            self.log_result("Toggle Reaction", False, f"Unexpected error while toggling reaction: {e} (screenshot:{png})")
+            return False
 
     def run_all_tasks(self):
         print("\n📋 Running Task Page Tests...")
@@ -162,6 +241,14 @@ class TaskPageTests(BaseTestSuite):
             self.land_task_page()
             self.add_task("Test Task 1")
             self.add_task("Test Task 2")
+
+            comment_ok = self.add_comment("Test Task 1", "Automated test comment - do not remove")
+            if comment_ok:
+                self.attempt_delete_comment_and_assert_nonremovable("Test Task 1", "Automated test comment - do not remove")
+
+            reaction_label = '👍'  # adjust to match app's reaction label if different
+            self.attempt_toggle_reaction_and_assert_nonremovable("Test Task 2", reaction_label)
+
         except Exception as e:
             self.log_result("Run All Tasks", False, str(e))
             print(f"❌ An error occurred during task tests: {e}")

@@ -5,10 +5,6 @@ import FormMessage from "../Components/Auth/FormMessage";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthInput, AuthButton } from "../Components/Auth/AuthStyles";
 
-/* Displays Login Form
-   - Calls backend or uses local fallback (env-gated)
-   - Saves login session in localStorage (session for 1 hour)
-   - Displays success/error messages */
 const Login: React.FC = () => {
   useEffect(() => {
     document.title = "Honey-Do List Login";
@@ -18,11 +14,9 @@ const Login: React.FC = () => {
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [formMessage, setFormMessage] = useState<string | null>(
     (location.state as any)?.message || null
   );
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const lastSubmitTime = useRef<number>(0);
 
@@ -33,12 +27,10 @@ const Login: React.FC = () => {
     localStorage.setItem("isLoggedIn", "true");
     localStorage.setItem("loginTimestamp", String(now));
     localStorage.setItem("sessionExpiry", String(sessionExpiry));
-    // store user (for dev convenience only, guarded by env flag in code)
     localStorage.setItem("fakeUser", JSON.stringify(userData));
-    window.dispatchEvent(new Event("sessionchange")); // notify navbar
+    window.dispatchEvent(new Event("sessionchange"));
   };
 
-  /* Validation */
   const validateFields = (): string | null => {
     if (!email || !password) {
       return "All fields are required.";
@@ -49,7 +41,6 @@ const Login: React.FC = () => {
     return null;
   };
 
-  /* Request to Backend */
   const loginRequest = async () => {
     const validationError = validateFields();
     if (validationError) {
@@ -61,7 +52,7 @@ const Login: React.FC = () => {
 
     // Throttle: Prevent submissions within 3 seconds
     const now = Date.now();
-    const throttleDelay = 3000; // 3 seconds
+    const throttleDelay = 3000;
 
     if (now - lastSubmitTime.current < throttleDelay) {
       console.log("Request throttled. Please wait before submitting again.");
@@ -74,71 +65,70 @@ const Login: React.FC = () => {
     lastSubmitTime.current = now;
 
     try {
-      // Normalize backend base URL (trim trailing slashes) to avoid double slashes
-      const backendBase = (process.env.REACT_APP_BACKEND_BASE_URL || "").replace(/\/+$/, "");
+      // Get backend URL from environment
+      const backendBase = (process.env.REACT_APP_BACKEND_BASE_URL || "http://localhost:5001").replace(/\/+$/, "");
       const loginUrl = `${backendBase}/api/users/login`;
 
-      const response = await axios.post(loginUrl, { email, password });
+      console.log('🔄 Attempting login to:', loginUrl);
 
-      // axios resolves only for 2xx status codes; check server-provided message
+      const response = await axios.post(
+        loginUrl,
+        { email, password },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000, // 10 second timeout
+        }
+      );
+
+      console.log('✅ Login response:', response.status, response.data);
+
       if (response.data?.message === "Login successful") {
         const data = response.data;
-        if (data?.token) localStorage.setItem("authToken", String(data.token));
+        
+        // Save auth token if provided
+        if (data?.token) {
+          localStorage.setItem("authToken", String(data.token));
+        }
+        
         if (!data?.user) {
           setFormMessage("Invalid server response.");
           setIsSubmitting(false);
           return;
         }
+        
         saveLoginSession(data.user);
         navigate("/settings", { state: { message: "Welcome back!" } });
       } else {
-        // server returned 2xx but not a success message
-        const errorData = response.data || {};
-        setFormMessage(errorData.message || "Invalid credentials");
+        setFormMessage(response.data?.message || "Invalid credentials");
       }
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("❌ Login error:", err);
 
-      // If server responded with non-2xx, surface it instead of masking as network error
-      if (axios.isAxiosError(err) && err.response) {
-        const serverMsg = err.response.data?.message || "Invalid credentials";
-        setFormMessage(serverMsg);
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Network / CORS / no-response case: optionally attempt local fallback (dev only)
-      const allowFallback = process.env.REACT_APP_ALLOW_FALLBACK === "true";
-      if (allowFallback) {
-        const savedUser = localStorage.getItem("fakeUser");
-        if (savedUser) {
-          try {
-            const u = JSON.parse(savedUser);
-            if (u?.email === email && u?.password === password) {
-              saveLoginSession(u);
-              navigate("/settings", { state: { message: "Welcome back! (offline)" } });
-              setIsSubmitting(false);
-              return;
-            } else {
-              // savedUser exists but credentials don't match -> show "Invalid credentials"
-              setFormMessage("Invalid credentials");
-              setIsSubmitting(false);
-              return;
-            }
-          } catch (e) {
-            console.warn("Could not parse fakeUser from localStorage", e);
-          }
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          // Server responded with error status
+          const serverMsg = err.response.data?.message || "Invalid credentials";
+          setFormMessage(serverMsg);
+        } else if (err.request) {
+          // Request made but no response received
+          console.error('No response from server. Check if backend is running.');
+          setFormMessage(
+            "Cannot connect to server. Please ensure the backend is running on port 5001."
+          );
+        } else {
+          // Something else happened
+          setFormMessage("An error occurred. Please try again.");
         }
+      } else {
+        setFormMessage("An unexpected error occurred.");
       }
-
-      // No savedUser or fallback disabled -> genuine network/CORS problem
-      setFormMessage("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /* Login Form */
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     loginRequest();

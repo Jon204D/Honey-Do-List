@@ -30,7 +30,7 @@ const TaskBoard: React.FC = () => {
         const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-        })
+        });
 
         if (!response.ok) throw new Error("Backend not responding");
 
@@ -49,10 +49,10 @@ const TaskBoard: React.FC = () => {
           setFilteredTasks(parsed);
         }
       }
-    }
+    };
 
     fetchTasks();
-  }, [])
+  }, []);
 
   // Filters
   const applyFilters = () => {
@@ -66,23 +66,40 @@ const TaskBoard: React.FC = () => {
       const priorityMatch = !filters.priority || task.priority === filters.priority;
       const dueMatch = !filters.dueDate || task.dueDate === filters.dueDate;
       return statusMatch && priorityMatch && dueMatch;
-    })
+    });
 
     setFilteredTasks(filtered);
-  }
+  };
 
   // Add Task
   const handleAddTask = async (newTask: Task) => {
     try {
-      const response = await fetch(`/api/tasks`, {
+      console.log('🔄 Creating task:', newTask);
+      
+      // FIXED: Convert priority and status to lowercase to match backend enum values
+      const cleanTask = {
+        ...newTask,
+        priority: newTask.priority?.toLowerCase() || 'medium',
+        status: newTask.status?.toLowerCase() || 'pending',
+      };
+      
+      console.log('📤 Sending cleaned task:', cleanTask);
+      
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newTask),
-      })
+        body: JSON.stringify(cleanTask),
+      });
 
-      if (!response.ok) throw new Error("Backend not reachable");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ Backend error:', errorData);
+        throw new Error("Backend not reachable");
+      }
 
       const savedTask = await response.json();
+      console.log('✅ Task created successfully:', savedTask);
+      
       const updated = [...tasks, savedTask];
       setTasks(updated);
       setFilteredTasks(updated);
@@ -91,8 +108,8 @@ const TaskBoard: React.FC = () => {
       // tell the tour a task was created
       window.dispatchEvent(new Event("task-created"));
     } catch (err) {
-      console.warn("Backend failed, using localStorage only.", err);
-      const fallbackTask = { ...newTask, _id: Date.now().toString() }
+      console.warn("⚠️  Backend failed, using localStorage only.", err);
+      const fallbackTask = { ...newTask, _id: Date.now().toString() };
       const updated = [...tasks, fallbackTask];
       setTasks(updated);
       setFilteredTasks(updated);
@@ -101,31 +118,35 @@ const TaskBoard: React.FC = () => {
       // tell the tour a task was created (fallback)
       window.dispatchEvent(new Event("task-created"));
     }
-  }
+  };
 
   // Delete Task
   const handleDeleteTask = async (id: string) => {
     try {
+      console.log('🗑️  Deleting task:', id);
+      
       const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks/${id}`, {
         method: "DELETE",
-      })
+      });
 
       if (!response.ok) throw new Error("Backend not reachable");
+      
+      console.log('✅ Task deleted successfully');
     } catch (err) {
-      console.warn("Backend failed, using localStorage only.", err);
+      console.warn("⚠️  Backend failed, using localStorage only.", err);
     }
 
     const updated = tasks.filter((t) => t._id !== id);
     setTasks(updated);
     setFilteredTasks(updated);
     localStorage.setItem("tasks", JSON.stringify(updated));
-  }
+  };
 
   // Open modal (and notify tour the modal opened)
   const openCreateTask = () => {
     setIsModalOpen(true);
     window.dispatchEvent(new Event("task-modal-open"));
-  }
+  };
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -159,7 +180,7 @@ const TaskBoard: React.FC = () => {
         <TaskModal onClose={() => setIsModalOpen(false)} onSave={handleAddTask} />
       )}
     </div>
-  )
-}
+  );
+};
 
 export default TaskBoard;
