@@ -5,7 +5,7 @@ name: Server User Seeding Tests (Legacy)
 
 on:
   push:
-    branches: [main, develop, UI-Automation]
+    branches: [main, develop, UI-Automation, feature/*]
     paths:
       - 'server/tests/seedUsers.test.js'
       - 'server/scripts/seedUsers.js'
