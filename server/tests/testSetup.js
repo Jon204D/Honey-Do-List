@@ -20,10 +20,8 @@ beforeAll(async () => {
     useUnifiedTopology: true,
   });
 
-  // Drop the whole test DB once at the start (ensures a clean slate)
-  await mongoose.connection.dropDatabase();
-  
-  // Ensure all model indexes are created after dropping database
+  // Note: Database is already dropped by globalSetup.js before any tests run
+  // We just need to ensure indexes are created
   const User = require('../models/User');
   const Task = require('../models/Task');
   await User.createIndexes();
