@@ -3,6 +3,7 @@
 const bcrypt = require("bcryptjs");
 const userQueries = require("../queries/userQueries");
 const emailTemplate = require("../config/emailTemplate");
+const enviornmentCheck = require("../function/enviornmentCheck");
 
 const registerUser = async (req, res) => {
   try {
