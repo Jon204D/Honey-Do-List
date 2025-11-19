@@ -104,7 +104,7 @@ const TaskModal: React.FC<Props> = ({onClose, onSave}) => {
           }}
         />
 
-        {/* Status */}
+        {/* Status - FIXED: Changed values to lowercase */}
         <select
           data-tour="task-status"
           value={status}
@@ -122,12 +122,12 @@ const TaskModal: React.FC<Props> = ({onClose, onSave}) => {
           }}
         >
           <option value="">Select Status</option>
-          <option value="Pending">Pending</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Completed">Completed</option>
+          <option value="pending">Pending</option>
+          <option value="in-progress">In Progress</option>
+          <option value="completed">Completed</option>
         </select>
 
-         {/* Priority */}
+         {/* Priority - FIXED: Changed values to lowercase */}
          <select
           data-tour="task-priority"
           value={priority}
@@ -145,9 +145,9 @@ const TaskModal: React.FC<Props> = ({onClose, onSave}) => {
           }}
         >
           <option value="">Select Priority</option>
-          <option value="Low">Low</option>
-          <option value="Medium">Medium</option>
-          <option value="High">High</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
         </select>
 
         <AuthInput
