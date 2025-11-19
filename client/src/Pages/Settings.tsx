@@ -1,17 +1,3 @@
-<<<<<<< HEAD
-import AuthCard from "../components/AuthCard";
-import React, {useState, useEffect} from "react";
-import {AuthButton} from "../components/AuthStyles";
-import EmailDisplay from "../components/EmailDisplay";
-import {useNavigate, useLocation} from "react-router-dom";
-import PasswordDisplay from "../components/PasswordDisplay";
-import UsernameDisplay from "../components/UsernameDisplay";
-
-/* Account Settings
-   - Displays username, email, and password
-   - Allows user to reset username and password
-   - Lets user log out */
-=======
 import AuthCard from "../Components/Auth/AuthCard";
 import React, { useState, useEffect } from "react";
 import FormMessage from "../Components/Auth/FormMessage";
@@ -29,7 +15,6 @@ import Delete from "../Components/Profile/Delete";
    - Save changes to backend or falls back to localStorage
    - Lets user log out
    - Lets user delete account permanently */
->>>>>>> develop
 const Settings: React.FC = () => {
   useEffect(() => {
     document.title = "Settings - Honey-Do List";
@@ -37,19 +22,6 @@ const Settings: React.FC = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-<<<<<<< HEAD
-
-  /* State variables for user info */
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  /* Success/Error Message */
-  const message = location.state?.message;
-
-  /* Reads fakeUser from localStorage
-     Populates state variables with saved username, email, and password */
-=======
   
   // State variables for user info
   const [userId, setUserId] = useState<string>("");
@@ -69,7 +41,6 @@ const Settings: React.FC = () => {
 
   /* Reads fakeUser from localStorage
      Populates username, email, and password */
->>>>>>> develop
   useEffect(() => {
     const storedUser = localStorage.getItem("fakeUser");
     if (storedUser) {
@@ -82,20 +53,6 @@ const Settings: React.FC = () => {
     setLoaded(true);
   }, []);
 
-<<<<<<< HEAD
-  /* Saves updated user info back into localStorage */
-  const saveUser = (newUsername = username, newPassword = password) => {
-    localStorage.setItem(
-      "fakeUser",
-      JSON.stringify({username: newUsername, email, password: newPassword})
-    )
-    setUsername(newUsername);
-    setPassword(newPassword);
-  }
-
-  /* Clears the login flag from storage */
-  const handleLogout = () => {
-=======
   /* Consume message so it doesn’t reappear on refresh */
   useEffect(() => {
     const state = location.state as any;
@@ -173,7 +130,6 @@ const Settings: React.FC = () => {
 
   // Clear only session data (used for logout)
   const clearSession = () => {
->>>>>>> develop
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("loginTimestamp");
     localStorage.removeItem("sessionExpiry");
@@ -207,37 +163,7 @@ const Settings: React.FC = () => {
   }
 
   return (
-    /* Title */
     <AuthCard title="Account Settings">
-<<<<<<< HEAD
-      {message && <div style = {{color: "orange", marginBottom: "15px", fontWeight: "bold"}}>{message}</div>}
-
-      {/* Username */}
-      <UsernameDisplay
-        username={username}
-        password={password}
-        saveUser={saveUser}
-      />
-
-      {/* Email */}
-      <EmailDisplay email={email}/>
-
-      {/* Password */}
-      <PasswordDisplay
-        username={username}
-        password={password}
-        saveUser={saveUser}
-      />
-
-      {/* Logout */}
-      <div style={{marginTop: "20px"}}>
-        <AuthButton 
-          onClick={handleLogout} 
-          variant="primary"
-        >
-          Log Out
-        </AuthButton>
-=======
       {formMessage && <FormMessage message={formMessage}/>}
 
       <div style={{display: "flex", flexDirection: "column", gap: 24, textAlign: "left"}}>
@@ -280,7 +206,6 @@ const Settings: React.FC = () => {
             Log Out
           </AuthButton>
         </div>
->>>>>>> develop
       </div>
     </AuthCard>
   )
