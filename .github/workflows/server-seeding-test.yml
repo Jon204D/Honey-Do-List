@@ -1,0 +1,93 @@
+name: Server User Seeding Tests (Legacy)
+
+# This workflow focuses on the original user seeding tests
+# For comprehensive server testing, see server-tests.yml
+
+on:
+  push:
+    branches: [main, develop, UI-Automation]
+    paths:
+      - 'server/tests/seedUsers.test.js'
+      - 'server/scripts/seedUsers.js'
+  pull_request:
+    branches: [main, develop, UI-Automation, feature/*]
+    paths:
+      - 'server/tests/seedUsers.test.js'
+      - 'server/scripts/seedUsers.js'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: Honey-Do-List BE (Develop) (pacific-recreation / production)
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ vars.MONGODB_USER }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ vars.MONGODB_PASS }}
+        ports:
+          - 27017:27017
+
+    env:
+      MONGO_URI: ${{ vars.MONGO_URI }}
+      NODE_ENV: test
+      SendGridApiKey: ${{ vars.SendGridApiKey }}
+      FRONTEND_BASE_URL: ${{ vars.REACT_APP_FRONTEND_BASE_URL }}
+      # User seeding test variables
+      TESTUSER1EMAIL: ${{ vars.TESTUSER1EMAIL }}
+      TESTUSER1USERNAME: ${{ vars.TESTUSER1USERNAME }}
+      TESTUSER1PASSWORD: ${{ vars.TESTUSER1PASSWORD }}
+      TESTUSER2EMAIL: ${{ vars.TESTUSER2EMAIL }}
+      TESTUSER2USERNAME: ${{ vars.TESTUSER2USERNAME }}
+      TESTUSER2PASSWORD: ${{ vars.TESTUSER2PASSWORD }}
+      TESTUSER3EMAIL: ${{ vars.TESTUSER3EMAIL }}
+      TESTUSER3USERNAME: ${{ vars.TESTUSER3USERNAME }}
+      TESTUSER3PASSWORD: ${{ vars.TESTUSER3PASSWORD }}
+      TESTADMINEMAIL: ${{ vars.TESTADMINEMAIL }}
+      TESTADMINUSERNAME: ${{ vars.TESTADMINUSERNAME }}
+      TESTADMINPASSWORD: ${{ vars.TESTADMINPASSWORD }}
+      TESTDEMOEMAIL: ${{ vars.TESTDEMOEMAIL }}
+      TESTDEMOUSERNAME: ${{ vars.TESTDEMOUSERNAME }}
+      TESTDEMOPASSWORD: ${{ vars.TESTDEMOPASSWORD }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'server/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Run User Seeding Tests
+        working-directory: server
+        run: |
+          echo "🌱 Running User Seeding Tests..."
+          npx jest tests/seedUsers.test.js --verbose
+
+      - name: Validate Test Environment Variables
+        working-directory: server
+        run: |
+          echo "🔍 Validating test environment variables..."
+          node -e "
+            const requiredVars = ['TESTUSER1EMAIL', 'TESTUSER1USERNAME', 'TESTUSER2EMAIL', 'TESTADMINEMAIL'];
+            const missing = requiredVars.filter(v => !process.env[v]);
+            if (missing.length > 0) {
+              console.log('❌ Missing required environment variables:', missing.join(', '));
+              process.exit(1);
+            }
+            console.log('✅ All required environment variables are present');
+          "
+
+      - name: Reference Comprehensive Tests
+        run: |
+          echo "ℹ️  For comprehensive server testing including unit tests, integration tests, and coverage reports,"
+          echo "   please see the 'Server Unit & Integration Tests' workflow (server-tests.yml)"
+          echo "   This workflow focuses specifically on user seeding functionality."

@@ -1,47 +1,141 @@
-import React, {useState} from "react";
-import AuthCard from "../components/AuthCard";
 import {useNavigate} from "react-router-dom";
-import {AuthInput, AuthButton} from "../components/AuthStyles";
+import React, {useState, useEffect, useRef} from "react";
+import AuthCard from "../Components/Auth/AuthCard";
+import FormMessage from "../Components/Auth/FormMessage";
+import SignUpExtraButton from "../Components/Auth/SignUpExtraButon";
+import {AuthInput, AuthButton} from "../Components/Auth/AuthStyles";
 
 /* Registers username, email, and password
    - Saves a fake user into localStorage
    - Goes back to the "Login" page */
 const SignUp: React.FC = () => {
+   useEffect(() => {
+        document.title = "Sign Up - Honey-Do List";
+    }, []);
+
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const lastSubmitTime = useRef<number>(0);
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const validateFields = (): string | null => {
+    if (!username || !email || !password) {
+      return 'All fields are required.';
+    }
+    if (username.length < 3) {
+      return 'Username must be at least 3 characters long.';
+    }
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long.';
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      return 'Invalid email format.';
+    }
+    return null;
+  };
+
+  const signUpRequest = async () => {
+    // Field Validation
+    const validationError = validateFields();
+    if (validationError) {
+      setFormMessage(validationError);
+      return;
+    } else {
+      setFormMessage(null);
+    }
+
+    // Throttle: Prevent submissions within 3 seconds
+    const now = Date.now();
+    const throttleDelay = 3000; // 3 seconds
+    
+    if (now - lastSubmitTime.current < throttleDelay) {
+      console.log('Request throttled. Please wait before submitting again.');
+      return;
+    }
+
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    lastSubmitTime.current = now;
+
+    try {
+      // Make the API POST request
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      // Handle response
+      if (response.ok) {
+        loginNav("Account created! Please log in.");
+      } else {
+        const errorData = await response.json();
+        console.error('Sign up failed:', errorData.message);
+
+        /* Email & Username Already In Use */
+        if (
+          response.status === 400 &&
+          errorData.message?.toLowerCase().includes("email")
+        ) {
+          setFormMessage("Email already in use / taken");
+        } else if (
+          response.status === 400 &&
+          errorData.message?.toLowerCase().includes("username")
+        ) {
+          setFormMessage("Username already in use / taken");
+        } else {
+          setFormMessage(errorData.message || "Please try again");
+        }
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+      
+      // Fallback: Save fake user in localStorage for development
+      localStorage.setItem(
+        "fakeUser",
+        JSON.stringify({ username, email, password })
+      );
+      loginNav("Account created! Please log in.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const loginNav = (message?: string) => {
+    navigate("/login", { state: { message } });
+  }
+
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Save fake user in localStorage
-    localStorage.setItem(
-      "fakeUser",
-      JSON.stringify({ username, email, password })
-    )
-
-    // Redirect with success message
-    navigate("/login", { state: { message: "Account created! Please log in." } });
   }
 
   return (
+<<<<<<< HEAD
 
+=======
+>>>>>>> develop
     /* Title */
     <AuthCard title="Create Account">
+      {formMessage && <FormMessage message={formMessage} />}
       <form
         onSubmit={handleSignUp}
-        style = {{ 
-          display: "flex", 
-          flexDirection: "column", 
-          gap: "10px" 
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px"
         }}
       >
 
         {/* Username */}
         <AuthInput
           type="text"
-          name="username" 
+          name="username"
           placeholder="Username"
           autoComplete="username"
           value={username}
@@ -52,9 +146,9 @@ const SignUp: React.FC = () => {
         {/* Email */}
         <AuthInput
           type="email"
-          name="email" 
+          name="email"
           placeholder="Email"
-          autoComplete="email" 
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -63,7 +157,7 @@ const SignUp: React.FC = () => {
         {/* Password */}
         <AuthInput
           type="password"
-          name="password" 
+          name="password"
           placeholder="Password"
           autoComplete="new-password"
           value={password}
@@ -72,6 +166,7 @@ const SignUp: React.FC = () => {
         />
 
         {/* Create Button */}
+<<<<<<< HEAD
         <AuthButton 
           type="submit" 
           variant="primary">
@@ -91,6 +186,19 @@ const SignUp: React.FC = () => {
             Back to Login
         </AuthButton>
       </div>
+=======
+        <AuthButton
+          type="submit"
+          variant="primary"
+          onClick={signUpRequest}
+          disabled={isSubmitting}>
+          {isSubmitting ? 'Creating Account...' : 'Create Account'}
+        </AuthButton>
+      </form>
+
+      {/* Navigate to Login */}
+      <SignUpExtraButton/>
+>>>>>>> develop
     </AuthCard>
   )
 }

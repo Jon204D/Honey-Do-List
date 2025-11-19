@@ -1,0 +1,86 @@
+name: UI Automation Tests
+
+on:
+  push:
+    branches: [main, develop, UI-Automation]
+  pull_request:
+    branches: [main, develop, UI-Automation, feature/*]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: "Honey-Do-List FE (Develop) (pacific-recreation / production)"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Prepare artifacts dir
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/artifacts"
+          ls -la "$GITHUB_WORKSPACE"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ui-requirements.txt
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+          # Try to install chromedriver that matches the Chrome major version (best effort)
+          CHROME_VER=$(google-chrome --version | grep -oP '\d+' | head -1 || true)
+          if [ -n "$CHROME_VER" ]; then
+            echo "Chrome major version: $CHROME_VER"
+            # attempt to install chromedriver via apt (may differ by runner); ignore errors
+            sudo apt-get install -y chromedriver || true
+          fi
+
+      - name: Run UI automation tests
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+          TESTUSER1EMAIL: ${{ vars.TESTUSER1EMAIL }}
+          TESTUSER1PASSWORD: ${{ vars.TESTUSER1PASSWORD }}
+          TESTUSER1USERNAME: ${{ vars.TESTUSER1USERNAME }}
+          TESTUSER3EMAIL: ${{ vars.TESTUSER3EMAIL }}
+          TESTUSER3USERNAME: ${{ vars.TESTUSER3USERNAME }}
+          TESTUSER3PASSWORD: ${{ vars.TESTUSER3PASSWORD }}
+          TESTUSERNEWUSERNAME: ${{ vars.TESTUSERNEWUSERNAME }}
+          TESTUSERNEWPASSWORD: ${{ vars.TESTUSERNEWPASSWORD }}
+          # ensure tests writing to workspace use this path
+          ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
+        run: |
+          # ensure ARTIFACTS_DIR exists for tests to write to
+          mkdir -p "$ARTIFACTS_DIR"
+          # run tests (adjust path if needed)
+          python test/e2e/run.py
+
+      - name: List candidate artifact files (for debugging)
+        if: always()
+        run: |
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo "Listing /tmp"
+          ls -la /tmp || true
+          echo "Listing $GITHUB_WORKSPACE/artifacts"
+          ls -la "$GITHUB_WORKSPACE/artifacts" || true
+          echo "Find any png/html/txt files under workspace"
+          find "$GITHUB_WORKSPACE" -maxdepth 3 -type f \( -name "*.png" -o -name "*.html" -o -name "*.txt" \) -print || true
+
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: |
+            /tmp/*.png
+            /tmp/*.html
+            /tmp/*.txt
+            ${{ github.workspace }}/artifacts/**

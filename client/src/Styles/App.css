@@ -1,0 +1,83 @@
+.navbar {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  background: #212121;
+  justify-content: space-between;
+  font-family: 'Pacifico', cursive;
+  padding-left: 35px;
+  padding-right: 35px;
+}
+
+.icon-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  color: #fbbf24;
+  width: 60px;
+}
+
+.icon-hover-text {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 500;
+  padding-top: 4px;
+  white-space: nowrap; 
+  transition: max-height 0.5s ease-out, opacity 0.5s ease-out, color 0.3s ease-out;
+}
+
+.navbar:hover .icon-hover-text {
+  max-height: 1.5rem;
+  opacity: 1;
+}
+
+/* Circle Background */
+.icon-circle {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #fbbf24; 
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.icon-circle:hover{
+  background-color: #f59e0b;
+}
+
+.icon-circle:hover + .icon-hover-text{
+  opacity: 1;
+  color: #f59e0b; /* Darker orange */
+}
+
+/* Honey Home Icon */
+.icon-circle svg {
+  width: 40px;   /* icon size */
+  height: 40px;  
+  fill: black;   
+  /* transition: fill 0.3s ease; */
+  padding-left: 2px;
+} 
+
+/* Bee Profile Icon */
+.icon-circle img {
+  width: 40px;   /* icon size */
+  height: 40px;  
+  fill: black;   
+  /* transition: fill 0.3s ease; */
+}
+
+.navbar .title{
+  color: #fbbf24; 
+}
+
+/* Title Text Hover */
+.title:hover {
+  color: #f59e0b; 
+}

@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+nav .title {
+  font-family: 'Pacifico', cursive;
+  font-size: 1.5rem;
+  font-weight: normal;
+  transform: scaleX(1.5) scaleY(1.5);  display: inline-block;  /* needed so transform applies cleanly */
+  text-decoration: none;
+  color: orange;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: orange; 
+  font-family: "Poppins", sans-serif;
+  color: #212121;
+}
+
+::placeholder {
+  color: orange;
+  opacity: 1; 
+}
+
+.task-filter select {
+  background-color: #212121;
+  color: orange;
+  border: 1px solid orange;
+  border-radius: 5px;
+  padding: 10px;
+  appearance: none;
+}
+
+.task-filter select:focus {
+  outline: none;
+  border-color: #ffcc66;
+  box-shadow: 0 0 5px #ffcc66;
+}
+
+/* Calendar */
+input[type="date"] {
+  background-color: #212121;        
+  color: orange;                    
+  border: 1px solid orange;         
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Calendar Icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(68%) sepia(88%) saturate(600%) hue-rotate(5deg);
+  cursor: pointer;
+}
+
+/* Calendar Orange Glow */
+input[type="date"]:focus {
+  outline: none;
+  border-color: #ffcc66;            
+  box-shadow: 0 0 6px #ffcc66;      
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+/* Driver.js */
+.driver-popover {
+  background: #212121 !important;
+  color: #ff9f1a !important;             
+  border: 1px solid #ff9f1a !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,.55) !important;
+}
+
+/* Title */
+.driver-popover-title {
+  color: #ffb142 !important;
+  font-weight: 800 !important;
+}
+
+/* Description */
+.driver-popover-description {
+  color: #ffd79c !important;
+  line-height: 1.35 !important;
+}
+
+/* Progress Text */
+.driver-popover-progress-text {
+  color: #ffd79c !important;
+  opacity: .9 !important;
+}
+
+/* Footer */
+.driver-popover-footer {
+  gap: 8px !important;
+}
+
+/* Buttons */
+
+/* needs this to override the driver.js assignment for buttons */
+.driver-popover .driver-btn {
+  color: #212121 !important;        /* dark text for contrast */
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  padding: 8px 14px !important;
+}
+
+/* Next button */
+.driver-popover .driver-popover-next-btn {
+  background-color: #fbbf24 !important; /* honey yellow */
+  color: black !important;              /* dark text */
+  border: none !important;
+}
+
+/* Prev/Done buttons */
+.driver-popover .driver-popover-prev-btn,
+.driver-popover .driver-popover-done-btn {
+  background: transparent !important;
+  color: #fbbf24 !important;  /* honey color to match theme */
+  border: 1px solid #fbbf24 !important;
+}
+
+/* Remove Default Close */
+.driver-popover-close-btn {
+  display: none !important;
+}
+
+/* Highlight Ring  */
+.driver-stage {
+  box-shadow:
+    0 0 0 3px #ff9f1a,
+    0 0 0 9999px rgba(0,0,0,.65) !important;  
+  border-radius: 14px !important;             
+}
+
+/* Tighten Arrow  */
+.driver-popover-arrow {
+  --driverjs-popover-arrow-color: #212121;  
+}
+
+/* Remove White Outline */
+.driver-popover button {
+  text-shadow: none !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  color: inherit !important; 
+}
