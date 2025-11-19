@@ -1,12 +1,15 @@
 module.exports = {
   testEnvironment: 'node',
+  globalSetup: '<rootDir>/tests/globalSetup.js',
   setupFiles: ['<rootDir>/tests/setupMocks.js'],
   setupFilesAfterEnv: ['<rootDir>/tests/testSetup.js'],
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/tests/setup.test.js',
     '/tests/testSetup.js',
-    '/tests/setupMocks.js'
+    '/tests/setupMocks.js',
+    '/tests/globalSetup.js',
+    '/tests/testHelpers.js'
   ],
   testMatch: [
     '**/tests/**/*.test.js',
@@ -19,6 +22,8 @@ module.exports = {
     '!**/tests/setup.test.js',
     '!**/tests/testSetup.js',
     '!**/tests/setupMocks.js',
+    '!**/tests/globalSetup.js',
+    '!**/tests/testHelpers.js',
     '!jest.config.js',
     '!seedUsers.js',
     '!server.js'

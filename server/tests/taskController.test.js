@@ -54,9 +54,11 @@ describe('Task Controller Tests', () => {
     it('should handle errors gracefully', async () => {
       const { req, res } = createMockReqRes();
       
-      // Mock database error: populate() returns a promise that rejects
+      // Mock database error by making populate reject
+      const error = new Error('Database error');
+      const mockPopulate = jest.fn().mockRejectedValue(error);
       jest.spyOn(Task, 'find').mockReturnValueOnce({
-        populate: jest.fn(() => Promise.reject(new Error('Database error')))
+        populate: mockPopulate
       });
 
       await getAllTasks(req, res);

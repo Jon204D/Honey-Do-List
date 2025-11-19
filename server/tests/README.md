@@ -6,6 +6,7 @@ This directory contains comprehensive unit and integration tests for the Honey-D
 
 ```
 tests/
+├── globalSetup.js          # RUNS FIRST: Drops DB before any imports
 ├── setup.test.js           # Test configuration and setup
 ├── setupMocks.js           # Early mocks (runs before module imports)
 ├── testSetup.js            # Global DB setup and teardown
@@ -16,6 +17,7 @@ tests/
 ├── models.test.js          # Mongoose model tests
 ├── emailTemplate.test.js   # Email functionality tests
 ├── testUtils.js            # Utility functions for testing
+├── testHelpers.js          # Chainable mock helpers
 └── README.md               # This file
 ```
 
@@ -32,7 +34,9 @@ tests/
 - **Task Query Tests** (`task.test.js`): Tests complex task queries and database interactions
 
 ### Utility Files
+- **Global Setup** (`globalSetup.js`): **RUNS FIRST** - Drops test database before any model imports to prevent race conditions
 - **Test Utilities** (`testUtils.js`): Helper functions for creating test data, mocking, and generating unique test emails
+- **Test Helpers** (`testHelpers.js`): Chainable mock utilities for Mongoose queries (mockFindPopulate, etc.)
 - **Setup** (`setup.test.js`): Global test configuration and environment setup
 - **Setup Mocks** (`setupMocks.js`): Early mocks that run before module imports (prevents network calls)
 - **Test Setup** (`testSetup.js`): Global database setup, cleanup, and index creation
@@ -97,9 +101,30 @@ The tests use Jest mocking for:
 
 ## Database Considerations
 
+### Test Execution Order (Important!)
+
+Jest runs test setup in this specific order:
+
+1. **globalSetup.js** (via globalSetup config) - **RUNS FIRST BEFORE EVERYTHING**
+   - Drops the test database completely
+   - Runs BEFORE any model imports
+   - Prevents race conditions with index creation
+   - Critical for preventing E11000 errors
+
+2. **setupMocks.js** (via setupFiles config)
+   - Mocks external services like SendGrid
+   - Runs before any module imports
+
+3. **testSetup.js** (via setupFilesAfterEnv config)
+   - Connects to MongoDB
+   - Recreates indexes after globalSetup drop
+   - Clears all collections after each test
+   - Disconnects after all tests
+
+4. **Individual test files** - Execute in sequence (--runInBand)
+
+### Best Practices
 - Tests use a separate test database to avoid conflicts
-- **Global setup** (`testSetup.js`): Connects to DB, drops database, and creates indexes before all tests
-- **Global cleanup** (`testSetup.js`): Clears all collections after each test and disconnects after all tests
 - Individual test files no longer need their own connection/disconnection code
 - **Tests run in-band** (`--runInBand` flag): Prevents race conditions with shared test database
 - **Unique emails**: Use `generateUniqueEmail()` from testUtils to avoid duplicate key errors
@@ -153,9 +178,10 @@ describe('Feature Tests', () => {
 1. **Tests timeout**: Increase timeout in Jest config or individual tests
 2. **Database connection errors**: Ensure MongoDB is running and accessible
 3. **Duplicate key errors (E11000)**: Use `generateUniqueEmail()` or `createTestUser()` instead of fixed emails
-4. **Mock issues**: Clear mocks between tests using `jest.clearAllMocks()`
-5. **"populate is not a function"**: Use `mockFindPopulate()` from testUtils for chainable mocks
-6. **Race conditions**: Tests run in-band by default to prevent concurrent DB access
+4. **"Conflicted registering namespace"**: This is fixed by globalSetup.js dropping DB early
+5. **Mock issues**: Clear mocks between tests using `jest.clearAllMocks()`
+6. **"populate is not a function" or "exec is not a function"**: Use `mockFindPopulate()` from testUtils or testHelpers for chainable mocks
+7. **Race conditions**: Tests run in-band by default to prevent concurrent DB access
 
 ### Debug Mode
 

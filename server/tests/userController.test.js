@@ -3,7 +3,9 @@
 // Mock the email template BEFORE any imports that use it
 jest.mock('../config/emailTemplate', () => ({
   sendVerification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' }),
-  sendRecoveryVerification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' })
+  sendRecoveryVerification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' }),
+  sendDeleteNotification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' }),
+  sendUpdateNotification: jest.fn().mockResolvedValue({ status: 'success', messageId: 'mock-id' })
 }));
 
 require('dotenv').config();

@@ -169,31 +169,28 @@ const createUserWithHashedPassword = async (plainPassword = 'password123') => {
 
 /**
  * Helpers for mocking mongoose chainable queries like Model.find().populate(...).exec()
+ * Creates a chainable mock that supports .populate().exec() and direct awaiting
  */
 function mockFindPopulate(model, returnValue) {
-  // central mock function
-  const fn = jest.fn();
-  if (returnValue instanceof Error) {
-    fn.mockRejectedValue(returnValue);
-  } else {
-    fn.mockResolvedValue(returnValue);
-  }
-
-  // return an object that supports populate and exec chaining
-  const chainable = {
-    populate: (...args) => ({ exec: () => fn(...args) }),
-    exec: () => fn()
+  const mockChain = {
+    populate: jest.fn().mockReturnThis(),
+    exec: jest.fn().mockResolvedValue(returnValue),
+    sort: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    skip: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    lean: jest.fn().mockReturnThis()
+  };
+  
+  // Make the chain also thenable so it can be awaited directly
+  mockChain.then = function(resolve, reject) {
+    return mockChain.exec().then(resolve, reject);
   };
 
-  // ensure populate itself is callable as a function that returns a promise
-  chainable.populate = jest.fn(() => ({ exec: () => fn() }));
-  // also make populate().then work for environments that await the returned object:
-  chainable.populate.mockImplementation(() => ({ then: (res) => fn().then(res) }));
-
   // spy on model.find and return the chainable object
-  jest.spyOn(model, 'find').mockReturnValue(chainable);
+  jest.spyOn(model, 'find').mockReturnValue(mockChain);
 
-  return fn;
+  return mockChain;
 }
 
 module.exports = {
