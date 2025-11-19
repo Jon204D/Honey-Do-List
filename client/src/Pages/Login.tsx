@@ -6,58 +6,19 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { AuthInput, AuthButton } from "../Components/Auth/AuthStyles";
 
 /* Displays Login Form
-<<<<<<< HEAD
-   - Checks credentials saved in localStorage by SignUp
-   - sets "isLoggedIn" flag if they match
-   - displays success/error messages */
-=======
    - Calls backend or uses local fallback (env-gated)
    - Saves login session in localStorage (session for 1 hour)
    - Displays success/error messages */
->>>>>>> develop
 const Login: React.FC = () => {
   useEffect(() => {
     document.title = "Honey-Do List Login";
   }, []);
 
   const navigate = useNavigate();
-  const location = useLocation();               // Reading messages passed in navigation
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-<<<<<<< HEAD
-  /* Login Form */
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    /* Get the stored user from localStorage */
-    const savedUser = localStorage.getItem("fakeUser");
-  
-    if (savedUser) {
-      // Parse saved user and check credentials
-      const {email: savedEmail, password: savedPassword} = JSON.parse(savedUser);
-
-    if (email === savedEmail && password === savedPassword) {
-      localStorage.setItem("isLoggedIn", "true");
-      navigate("/settings", {state: {message: "Welcome back!"}});
-    } else {
-      navigate("/login", {state: {message: "Invalid email or password!"}});
-    }
-  } else {
-    navigate("/signup", {state: {message: "No account found!"}});
-  }
-}
-
-  return (
-    <AuthCard title="Log In">
-      {/* Success/Error Messages */}
-      {message && <p style = {{color: "orange", fontWeight: "bold"}}>{message}</p>}   
-      
-      {/* Login Form */}
-      <form onSubmit={handleLogin} style = {{display: "flex", flexDirection: "column", gap: "10px"}}>
-        
-        {/* Email Input */}
-=======
   const [formMessage, setFormMessage] = useState<string | null>(
     (location.state as any)?.message || null
   );
@@ -188,7 +149,6 @@ const Login: React.FC = () => {
       {formMessage && <FormMessage message={formMessage} />}
 
       <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
->>>>>>> develop
         <AuthInput
           type="email"
           name="email"
@@ -199,7 +159,6 @@ const Login: React.FC = () => {
           required
         />
 
-        {/* Password Input */}
         <AuthInput
           type="password"
           name="password"
@@ -210,30 +169,10 @@ const Login: React.FC = () => {
           required
         />
 
-<<<<<<< HEAD
-        {/* Submit Button */}
-        <AuthButton 
-          type="submit" 
-          variant="primary">
-            Log In
-        </AuthButton>
-      </form>
-
-      {/* Forgot Password & Create Account */}
-      <div 
-        style = {{
-          marginTop: "20px", 
-          display: "flex", 
-          flexDirection: "column", 
-          gap: "10px"
-        }}
-      >
-=======
         <AuthButton type="submit" variant="primary" disabled={isSubmitting}>
           {isSubmitting ? "Logging in..." : "Log In"}
         </AuthButton>
       </form>
->>>>>>> develop
 
       <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
         <AuthButton onClick={() => navigate("/forgot-password")} variant="secondary">
