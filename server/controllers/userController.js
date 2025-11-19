@@ -17,15 +17,15 @@ const registerUser = async (req, res) => {
     const newUser = await userQueries.createUser({ email, username, password });
 
     // Send verification email
-    if (emailTemplate.sendVerification(newUser.email, newUser.username)) {
-      // Email sent successfully
-      // Don't return the password in the response
+    if ((await emailTemplate.sendVerification(newUser.email, newUser.username)).status === 'success') {
       return res.status(201).json({
         id: newUser._id,
         email: newUser.email,
         username: newUser.username,
         createdAt: newUser.createdAt
       });
+    } else {
+      throw new Error("Error sending verification email.");
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -81,12 +81,16 @@ const updateUser = async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
-    
-    res.status(200).json({
-      id: updatedUser._id,
-      email: updatedUser.email,
-      username: updatedUser.username
-    });
+
+    if ((await emailTemplate.sendUpdateNotification(updatedUser.email, updatedUser.username)).status === 'success') {
+      res.status(200).json({
+        id: updatedUser._id,
+        email: updatedUser.email,
+        username: updatedUser.username
+      });
+    } else {
+      throw new Error("Error sending update notification email.");
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -99,7 +103,12 @@ const deleteUser = async (req, res) => {
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json({ message: "User deleted successfully" });
+
+    if ((await emailTemplate.sendDeleteNotification(deletedUser.email, deletedUser.username)).status === 'success') {
+      res.status(200).json({ message: "User deleted successfully" });
+    } else {
+      throw new Error("Error sending deletion notification email.");
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -182,12 +191,12 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // Send recovery email
-    if (emailTemplate.sendRecoveryVerification(user.email, user.username)) {
-      // TODO: Implement actual email sending with reset token
-      return res.status(200).json({ 
+    if ((await emailTemplate.sendRecoveryVerification(user.email, user.username)).status === 'success') {
+      return res.status(200).json({
         message: "Password reset instructions sent to email (mock response)" 
       });
+    } else {
+      throw new Error("Error sending recovery email.");
     }
   } catch (err) {
     res.status(500).json({ message: err.message });

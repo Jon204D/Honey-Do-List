@@ -151,8 +151,8 @@ class LoginTests(BaseTestSuite):
                 ))
                 self.log_result("Valid Login", False, "Network error displayed during login. (Backend/CORS issue)")
             except Exception:
-                self.log_result("Valid Login", False, f"Did not redirect; current URL: {self.driver.current_url} (screenshot:{png}, console:{console})")
-    
+                self.log_result("Valid Login", False, f"Did not redirect; current URL: {self.driver.current_url} (screenshot:{png}, console:{console})")    
+
     def run_all_login(self):
         print("\n🔍 Running login feature tests...")
         try:

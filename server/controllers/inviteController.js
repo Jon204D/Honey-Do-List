@@ -1,20 +1,25 @@
 // controllers/inviteController.js
 const inviteQueries = require("../queries/inviteQueries");
+const emailTemplate = require("../config/emailTemplate");
 
 const createInvite = async (req, res) => {
     try {
         const { email } = req.body;
 
-    if (!email) {
-        return res.status(400).json({ message: "Email is required." });
-    }
+        if (!email) {
+            return res.status(400).json({ message: "Email is required." });
+        }
 
-    const savedInvite = await inviteQueries.createInviteQuery(email);
-    res.status(201).json(savedInvite);
+        if ((await emailTemplate.sendVerification(email)).status === 'success') {
+            const savedInvite = await inviteQueries.createInviteQuery(email);
+            res.status(201).json(savedInvite);
+        } else {
+            throw new Error("Error sending verification email.");
+        }
     } catch (error) {
-    res
-        .status(500)
-        .json({ message: "Error creating invite.", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error creating invite.", error: error.message });
     }
 };
 

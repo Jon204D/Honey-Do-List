@@ -1,0 +1,133 @@
+name: Server Unit & Integration Tests
+
+on:
+  push:
+    branches: [main, develop, UI-Automation, feature/*]
+    paths:
+      - 'server/**'
+      - '.github/workflows/server-tests.yml'
+  pull_request:
+    branches: [main, develop, UI-Automation, feature/*]
+    paths:
+      - 'server/**'
+      - '.github/workflows/server-tests.yml'
+
+jobs:
+  test:
+    name: Run Server Tests
+    runs-on: ubuntu-latest
+    environment: Honey-Do-List BE (Develop) (pacific-recreation / production)
+    timeout-minutes: 15
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ vars.MONGODB_USER }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ vars.MONGODB_PASS }}
+        ports:
+          - 27017:27017
+    
+    env:
+      MONGO_URI: ${{ vars.MONGO_URI }}
+      NODE_ENV: test
+      SendGridApiKey: ${{ vars.SendGridApiKey }}
+      FRONTEND_BASE_URL: ${{ vars.REACT_APP_FRONTEND_BASE_URL }}
+      # Test user environment variables for seeding tests
+      TESTUSER1EMAIL: ${{ vars.TESTUSER1EMAIL }}
+      TESTUSER1USERNAME: ${{ vars.TESTUSER1USERNAME }}
+      TESTUSER1PASSWORD: ${{ vars.TESTUSER1PASSWORD }}
+      TESTUSER2EMAIL: ${{ vars.TESTUSER2EMAIL }}
+      TESTUSER2USERNAME: ${{ vars.TESTUSER2USERNAME }}
+      TESTUSER2PASSWORD: ${{ vars.TESTUSER2PASSWORD }}
+      TESTUSER3EMAIL: ${{ vars.TESTUSER3EMAIL }}
+      TESTUSER3USERNAME: ${{ vars.TESTUSER3USERNAME }}
+      TESTUSER3PASSWORD: ${{ vars.TESTUSER3PASSWORD }}
+      TESTADMINEMAIL: ${{ vars.TESTADMINEMAIL }}
+      TESTADMINUSERNAME: ${{ vars.TESTADMINUSERNAME }}
+      TESTADMINPASSWORD: ${{ vars.TESTADMINPASSWORD }}
+      TESTDEMOEMAIL: ${{ vars.TESTDEMOEMAIL }}
+      TESTDEMOUSERNAME: ${{ vars.TESTDEMOUSERNAME }}
+      TESTDEMOPASSWORD: ${{ vars.TESTDEMOPASSWORD }}
+
+    strategy:
+      matrix:
+        node-version: [18, 20]
+        test-type: [unit, integration, coverage]
+      fail-fast: false
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: 'server/package-lock.json'
+
+      - name: Install Dependencies
+        working-directory: server
+        run: |
+          npm ci
+          echo "✅ Dependencies installed"
+
+      - name: Run Unit Tests
+        if: matrix.test-type == 'unit'
+        working-directory: server
+        run: |
+          echo "🧪 Running Unit Tests on Node.js ${{ matrix.node-version }}"
+          npx jest tests/setup.test.js tests/models.test.js tests/userController.test.js tests/taskController.test.js tests/emailTemplate.test.js --runInBand --verbose --detectOpenHandles --forceExit
+
+      - name: Run Integration Tests
+        if: matrix.test-type == 'integration'
+        working-directory: server
+        run: |
+          echo "🔗 Running Integration Tests on Node.js ${{ matrix.node-version }}"
+          npx jest tests/task.test.js tests/seedUsers.test.js --runInBand --verbose --detectOpenHandles --forceExit
+
+      - name: Run All Tests with Coverage
+        if: matrix.test-type == 'coverage' && matrix.node-version == '20'
+        working-directory: server
+        run: |
+          echo "📊 Running Full Test Suite with Coverage"
+          npm run test:coverage
+
+      - name: Upload Coverage to Codecov
+        if: matrix.test-type == 'coverage' && matrix.node-version == '20' && success()
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./server/coverage/lcov.info
+          flags: server
+          name: server-coverage
+          fail_ci_if_error: false
+
+      - name: Generate Test Summary
+        if: always()
+        working-directory: server
+        run: |
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Node.js Version:** ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Type:** ${{ matrix.test-type }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ matrix.test-type }}" == "coverage" ] && [ "${{ matrix.node-version }}" == "20" ]; then
+            if [ -f coverage/lcov-report/index.html ]; then
+              echo "- **Coverage Report:** Generated successfully" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+    steps:
+      - name: Generate Overall Summary
+        run: |
+          echo "## Server Test Suite Results" >> $GITHUB_STEP_SUMMARY
+          echo "All test jobs have completed. Check individual job results above." >> $GITHUB_STEP_SUMMARY
+          echo "### Test Coverage:" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit Tests: User Controllers, Task Controllers, Models, Email Templates" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration Tests: Database Operations, Task Queries, User Seeding" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage Analysis: Comprehensive code coverage reporting" >> $GITHUB_STEP_SUMMARY
