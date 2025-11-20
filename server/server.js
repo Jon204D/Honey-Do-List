@@ -7,6 +7,8 @@ const taskRoutes = require('./routes/taskRoutes');
 const userRoutes = require('./routes/userRoutes');
 const inviteRoutes = require('./routes/inviteRoutes.js');
 const errorHandler = require('./middleware/errorHandler');
+const commentRoutes = require("./routes/commentRoutes");
+const reactionRoutes = require("./routes/reactionRoutes");
 
 const app = express();
 
@@ -94,6 +96,8 @@ app.use((req, res, next) => {
 app.use('/api/tasks', taskRoutes);
 app.use('/api/invites', inviteRoutes);
 app.use('/api/users', userRoutes);
+app.use("/api/comments", commentRoutes);
+app.use("/api/reactions", reactionRoutes);
 
 // Base Route
 app.get('/', (req, res) => {
