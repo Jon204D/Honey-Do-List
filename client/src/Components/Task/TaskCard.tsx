@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Task } from "./TaskBoard";
+import { Task, TaskUpdateData } from "./TaskBoard"; 
 import { AuthButton } from "../Auth/AuthStyles";
 
 interface Props {
   task: Task;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, updateData: TaskUpdateData) => Promise<void>; 
 }
 
 interface CommentData {
@@ -14,7 +15,7 @@ interface CommentData {
 
 const API_BASE = "http://localhost:5001"; 
 
-const TaskCard: React.FC<Props> = ({ task, onDelete }) => {
+const TaskCard: React.FC<Props> = ({ task, onDelete, onUpdate }) => {
   
   const defaultReactions = {
     "👍": 0,
@@ -103,9 +104,28 @@ const TaskCard: React.FC<Props> = ({ task, onDelete }) => {
     }
   };
 
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (task._id) { 
+        onUpdate(task._id, { status: e.target.value });
+    }
+  };
+  
+  const handlePriorityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (task._id) { 
+        onUpdate(task._id, { priority: e.target.value });
+    }
+  };
+
   if (!task) return null;
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+  
+  const getFormattedDueDate = (dueDate?: string) => {
+    if (!dueDate) return "N/A";
+    return dueDate.split('T')[0] || dueDate;
+  };
+  
+  const formattedDueDate = getFormattedDueDate(task.dueDate);
 
   return (
     <div
@@ -120,11 +140,54 @@ const TaskCard: React.FC<Props> = ({ task, onDelete }) => {
     >
       <h3 style={{ margin: "0 0 0.5rem 0" }}>{task.title}</h3>
       <p style={{ margin: "0 0 0.5rem 0" }}>{task.description}</p>
-      <small>Status: {task.status}</small>
-      <br />
-      <small>Priority: {task.priority}</small>
-      <br />
-      <small>Due: {task.dueDate ? task.dueDate : "N/A"}</small>
+      
+      <div style={{ marginBottom: "0.5rem", display: "flex", gap: "1rem" }}>
+          {/* Status Selector */}
+          <label style={{ color: "#ccc", fontSize: "0.9rem" }}>
+              Status:
+              <select 
+                  value={task.status?.toLowerCase() || 'pending'}
+                  onChange={handleStatusChange}
+                  style={{ 
+                      marginLeft: "0.5rem", 
+                      padding: "0.2rem", 
+                      background: "#333", 
+                      color: "orange", 
+                      border: "1px solid #555",
+                      borderRadius: "4px"
+                  }}
+              >
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In-Progress</option>
+                  <option value="completed">Completed</option>
+              </select>
+          </label>
+          
+          {/* Priority Selector */}
+          <label style={{ color: "#ccc", fontSize: "0.9rem" }}>
+              Priority:
+              <select 
+                  value={task.priority?.toLowerCase() || 'medium'}
+                  onChange={handlePriorityChange}
+                  style={{ 
+                      marginLeft: "0.5rem", 
+                      padding: "0.2rem", 
+                      background: "#333", 
+                      color: "orange", 
+                      border: "1px solid #555",
+                      borderRadius: "4px"
+                  }}
+              >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+              </select>
+          </label>
+      </div>
+
+      <small style={{ color: isOverdue ? 'red' : '#ccc' }}>
+          Due: {formattedDueDate}
+      </small>
       <div style={{ marginTop: "0.5rem" }}>
         <AuthButton
           variant="secondary"
