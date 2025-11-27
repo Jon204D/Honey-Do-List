@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { AuthButton } from "../Auth/AuthStyles";
 import TaskList from "./TaskList";
 import TaskModal from "./TaskModal";
@@ -6,241 +6,251 @@ import TaskFilter from "./TaskFilter";
 import OnboardingTour from "../Tour/OnboardingTour";
 
 export interface Task {
-  _id?: string;
-  title: string;
-  description: string;
-  priority: string;
-  status?: string;
-  dueDate?: string;
+  _id?: string;
+  title: string;
+  description: string;
+  priority: string;
+  status?: string;
+  dueDate?: string;
 }
 
 // Interface for the partial update data
 export interface TaskUpdateData {
-  priority?: string;
-  status?: string;
+  priority?: string;
+  status?: string;
 }
 
 const TaskBoard: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [filters, setFilters] = useState({ status: "", priority: "", dueDate: "" });
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filters, setFilters] = useState({ status: "", priority: "", dueDate: "" });
 
-  // used by the tour to decide whether to show for logged-out users
-  const isAuthed = localStorage.getItem("isLoggedIn") === "true";
+  // used by the tour to decide whether to show for logged-out users
+  const isAuthed = localStorage.getItem("isLoggedIn") === "true";
 
-  const updateTasksState = (newTasks: Task[]) => {
-    setTasks(newTasks);
+  // Filters logic (wrapped in useCallback for dependency management)
+  const applyFilters = useCallback(() => {
+    if (!filters.status && !filters.priority && !filters.dueDate) {
+      setFilteredTasks(tasks);
+      return;
+    }
 
-    if (!filters.status && !filters.priority && !filters.dueDate) {
-      setFilteredTasks(newTasks);
-    } else {
-      const filtered = newTasks.filter((task) => {
-        const statusMatch = !filters.status || task.status === filters.status;
-        const priorityMatch = !filters.priority || task.priority === filters.priority;
-        const dueMatch = !filters.dueDate || task.dueDate === filters.dueDate;
-        return statusMatch && priorityMatch && dueMatch;
-      });
-      setFilteredTasks(filtered);
-    }
-    localStorage.setItem("tasks", JSON.stringify(newTasks));
-  };
+    const filtered = tasks.filter((task) => {
+      // Ensure case-insensitive comparison
+      const taskStatus = task.status ? task.status.toLowerCase() : "";
+      const taskPriority = task.priority ? task.priority.toLowerCase() : "";
+      
+      const statusMatch = !filters.status || (taskStatus === filters.status.toLowerCase());
+      const priorityMatch = !filters.priority || (taskPriority === filters.priority.toLowerCase());
+      const dueMatch = !filters.dueDate || task.dueDate === filters.dueDate;
+      return statusMatch && priorityMatch && dueMatch;
+    });
+
+    setFilteredTasks(filtered);
+  }, [tasks, filters]);
 
 
-  // Load tasks from backend (fallback to localStorage)
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+  // Modified updateTasksState to only update the core tasks list and storage.
+  const updateTasksState = (newTasks: Task[]) => {
+    setTasks(newTasks);
+    localStorage.setItem("tasks", JSON.stringify(newTasks));
+  };
 
-        if (!response.ok) throw new Error("Backend not responding");
 
-        const data = await response.json();
-        const taskArray = Array.isArray(data) ? data : data.tasks || [];
+  // *** CORE CHANGE: Automatically apply filters when tasks or filters change. ***
+  useEffect(() => {
+    applyFilters();
+  }, [filters, tasks, applyFilters]);
 
-        updateTasksState(taskArray);
 
-      } catch (err) {
-        console.warn("Backend failed, using localStorage only.", err);
-        const savedTasks = localStorage.getItem("tasks");
-        if (savedTasks) {
-          const parsed = JSON.parse(savedTasks);
-          updateTasksState(parsed);
-        }
-      }
-    };
+  // Load tasks from backend (fallback to localStorage)
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
 
-    fetchTasks();
-  }, []);
+        if (!response.ok) throw new Error("Backend not responding");
 
-  // Filters
-  const applyFilters = () => {
-    if (!filters.status && !filters.priority && !filters.dueDate) {
-      setFilteredTasks(tasks);
-      return;
-    }
+        const data = await response.json();
+        const taskArray = Array.isArray(data) ? data : data.tasks || [];
 
-    const filtered = tasks.filter((task) => {
-      const statusMatch = !filters.status || task.status === filters.status;
-      const priorityMatch = !filters.priority || task.priority === filters.priority;
-      const dueMatch = !filters.dueDate || task.dueDate === filters.dueDate;
-      return statusMatch && priorityMatch && dueMatch;
-    });
+        updateTasksState(taskArray);
 
-    setFilteredTasks(filtered);
-  };
+      } catch (err) {
+        console.warn("Backend failed, using localStorage only.", err);
+        const savedTasks = localStorage.getItem("tasks");
+        if (savedTasks) {
+          const parsed = JSON.parse(savedTasks);
+          updateTasksState(parsed);
+        }
+      }
+    };
 
-  // Add Task
-  const handleAddTask = async (newTask: Task) => {
-    try {
-      console.log('Creating task:', newTask);
-      
-      // FIXED: Convert priority and status to lowercase to match backend enum values
-      const cleanTask = {
-        ...newTask,
-        priority: newTask.priority?.toLowerCase() || 'medium',
-        status: newTask.status?.toLowerCase() || 'pending',
-      };
-      
-      console.log('Sending cleaned task:', cleanTask);
-      
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cleanTask),
-      });
+    fetchTasks();
+  }, []);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Backend error:', errorData);
-        throw new Error("Backend not reachable");
-      }
 
-      const savedTask = await response.json();
-      console.log('Task created successfully:', savedTask);
-      
-      const updated = [...tasks, savedTask];
-      updateTasksState(updated);
+  // Handle filter change and apply automatically
+  const handleFilterChange = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+  };
 
-      // tell the tour a task was created
-      window.dispatchEvent(new Event("task-created"));
-    } catch (err) {
-      console.warn("Backend failed, using localStorage only.", err);
-      const fallbackTask = { ...newTask, _id: Date.now().toString() };
-      const updated = [...tasks, fallbackTask];
-      updateTasksState(updated);
 
-      // tell the tour a task was created (fallback)
-      window.dispatchEvent(new Event("task-created"));
-    }
-  };
+  // Add Task
+  const handleAddTask = async (newTask: Task) => {
+    try {
+      console.log('Creating task:', newTask);
+      
+      // Convert priority and status to lowercase 
+      const cleanTask = {
+        ...newTask,
+        priority: newTask.priority?.toLowerCase() || 'medium',
+        status: newTask.status?.toLowerCase() || 'pending',
+      };
+      
+      console.log('Sending cleaned task:', cleanTask);
+      
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cleanTask),
+      });
 
-  const handleUpdateTask = async (id: string, updateData: TaskUpdateData) => {
-    if (!id) return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Backend error:', errorData);
+        throw new Error("Backend not reachable");
+      }
 
-    const cleanUpdateData: TaskUpdateData = {};
-    if (updateData.priority) {
-        cleanUpdateData.priority = updateData.priority.toLowerCase();
-    }
-    if (updateData.status) {
-        cleanUpdateData.status = updateData.status.toLowerCase();
-    }
+      const savedTask = await response.json();
+      console.log('Task created successfully:', savedTask);
+      
+      const updated = [...tasks, savedTask];
+      updateTasksState(updated);
 
-    const updatedTasksOptimistic = tasks.map((task) => 
-      task._id === id ? { ...task, ...cleanUpdateData } : task
-    );
-    updateTasksState(updatedTasksOptimistic);
+      // tell the tour a task was created
+      window.dispatchEvent(new Event("task-created"));
+    } catch (err) {
+      console.warn("Backend failed, using localStorage only.", err);
+      const fallbackTask = { ...newTask, _id: Date.now().toString() };
+      const updated = [...tasks, fallbackTask];
+      updateTasksState(updated);
 
-    try {
-        console.log(`Updating task ${id} with:`, cleanUpdateData);
+      // tell the tour a task was created (fallback)
+      window.dispatchEvent(new Event("task-created"));
+    }
+  };
 
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(cleanUpdateData),
-        });
+  const handleUpdateTask = async (id: string, updateData: TaskUpdateData) => {
+    if (!id) return;
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Backend update error:', errorData);
-          throw new Error("Backend not reachable or update failed");
-        }
+    const cleanUpdateData: TaskUpdateData = {};
+    if (updateData.priority) {
+        cleanUpdateData.priority = updateData.priority.toLowerCase();
+    }
+    if (updateData.status) {
+        cleanUpdateData.status = updateData.status.toLowerCase();
+    }
 
-        const savedTask = await response.json();
-        console.log('Task updated successfully:', savedTask);
-        
-        const updatedTasks = tasks.map((task) => 
-            task._id === id ? savedTask : task
-        );
-        updateTasksState(updatedTasks);
+    const updatedTasksOptimistic = tasks.map((task) => 
+      task._id === id ? { ...task, ...cleanUpdateData } : task
+    );
+    updateTasksState(updatedTasksOptimistic);
 
-    } catch (err) {
-        console.warn("Backend failed to update, using localStorage only.", err);
-    }
-  };
+    try {
+        console.log(`Updating task ${id} with:`, cleanUpdateData);
 
-  // Delete Task
-  const handleDeleteTask = async (id: string) => {
-    try {
-      console.log('Deleting task:', id);
-      
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks/${id}`, {
-        method: "DELETE",
-      });
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cleanUpdateData),
+        });
 
-      if (!response.ok) throw new Error("Backend not reachable");
-      
-      console.log('Task deleted successfully');
-    } catch (err) {
-      console.warn("Backend failed, using localStorage only.", err);
-    }
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Backend update error:', errorData);
+          throw new Error("Backend not reachable or update failed");
+        }
 
-    const updated = tasks.filter((t) => t._id !== id);
-    updateTasksState(updated);
-  };
+        const savedTask = await response.json();
+        console.log('Task updated successfully:', savedTask);
+        
+        const updatedTasks = tasks.map((task) => 
+            task._id === id ? savedTask : task
+        );
+        updateTasksState(updatedTasks);
 
-  // Open modal (and notify tour the modal opened)
-  const openCreateTask = () => {
-    setIsModalOpen(true);
-    window.dispatchEvent(new Event("task-modal-open"));
-  };
+    } catch (err) {
+        console.warn("Backend failed to update, using localStorage only.", err);
+    }
+  };
 
-  return (
-    <div style={{ padding: "2rem" }}>
-      {/* Onboarding tour (only shows for logged-out users) */}
-      <OnboardingTour isAuthed={isAuthed} />
+  // Delete Task
+  const handleDeleteTask = async (id: string) => {
+    try {
+      console.log('Deleting task:', id);
+      
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_BASE_URL}/api/tasks/${id}`, {
+        method: "DELETE",
+      });
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <div style={{ fontSize: "2rem", color: "#212121" }}>Your Tasks</div>
+      if (!response.ok) throw new Error("Backend not reachable");
+      
+      console.log('Task deleted successfully');
+    } catch (err) {
+      console.warn("Backend failed, using localStorage only.", err);
+    }
 
-        <AuthButton
-          data-tour="create-task-button"
-          onClick={openCreateTask}
-          style={{ backgroundColor: "#212121", color: "orange" }}
-        >
-          + Create Task
-        </AuthButton>
-      </div>
+    const updated = tasks.filter((t) => t._id !== id);
+    updateTasksState(updated);
+  };
 
-      <TaskFilter onFilter={setFilters} onApply={applyFilters} />
+  // Open modal (and notify tour the modal opened)
+  const openCreateTask = () => {
+    setIsModalOpen(true);
+    window.dispatchEvent(new Event("task-modal-open"));
+  };
 
-      <TaskList tasks={filteredTasks} onDelete={handleDeleteTask} onUpdate={handleUpdateTask} />
+  return (
+    <div style={{ padding: "2rem" }}>
+      {/* Onboarding tour (only shows for logged-out users) */}
+      <OnboardingTour isAuthed={isAuthed} />
 
-      {isModalOpen && (
-        <TaskModal onClose={() => setIsModalOpen(false)} onSave={handleAddTask} />
-      )}
-    </div>
-  );
+      <div
+        style={{
+          display: "flex",
+          width: "100%", 
+          justifyContent: "space-between", 
+          alignItems: "center", 
+          marginBottom: "1.5rem",
+        }}
+      >
+        <div style={{ fontSize: "2rem", color: "#212121", marginRight: "auto" }}>
+            Your Tasks
+        </div>
+
+        <AuthButton
+          data-tour="create-task-button"
+          onClick={openCreateTask}
+          style={{ backgroundColor: "#212121", color: "orange" }}
+        >
+          + Create Task
+        </AuthButton>
+      </div>
+
+      <TaskFilter onFilter={handleFilterChange} onApply={applyFilters} />
+
+      <TaskList tasks={filteredTasks} onDelete={handleDeleteTask} onUpdate={handleUpdateTask} />
+
+      {isModalOpen && (
+        <TaskModal onClose={() => setIsModalOpen(false)} onSave={handleAddTask} />
+      )}
+    </div>
+  );
 };
 
 export default TaskBoard;
