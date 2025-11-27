@@ -56,9 +56,6 @@ const TaskFilter: React.FC<Props> = ({onFilter, onApply}) => {
         </select>
 
         <input type="date" name="dueDate" value={filters.dueDate} onChange={handleChange}/>
-        <AuthButton variant="primary" onClick={onApply}>
-          Apply
-        </AuthButton>
         <AuthButton variant="secondary" onClick={clearFilters}>
           Clear
         </AuthButton>

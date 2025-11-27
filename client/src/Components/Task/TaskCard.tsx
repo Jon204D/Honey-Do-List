@@ -15,6 +15,14 @@ interface CommentData {
 
 const API_BASE = "http://localhost:5001"; 
 
+// Helper function to get today's date at midnight (00:00:00)
+// This ensures that we compare calendar dates only.
+const getTodayMidnight = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+    return today;
+};
+
 const TaskCard: React.FC<Props> = ({ task, onDelete, onUpdate }) => {
   
   const defaultReactions = {
@@ -118,7 +126,15 @@ const TaskCard: React.FC<Props> = ({ task, onDelete, onUpdate }) => {
 
   if (!task) return null;
 
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+  // --- START OF FIX ---
+  // A task is overdue if its due date is set, and that date is strictly before today's date at midnight.
+  const taskDueDateObject = task.dueDate ? new Date(task.dueDate) : null;
+  const todayMidnight = getTodayMidnight();
+
+  const isOverdue = 
+      taskDueDateObject && 
+      taskDueDateObject.getTime() < todayMidnight.getTime();
+  // --- END OF FIX ---
   
   const getFormattedDueDate = (dueDate?: string) => {
     if (!dueDate) return "N/A";
@@ -142,51 +158,51 @@ const TaskCard: React.FC<Props> = ({ task, onDelete, onUpdate }) => {
       <p style={{ margin: "0 0 0.5rem 0" }}>{task.description}</p>
       
       <div style={{ marginBottom: "0.5rem", display: "flex", gap: "1rem" }}>
-          {/* Status Selector */}
-          <label style={{ color: "#ccc", fontSize: "0.9rem" }}>
-              Status:
-              <select 
-                  value={task.status?.toLowerCase() || 'pending'}
-                  onChange={handleStatusChange}
-                  style={{ 
-                      marginLeft: "0.5rem", 
-                      padding: "0.2rem", 
-                      background: "#333", 
-                      color: "orange", 
-                      border: "1px solid #555",
-                      borderRadius: "4px"
-                  }}
-              >
-                  <option value="pending">Pending</option>
-                  <option value="in-progress">In-Progress</option>
-                  <option value="completed">Completed</option>
-              </select>
-          </label>
-          
-          {/* Priority Selector */}
-          <label style={{ color: "#ccc", fontSize: "0.9rem" }}>
-              Priority:
-              <select 
-                  value={task.priority?.toLowerCase() || 'medium'}
-                  onChange={handlePriorityChange}
-                  style={{ 
-                      marginLeft: "0.5rem", 
-                      padding: "0.2rem", 
-                      background: "#333", 
-                      color: "orange", 
-                      border: "1px solid #555",
-                      borderRadius: "4px"
-                  }}
-              >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-              </select>
-          </label>
+        	{/* Status Selector */}
+        	<label style={{ color: "#ccc", fontSize: "0.9rem" }}>
+        	  Status:
+        	  <select 
+        	    value={task.status?.toLowerCase() || 'pending'}
+        	    onChange={handleStatusChange}
+        	    style={{ 
+        	      marginLeft: "0.5rem", 
+        	      padding: "0.2rem", 
+        	      background: "#333", 
+        	      color: "orange", 
+        	      border: "1px solid #555",
+        	      borderRadius: "4px"
+        	    }}
+        	  >
+        	    <option value="pending">Pending</option>
+        	    <option value="in-progress">In-Progress</option>
+        	    <option value="completed">Completed</option>
+        	  </select>
+        	</label>
+        	
+        	{/* Priority Selector */}
+        	<label style={{ color: "#ccc", fontSize: "0.9rem" }}>
+        	  Priority:
+        	  <select 
+        	    value={task.priority?.toLowerCase() || 'medium'}
+        	    onChange={handlePriorityChange}
+        	    style={{ 
+        	      marginLeft: "0.5rem", 
+        	      padding: "0.2rem", 
+        	      background: "#333", 
+        	      color: "orange", 
+        	      border: "1px solid #555",
+        	      borderRadius: "4px"
+        	    }}
+        	  >
+        	    <option value="low">Low</option>
+        	    <option value="medium">Medium</option>
+        	    <option value="high">High</option>
+        	  </select>
+        	</label>
       </div>
 
       <small style={{ color: isOverdue ? 'red' : '#ccc' }}>
-          Due: {formattedDueDate}
+        	Due: {formattedDueDate}
       </small>
       <div style={{ marginTop: "0.5rem" }}>
         <AuthButton

@@ -37,13 +37,20 @@ const TaskBoard: React.FC = () => {
     }
 
     const filtered = tasks.filter((task) => {
-      // Ensure case-insensitive comparison
+      // Ensure case-insensitive comparison for text fields
       const taskStatus = task.status ? task.status.toLowerCase() : "";
       const taskPriority = task.priority ? task.priority.toLowerCase() : "";
       
+      // FIX: Date comparison now only checks the YYYY-MM-DD part (first 10 chars)
+      const taskDate = task.dueDate ? task.dueDate.substring(0, 10) : "";
+      const filterDate = filters.dueDate ? filters.dueDate.substring(0, 10) : "";
+      
       const statusMatch = !filters.status || (taskStatus === filters.status.toLowerCase());
       const priorityMatch = !filters.priority || (taskPriority === filters.priority.toLowerCase());
-      const dueMatch = !filters.dueDate || task.dueDate === filters.dueDate;
+      
+      // Use the normalized date strings for comparison
+      const dueMatch = !filters.dueDate || taskDate === filterDate;
+      
       return statusMatch && priorityMatch && dueMatch;
     });
 
@@ -223,12 +230,13 @@ const TaskBoard: React.FC = () => {
       <div
         style={{
           display: "flex",
-          width: "100%", 
-          justifyContent: "space-between", 
-          alignItems: "center", 
+          width: "100%", // Ensures the container spans the full width
+          justifyContent: "flex-start", // Allows margin-right: auto to work fully
+          alignItems: "center", // Ensures vertical alignment
           marginBottom: "1.5rem",
         }}
       >
+        {/* Layout Fix: margin-right: auto pushes the next element to the far right */}
         <div style={{ fontSize: "2rem", color: "#212121", marginRight: "auto" }}>
             Your Tasks
         </div>
