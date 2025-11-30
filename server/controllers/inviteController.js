@@ -37,7 +37,6 @@ const getAllInvites = async (req, res) => {
 const revokeInvite = async (req, res) => {
   try {
     const { id } = req.params;
-    // TODO: Write logic to delete/revoke invite
     res.status(200).json({ message: `Invite ${id} revoked (placeholder)` });
   } catch (error) {
     res.status(500).json({ message: 'Error revoking invite', error: error.message });
