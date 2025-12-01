@@ -27,7 +27,7 @@ const Settings: React.FC = () => {
   const [userId, setUserId] = useState<string>("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [loaded, setLoaded] = useState(false);
 
   // Success / Error Messages
   const [formMessage, setFormMessage] = useState<string | null>(
@@ -37,8 +37,6 @@ const Settings: React.FC = () => {
   // Disables buttons while submitting
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [loaded, setLoaded] = useState(false);
-
   /* Reads fakeUser from localStorage
      Populates username, email, and password */
   useEffect(() => {
@@ -47,7 +45,6 @@ const Settings: React.FC = () => {
       const parsedUser = JSON.parse(storedUser);
       setUsername(parsedUser.username || "");
       setEmail(parsedUser.email || "");
-      setPassword(parsedUser.password || "");
       setUserId(String(parsedUser._id ?? parsedUser.id ?? ""));
     }
     setLoaded(true);
@@ -65,68 +62,66 @@ const Settings: React.FC = () => {
      - If backend succeeds: updates state & localStorage
      - If backend fails: shows backend error message
      - If network error: fallback to localStorage */
-   const saveUser = async (updates: {username?: string; password?: string}, message: string, onSuccess?: () => void) => {
+   const saveUser = async (updates: {username?: string; currentPassword?: string; newPassword?: string;}, message: string, onSuccess?: () => void) => {
     setIsSubmitting(true);
 
     try {
       let endpoint = "";
-      let bodyData: any = {};
+      let body: any = {};
 
       /* Update Username */
-      if (updates.username && !updates.password) {
-        endpoint = `${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/user/${userId}`;
-        bodyData = {username: updates.username}; 
+      if (updates.username && !updates.currentPassword && !updates.newPassword) {
+        endpoint = `${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/${userId}`;
+        body = {username: updates.username};
       }
 
       /* Update Password */
-      else if (updates.password && !updates.username) {
-        endpoint = `${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/password/${userId}`;
-        bodyData = {password: updates.password}; 
+      else if (updates.currentPassword && updates.newPassword) {
+        endpoint = `${process.env.REACT_APP_BACKEND_BASE_URL}/api/users/${userId}/password`;
+        body = {
+          currentPassword: updates.currentPassword,
+          newPassword: updates.newPassword,
+        };
+      } else {
+        setIsSubmitting(false);
+        return;
       }
 
       /* Backend */
       const response = await fetch(endpoint, {
         method: "PUT",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(bodyData),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
         // Update state
-        if (updates.username) setUsername(updates.username);
-        if (updates.password) setPassword(updates.password);
+        if (updates.username) {
+          setUsername(updates.username);
 
-        // Save to localStorage
-        const updatedUser = {
-          username: updates.username ?? username,
-          email,
-          password: updates.password ?? password,
-          id: userId,
-        };
-        localStorage.setItem("fakeUser", JSON.stringify(updatedUser));
+          localStorage.setItem(
+            "fakeUser",
+            JSON.stringify({
+              id: userId,
+              email,
+              username: updates.username,
+            })
+          );
+        }
 
         setFormMessage(message);
         onSuccess?.();
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setFormMessage(errorData.message || "Failed to update user");
+        setFormMessage(errorData.message || "Failed to update");
       }
-    } catch (error) {
-      console.error("Network error:", error);
-      // Save locally if backend fails
-      const updatedUser = {
-        username: updates.username ?? username,
-        email,
-        password: updates.password ?? password,
-        id: userId,
-      };
-      localStorage.setItem("fakeUser", JSON.stringify(updatedUser));
-      setFormMessage(`${message} (saved locally)`);
-      onSuccess?.();
+    } catch (err) {
+      console.error("Save error:", err);
+      setFormMessage("Network error while saving");
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
   // Clear only session data (used for logout)
   const clearSession = () => {
@@ -169,22 +164,30 @@ const Settings: React.FC = () => {
       <div style={{display: "flex", flexDirection: "column", gap: 24, textAlign: "left"}}>
         <UsernameDisplay
           username={username}
-          password={password}
-          saveUser={(updates, onSuccess) =>
-            saveUser(updates, "Username updated!", onSuccess)
-          }
           isSubmitting={isSubmitting}
+          saveUser={(updates, onSuccess) =>
+            saveUser(
+              { username: updates.username },
+              "Username updated!",
+              onSuccess
+            )
+          }
         />
 
         <EmailDisplay email={email} />
 
         <PasswordDisplay
-          username={username}
-          password={password}
-          saveUser={(updates, onSuccess) =>
-            saveUser(updates, "Password updated!", onSuccess)
-          }
           isSubmitting={isSubmitting}
+          changePassword={(payload, onSuccess) =>
+            saveUser(
+              {
+                currentPassword: payload.currentPassword,
+                newPassword: payload.newPassword,
+              },
+              "Password updated!",
+              onSuccess
+            )
+          }
         />
 
         

@@ -4,15 +4,14 @@ import { AuthButton } from "../Auth/AuthStyles";
 
 interface Props {
   username: string;   // Current saved username   
-  password: string;   // Current saved password
   isSubmitting: boolean;
-  saveUser: (updates: {username?: string; password?: string}, onSuccess?: () => void) => void;
+  saveUser: (updates: {username?: string}, onSuccess?: () => void) => void;
 }
 
 /* Displaying & Editing Username 
    - View Mode - shows username & "Reset Username" button
    - Edit Mode - shows input field & save/cancel buttons */
-const UsernameDisplay: React.FC<Props> = ({username, password, saveUser, isSubmitting}) => {
+const UsernameDisplay: React.FC<Props> = ({username, saveUser, isSubmitting}) => {
   const [editingUsername, setEditingUsername] = useState(false);
   const [tempUsername, setTempUsername] = useState(username);
   const navigate = useNavigate();
@@ -21,6 +20,17 @@ const UsernameDisplay: React.FC<Props> = ({username, password, saveUser, isSubmi
   useEffect(() => {
     setTempUsername(username);
   }, [username])
+
+  const handleSave = () => {
+    if (!tempUsername.trim()) return;
+    saveUser(
+      { username: tempUsername.trim() },
+      () => {
+        setEditingUsername(false);
+        navigate("/settings", { state: { message: "Username updated!" } });
+      }
+    );
+  };
 
   return (
     <div style={{display: "flex", flexDirection: "column", gap: 6, textAlign: "left"}}>
@@ -37,19 +47,17 @@ const UsernameDisplay: React.FC<Props> = ({username, password, saveUser, isSubmi
           />
           <div style={{ marginTop: 10, display: "flex", gap: 10}}>
             <AuthButton
-              onClick={() =>
-                saveUser({username: tempUsername}, () => {
-                  setEditingUsername(false);
-                  navigate("/settings", {state: {message: "Username updated!"}});
-                })
-              }
-              disabled={isSubmitting}
+              onClick={handleSave}
+              disabled={isSubmitting || !tempUsername.trim()}
             >
               {isSubmitting ? "Saving..." : "Save"}
             </AuthButton>
 
             <AuthButton
-              onClick={() => setEditingUsername(false)}
+              onClick={() => {
+                setEditingUsername(false);
+                setTempUsername(username); // reset to original
+              }}
               variant="secondary"
               disabled={isSubmitting}
             >
@@ -62,7 +70,10 @@ const UsernameDisplay: React.FC<Props> = ({username, password, saveUser, isSubmi
           style={{display: "flex", alignItems: "center", gap: 10, justifyContent: "space-between"}}
         >
           <p style={{fontWeight: "normal", margin: 0}}>{username}</p>
-          <AuthButton onClick={() => setEditingUsername(true)} variant="secondary">
+          <AuthButton 
+          onClick={() => setEditingUsername(true)}
+            variant="secondary"
+          >
             Reset Username
           </AuthButton>
         </div>
